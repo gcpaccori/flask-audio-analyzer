@@ -11,6 +11,7 @@ from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import pytz
 from flask import send_file
+from werkzeug.utils import secure_filename
 
 
 # Configurar logger
@@ -23,13 +24,16 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+app.config['PHOTOS_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'fotos')
+app.config['ALLOWED_IMAGE_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['API_KEY'] = 'acoustics'
 db = SQLAlchemy(app)
 
-# Crear carpeta de subidas si no existe
+# Crear carpetas de subidas si no existen
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
     logger.debug(f"Carpeta de subidas creada en: {app.config['UPLOAD_FOLDER']}")
+os.makedirs(app.config['PHOTOS_FOLDER'], exist_ok=True)
 
 # Parámetros acústicos (constantes)
 p0 = 20e-6   # 20 µPa, umbral de audición humana
@@ -77,6 +81,7 @@ class Escenario(db.Model):
     tipo_analisis = db.Column(db.String(100), nullable=True)
     microfonos = db.relationship('Microfono', backref='escenario', lazy=True)
     microfonos_historial = db.Column(db.Text, nullable=True)
+    fotos = db.Column(db.Text, nullable=True)  # JSON list of photo filenames
 
 class Microfono(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -513,16 +518,31 @@ def listar_microfonos():
         'escenario_nombre': m.escenario.nombre if m.escenario else "Libre"
     } for m in microfonos])
 
+def _actualizar_campos_descriptivos(escenario, data):
+    """Update descriptive metadata fields shared between culminado and programado scenarios."""
+    escenario.nombre = data.get('nombre', escenario.nombre)
+    escenario.descripcion = data.get('descripcion', escenario.descripcion)
+    escenario.ubicacion = data.get('ubicacion', escenario.ubicacion)
+    escenario.tipo_ruido = data.get('tipo_ruido', escenario.tipo_ruido)
+    escenario.num_fuentes = data.get('num_fuentes', escenario.num_fuentes)
+    escenario.num_personas = data.get('num_personas', escenario.num_personas)
+    escenario.proteccion_auditiva = data.get('proteccion_auditiva', escenario.proteccion_auditiva)
+    escenario.tipo_analisis = data.get('tipo_analisis', escenario.tipo_analisis)
+
+
 @app.route('/escenarios/<int:id>', methods=['PUT'])
 def actualizar_escenario(id):
     data = request.json
     escenario = Escenario.query.get_or_404(id)
-    if escenario.estado != 'programado':
-        return jsonify({'error': 'Solo se pueden modificar escenarios programados'}), 400
     try:
-        escenario.nombre = data.get('nombre', escenario.nombre)
-        escenario.descripcion = data.get('descripcion', escenario.descripcion)
-        escenario.ubicacion = data.get('ubicacion', escenario.ubicacion)
+        # For completed scenarios, allow editing descriptive metadata only (no date changes)
+        if escenario.estado == 'culminado':
+            _actualizar_campos_descriptivos(escenario, data)
+            db.session.commit()
+            return jsonify({'mensaje': 'Datos del escenario actualizados'})
+        if escenario.estado != 'programado':
+            return jsonify({'error': 'Solo se pueden modificar escenarios programados'}), 400
+        _actualizar_campos_descriptivos(escenario, data)
         if 'start_time' in data:
             escenario.start_time = datetime.datetime.strptime(data['start_time'], "%Y-%m-%d %H:%M:%S")
         if 'end_time' in data:
@@ -530,11 +550,6 @@ def actualizar_escenario(id):
         duracion_segundos = (escenario.end_time - escenario.start_time).total_seconds()
         escenario.horas_medicion = round(duracion_segundos / 3600.0, 2)
         escenario.dias_medicion = round(duracion_segundos / (3600.0 * 24), 2)
-        escenario.tipo_ruido = data.get('tipo_ruido', escenario.tipo_ruido)
-        escenario.num_fuentes = data.get('num_fuentes', escenario.num_fuentes)
-        escenario.num_personas = data.get('num_personas', escenario.num_personas)
-        escenario.proteccion_auditiva = data.get('proteccion_auditiva', escenario.proteccion_auditiva)
-        escenario.tipo_analisis = data.get('tipo_analisis', escenario.tipo_analisis)
         db.session.commit()
         return jsonify({'mensaje': 'Escenario actualizado'})
     except Exception as e:
@@ -641,9 +656,112 @@ def detalle_escenario(escenario_id):
         'start_time': escenario.start_time.strftime("%Y-%m-%d %H:%M:%S"),
         'end_time': escenario.end_time.strftime("%Y-%m-%d %H:%M:%S"),
         'estado': escenario.estado,
-        'microfonos': microfonos_data
+        'horas_medicion': escenario.horas_medicion,
+        'dias_medicion': escenario.dias_medicion,
+        'tipo_ruido': escenario.tipo_ruido,
+        'num_fuentes': escenario.num_fuentes,
+        'num_personas': escenario.num_personas,
+        'proteccion_auditiva': escenario.proteccion_auditiva,
+        'tipo_analisis': escenario.tipo_analisis,
+        'microfonos': microfonos_data,
+        'fotos': json.loads(escenario.fotos) if escenario.fotos else []
     }
     return jsonify(data)
+
+
+def _allowed_image(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_IMAGE_EXTENSIONS']
+
+
+MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB per photo
+
+
+@app.route('/escenarios/<int:escenario_id>/fotos', methods=['POST'])
+def subir_foto_escenario(escenario_id):
+    """Upload one or more photos for a scenario."""
+    escenario = Escenario.query.get_or_404(escenario_id)
+    if 'fotos' not in request.files:
+        return jsonify({'error': 'No se enviaron archivos'}), 400
+    files = request.files.getlist('fotos')
+    fotos_actuales = json.loads(escenario.fotos) if escenario.fotos else []
+    urls = []
+    for foto in files:
+        if not foto or not foto.filename:
+            continue
+        if not _allowed_image(foto.filename):
+            continue
+        base_filename = secure_filename(foto.filename)
+        # secure_filename may return empty string for non-ASCII names
+        if not base_filename or base_filename in ('.', '..'):
+            # Fallback: use a timestamp-based name with original extension
+            ext = foto.filename.rsplit('.', 1)[-1].lower() if '.' in foto.filename else 'jpg'
+            if ext not in app.config['ALLOWED_IMAGE_EXTENSIONS']:
+                continue
+            import time
+            base_filename = f"foto_{int(time.time())}.{ext}"
+        filename = f"esc{escenario_id}_{base_filename}"
+        filepath = os.path.join(app.config['PHOTOS_FOLDER'], filename)
+        # Read file data and check size before saving
+        foto_data = foto.read()
+        if len(foto_data) > MAX_PHOTO_SIZE_BYTES:
+            return jsonify({'error': f'El archivo {base_filename} supera el límite de 10 MB'}), 413
+        with open(filepath, 'wb') as f:
+            f.write(foto_data)
+        fotos_actuales.append(filename)
+        urls.append(f'/fotos/{filename}')
+    escenario.fotos = json.dumps(fotos_actuales)
+    db.session.commit()
+    return jsonify({'fotos': fotos_actuales, 'urls': urls})
+
+
+@app.route('/escenarios/<int:escenario_id>/fotos/<filename>', methods=['DELETE'])
+def eliminar_foto_escenario(escenario_id, filename):
+    """Remove a photo from a scenario."""
+    escenario = Escenario.query.get_or_404(escenario_id)
+    fotos_actuales = json.loads(escenario.fotos) if escenario.fotos else []
+    safe_name = secure_filename(filename)
+    if safe_name not in fotos_actuales:
+        return jsonify({'error': 'Foto no encontrada'}), 404
+    fotos_actuales.remove(safe_name)
+    escenario.fotos = json.dumps(fotos_actuales)
+    db.session.commit()
+    # Delete file from disk
+    filepath = os.path.join(app.config['PHOTOS_FOLDER'], safe_name)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    return jsonify({'mensaje': 'Foto eliminada'})
+
+
+@app.route('/fotos/<filename>')
+def servir_foto(filename):
+    """Serve scenario photos."""
+    return send_from_directory(app.config['PHOTOS_FOLDER'], filename)
+
+
+@app.route('/escenarios/culminados', methods=['GET'])
+def listar_escenarios_culminados():
+    """Return all completed scenarios with their microphones for multi-print selection."""
+    escenarios = Escenario.query.filter_by(estado='culminado').order_by(Escenario.end_time.desc()).all()
+    resultado = []
+    for e in escenarios:
+        try:
+            mic_ids = json.loads(e.microfonos_historial) if e.microfonos_historial else []
+        except Exception:
+            mic_ids = []
+        mics = []
+        for mid in mic_ids:
+            m = Microfono.query.get(mid)
+            if m:
+                mics.append({'id': m.id, 'identificador': m.identificador})
+        resultado.append({
+            'id': e.id,
+            'nombre': e.nombre,
+            'ubicacion': e.ubicacion or '',
+            'start_time': e.start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            'end_time': e.end_time.strftime("%Y-%m-%d %H:%M:%S"),
+            'microfonos': mics
+        })
+    return jsonify(resultado)
 
 @app.route('/micros/<int:microfono_id>/resultado', methods=['GET'])
 def detalle_microfono(microfono_id):
@@ -820,13 +938,18 @@ def analisis_general(escenario_id, mic_id):
     Lp_eqT_global = 10 * np.log10(mean_pressure_sq / (2.0e-5)**2) if mean_pressure_sq > 0 else 0
     # Calcular el nivel de exposición acústica global
     LE_global = 10 * np.log10(total_ET / 4.0e-10) if total_ET > 0 else 0
+    # Calcular L_EX,8h según NTP ISO 9612:2010 (exposición normalizada a 8 horas)
+    duracion_horas = total_duration / 3600.0
+    # Require at least 1 minute of measurement for a meaningful L_EX,8h
+    L_EX_8h = round(Lp_eqT_global + 10 * np.log10(duracion_horas / 8.0), 2) if duracion_horas >= (1.0 / 60.0) else None
 
     analysis = {
          "duration": total_duration,
          "ET": total_ET,
          "Lp_eqT": round(Lp_eqT_global, 2),
-         "LE": round(LE_global, 2)
-         # Puedes agregar más métricas siguiendo la misma lógica.
+         "LE": round(LE_global, 2),
+         "L_EX_8h": L_EX_8h,
+         "cantidad_audios": len(resultados)
     }
     return jsonify(analysis)
 
@@ -861,6 +984,9 @@ def dashboard_data():
     total_audios = Audio.query.count()
     total_microphones = Microfono.query.count()
     active_microphones = Microfono.query.filter(Microfono.escenario_id.isnot(None)).count()
+    escenarios_activos = Escenario.query.filter_by(estado='activo').count()
+    escenarios_culminados = Escenario.query.filter_by(estado='culminado').count()
+    escenarios_programados = Escenario.query.filter_by(estado='programado').count()
 
     recent_results = AudioResultado.query.order_by(AudioResultado.timestamp.desc()).limit(10).all()
     recent_audios = []
@@ -920,6 +1046,9 @@ def dashboard_data():
         "total_audios": total_audios,
         "total_microphones": total_microphones,
         "active_microphones": active_microphones,
+        "escenarios_activos": escenarios_activos,
+        "escenarios_culminados": escenarios_culminados,
+        "escenarios_programados": escenarios_programados,
         "recent_audios": recent_audios,
         "alerts": alerts,
         "processing": list(processing_audios.values()),

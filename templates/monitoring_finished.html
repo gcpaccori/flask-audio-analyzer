@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <!-- Google Fonts para diseño moderno -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/global.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://code.highcharts.com/stock/highstock.js"></script>
   <!-- MathJax para fórmulas matemáticas -->
@@ -42,385 +43,1044 @@
       padding: 0;
     }
     
-    /* Estilos modernos para impresión */
+    /* CSS completo de impresión — tipo informe técnico */
     @media print {
-      body { 
-        background: white !important; 
-        font-size: 11pt;
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body {
+        background: white !important;
+        font-size: 10pt;
         line-height: 1.4;
+        color: #000 !important;
+        margin: 0;
+        padding: 0;
       }
-      .navbar-custom { background: var(--primary-color) !important; }
       .no-print { display: none !important; }
-      .print-break { page-break-before: always; }
-      .print-avoid-break { page-break-inside: avoid; }
-      #stockchart { height: 250px !important; }
-      .main-container { margin-top: 0 !important; }
-      .card { border: 1px solid #ddd !important; }
-      .methodology-section { font-size: 10pt; }
-      .formula { font-size: 9pt; }
+      .main-container {
+        margin: 0 !important;
+        padding: 15mm 15mm !important;
+        max-width: 100% !important;
+      }
+      #chart-container {
+        width: 100% !important;
+        border: 1px solid #000 !important;
+        padding: 10px !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+      #stockchart {
+        height: 350px !important;
+        width: 100% !important;
+      }
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        page-break-inside: avoid;
+      }
+      th, td {
+        border: 1px solid #000 !important;
+        padding: 4px 8px !important;
+        font-size: 9pt !important;
+        color: #000 !important;
+      }
+      th {
+        background: #e5e7eb !important;
+        font-weight: 700 !important;
+      }
+      .report-section {
+        page-break-inside: avoid;
+        margin-bottom: 15px;
+      }
+      .section-title {
+        background: #1e293b !important;
+        color: white !important;
+        padding: 6px 12px !important;
+        font-size: 11pt !important;
+        font-weight: 700 !important;
+        margin: 0 0 0 0 !important;
+        border: 1px solid #000 !important;
+      }
+      .formula-box {
+        border: 1px solid #999 !important;
+        border-left: 3px solid #333 !important;
+        background: #f9f9f9 !important;
+        padding: 8px !important;
+        font-size: 8pt !important;
+        page-break-inside: avoid;
+      }
+      .formula-box pre {
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+      }
+      .process-step {
+        border: 1px solid #999 !important;
+        background: #fafafa !important;
+        padding: 10px !important;
+        margin: 8px 0 !important;
+        page-break-inside: avoid;
+      }
+      .process-step::before {
+        position: static !important;
+        display: inline-block !important;
+        margin-bottom: 5px !important;
+        background: #333 !important;
+      }
+      .methodology-section {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 10px 0 !important;
+        page-break-before: always;
+      }
+      .methodology-section h2 {
+        background: #1e293b !important;
+        color: white !important;
+        padding: 6px 12px !important;
+        border: 1px solid #000 !important;
+        border-bottom: none !important;
+        border-radius: 0 !important;
+        font-size: 12pt !important;
+      }
+      .terms-grid {
+        display: block !important;
+        columns: 2;
+        column-gap: 15px;
+      }
+      .term-item {
+        break-inside: avoid;
+        border: 1px solid #ccc !important;
+        margin-bottom: 5px !important;
+        padding: 5px 8px !important;
+        font-size: 8pt !important;
+      }
+      .report-header-print {
+        text-align: center;
+        border: 2px solid #000;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      .laeq-summary {
+        background: none !important;
+        color: #000 !important;
+        border: 2px solid #1e293b !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 10px !important;
+        text-align: center;
+        page-break-inside: avoid;
+      }
+      .laeq-summary * { color: #000 !important; }
+      .laeq-value {
+        font-size: 24pt !important;
+        text-shadow: none !important;
+      }
+      .laeq-summary::before { display: none !important; }
+      .status-banner {
+        background: none !important;
+        color: #000 !important;
+        border: 2px solid #000 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 10px !important;
+      }
+      .status-banner * { color: #000 !important; }
+      .status-banner::before { display: none !important; }
+      .status-banner h1 { font-size: 16pt !important; }
+      .exceso-badge, .safe-badge {
+        border: 1px solid #000 !important;
+        background: none !important;
+        color: #000 !important;
+      }
+      #audios-list { display: none !important; }
+      .audio-print-table { display: table !important; }
+      .methodology-section div[style*="text-indent"] {
+        font-size: 8pt !important;
+        line-height: 1.5 !important;
+      }
+      .modern-card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+      .modern-card .card-header {
+        background: #e5e7eb !important;
+      }
+      /* Print-only elements */
+      .print-only { display: block !important; }
+      .portada-informe {
+        page-break-after: always;
+        text-align: center;
+        padding: 40mm 20mm;
+        border: 3px solid #000;
+        margin-bottom: 20px;
+      }
+      .portada-informe .portada-title {
+        font-size: 20pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .portada-informe .portada-subtitle {
+        font-size: 14pt;
+        margin-bottom: 30px;
+      }
+      .portada-informe .portada-scenario {
+        font-size: 13pt;
+        font-weight: 600;
+        border-top: 2px solid #000;
+        border-bottom: 2px solid #000;
+        padding: 10px 0;
+        margin: 20px 0;
+      }
+      .portada-informe .portada-norm {
+        font-size: 10pt;
+        line-height: 1.8;
+        margin: 20px 0;
+      }
+      .portada-informe .portada-meta {
+        font-size: 9pt;
+        color: #444;
+        margin-top: 30px;
+      }
+      .print-footer {
+        border-top: 1px solid #000;
+        padding-top: 5px;
+        margin-top: 20px;
+        display: flex !important;
+        justify-content: space-between;
+        font-size: 8pt;
+        color: #444;
+      }
+      /* Resumen global indicators */
+      #resumen-global { border: 1px solid #000 !important; }
+      .indicator-highlight { border-right: 1px solid #999 !important; padding: 8px !important; }
+      .indicator-value { font-size: 14pt !important; font-weight: 700 !important; }
+      .indicator-label { font-size: 8pt !important; }
+      /* Clasificacion banner */
+      .clasificacion-banner { border: 2px solid #000 !important; background: #f5f5f5 !important; color: #000 !important; }
+      .clasificacion-banner * { color: #000 !important; }
+      /* Badges */
+      .badge-safe, .badge-danger, .badge-warning {
+        border: 1px solid #000 !important;
+        background: none !important;
+        color: #000 !important;
+        padding: 1px 5px !important;
+      }
+      /* Report doc header hidden in print (portada replaces it) */
+      .report-doc-header { display: none !important; }
     }
     
-    /* Header moderno con gradiente */
-    .navbar-custom {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      box-shadow: var(--shadow-md);
-    }
+    /* Estilos de pantalla para elementos print-only */
+    .print-only { display: none; }
     
-    .navbar-custom .navbar-brand,
-    .navbar-custom .nav-link,
-    .navbar-custom .btn {
+    /* Cabecera de documento profesional (solo pantalla) */
+    .report-doc-header {
+      background: #1e293b;
       color: white;
-      font-weight: 500;
-      transition: all 0.3s ease;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
     }
-    
-    .navbar-custom .btn:hover {
-      background-color: rgba(255,255,255,0.2);
-      transform: translateY(-1px);
-    }
-    
-    /* Contenedor principal moderno */
-    .main-container {
-      margin-top: 70px;
-      padding: 2rem;
-      max-width: 1400px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    
-    /* Banner de estado moderno */
-    .status-banner {
-      background: linear-gradient(135deg, var(--success-color), var(--info-color));
-      color: white;
-      padding: 2rem;
-      text-align: center;
-      border-radius: 16px;
-      box-shadow: var(--shadow-lg);
-      margin-bottom: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .status-banner::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-      opacity: 0.3;
-    }
-    
-    .status-banner h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      position: relative;
-      z-index: 1;
-    }
-    
-    .status-banner p {
+    .report-doc-header .rh-brand .rh-type {
       font-size: 1.1rem;
-      opacity: 0.9;
-      position: relative;
-      z-index: 1;
-    }
-    
-    /* Cards modernos */
-    .modern-card {
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      box-shadow: var(--shadow-sm);
-      transition: all 0.3s ease;
-      overflow: hidden;
-    }
-    
-    .modern-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-    }
-    
-    .modern-card .card-header {
-      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-      border-bottom: 1px solid var(--border-color);
-      padding: 1.5rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-    
-    .modern-card .card-body {
-      padding: 1.5rem;
-    }
-    
-    /* Sección LAeq general destacada */
-    .laeq-summary {
-      background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
-      color: white;
-      padding: 2rem;
-      border-radius: 16px;
-      text-align: center;
-      box-shadow: var(--shadow-lg);
-      margin-bottom: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .laeq-summary::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-      animation: pulse 4s ease-in-out infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 0.5; }
-      50% { transform: scale(1.1); opacity: 0.8; }
-    }
-    
-    .laeq-value {
-      font-size: 3.5rem;
-      font-weight: 800;
-      margin: 1rem 0;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      position: relative;
-      z-index: 1;
-    }
-    
-    .laeq-details {
-      position: relative;
-      z-index: 1;
-    }
-    
-    /* Fixed contrast issues in LAeq details by removing problematic white backgrounds */
-    .laeq-details .detail-box {
-      background: rgba(255,255,255,0.15) !important;
-      border: 1px solid rgba(255,255,255,0.3);
-      color: white !important;
-      border-radius: 8px;
-      padding: 1rem;
-    }
-    
-    .laeq-details .detail-box strong,
-    .laeq-details .detail-box .fs-5,
-    .laeq-details .detail-box small {
-      color: white !important;
-    }
-    
-    /* Lista de audios moderna */
-    #audios-list {
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow-sm);
-      max-height: 70vh;
-      overflow-y: auto;
-    }
-    
-    .audio-item {
-      padding: 1rem;
-      margin-bottom: 0.75rem;
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border-left: 4px solid var(--success-color);
-    }
-    
-    .audio-item.has-excesos {
-      border-left: 4px solid var(--danger-color);
-    }
-    
-    .audio-item:hover {
-      background: #f1f5f9;
-      transform: translateX(4px);
-      box-shadow: var(--shadow-md);
-    }
-    
-    .audio-item.active {
-      background: #dbeafe;
-      border-color: var(--primary-color);
-      box-shadow: var(--shadow-md);
-    }
-    
-    /* Contenedor de gráfico moderno */
-    #chart-container {
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow-sm);
-    }
-    
-    #stockchart {
-      height: 500px;
-      border-radius: 8px;
-    }
-    
-    /* Análisis de excesos moderno */
-    #excesos-analysis {
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow-sm);
-      max-height: 70vh;
-      overflow-y: auto;
-    }
-    
-    .metric-item {
-      padding: 1rem;
-      margin-bottom: 0.75rem;
-      border-radius: 8px;
-      border-left: 4px solid var(--info-color);
-      background: #f8fafc;
-      transition: all 0.3s ease;
-    }
-    
-    .metric-item:hover {
-      transform: translateX(2px);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .metric-safe {
-      background: #f0fdf4;
-      border-left-color: var(--success-color);
-    }
-    
-    .metric-warning {
-      background: #fffbeb;
-      border-left-color: var(--warning-color);
-    }
-    
-    .metric-danger {
-      background: #fef2f2;
-      border-left-color: var(--danger-color);
-    }
-    
-    /* Badges modernos */
-    .exceso-badge, .safe-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.03em;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
-    
-    .exceso-badge {
-      background: var(--danger-color);
+    .report-doc-header .rh-brand .rh-norm {
+      font-size: 0.78rem;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+    .report-doc-header .rh-meta {
+      text-align: right;
+    }
+    .report-doc-header .rh-generated {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+    .doc-status-loading {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+    .doc-status-safe {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      background: #16a34a;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: white;
+    }
+    .doc-status-danger {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      background: #dc2626;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: white;
+    }
+    .doc-status-warning {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      background: #d97706;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
       color: white;
     }
     
-    .safe-badge {
-      background: var(--success-color);
-      color: white;
+    /* Resumen de indicadores acústicos */
+    .indicator-highlight {
+      text-align: center;
+      padding: 1rem;
+      background: #f8fafc;
+      border-right: 1px solid #cbd5e1;
+    }
+    .indicator-highlight:last-child { border-right: none; }
+    .indicator-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.2;
+    }
+    .indicator-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .indicator-status-safe { color: #16a34a; }
+    .indicator-status-danger { color: #dc2626; }
+    .indicator-status-warning { color: #d97706; }
+    
+    /* Badges de evaluación */
+    .badge-safe {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .badge-danger {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .badge-warning {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
     }
     
-    /* Secciones de metodología y documentación técnica */
+    /* Tabla: fila advertencia */
+    .report-table tr.row-warning { background: #fffbeb; }
+    
+    /* Clasificación/banner de conclusiones */
+    .clasificacion-banner {
+      padding: 0.9rem 1.25rem;
+      border-left: 4px solid;
+      border-radius: 0 4px 4px 0;
+      margin-top: 1rem;
+    }
+    .clasificacion-banner.status-safe {
+      background: #f0fdf4;
+      border-color: #16a34a;
+      color: #15803d;
+    }
+    .clasificacion-banner.status-warning {
+      background: #fffbeb;
+      border-color: #d97706;
+      color: #92400e;
+    }
+    .clasificacion-banner.status-danger {
+      background: #fef2f2;
+      border-color: #dc2626;
+      color: #b91c1c;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE LAYOUT — sidebar + main content
+    ═══════════════════════════════════════════ */
+    body { scroll-behavior: smooth; }
+
+    .page-layout {
+      display: flex;
+      align-items: flex-start;
+      max-width: 1700px;
+      margin: 0 auto;
+    }
+
+    /* Sticky sidebar */
+    .report-sidebar {
+      position: sticky;
+      top: 64px;
+      width: 226px;
+      min-width: 226px;
+      max-height: calc(100vh - 64px);
+      overflow-y: auto;
+      padding: 1.25rem 0.75rem 1.25rem 1rem;
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      margin-top: 64px;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+    .report-sidebar::-webkit-scrollbar { width: 4px; }
+    .report-sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .sidebar-logo .logo-icon {
+      width: 28px; height: 28px;
+      background: #1e293b;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 14px;
+    }
+    .sidebar-logo .logo-text { font-size: 0.72rem; color: #64748b; line-height: 1.3; }
+    .sidebar-logo .logo-text strong { display: block; color: #1e293b; font-size: 0.75rem; }
+
+    .sidebar-toc-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .sidebar-toc a {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.8rem;
+      color: #64748b;
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      border-radius: 0 4px 4px 0;
+      transition: all 0.15s ease;
+      line-height: 1.35;
+      margin-bottom: 1px;
+    }
+    .sidebar-toc a:hover {
+      color: #1e293b;
+      background: #f8fafc;
+      border-left-color: #94a3b8;
+    }
+    .sidebar-toc a.active {
+      color: #2563eb;
+      background: #eff6ff;
+      border-left-color: #2563eb;
+      font-weight: 600;
+    }
+    .toc-num {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #94a3b8;
+      min-width: 18px;
+    }
+    .sidebar-toc a.active .toc-num { color: #93c5fd; }
+
+    .sidebar-divider { height: 1px; background: #e2e8f0; margin: 0.75rem 0; }
+
+    .sidebar-status-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.65rem 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .sidebar-laeq-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
+    .sidebar-laeq-value { font-size: 1.3rem; font-weight: 700; color: #1e293b; line-height: 1.2; }
+    .sidebar-laeq-unit { font-size: 0.75rem; color: #64748b; }
+
+    /* Main content area */
+    .report-main {
+      flex: 1;
+      min-width: 0;
+      padding: 1.5rem 2rem 3rem;
+      margin-top: 64px;
+    }
+
+    /* ═══════════════════════════════════════════
+       SECTION STYLING — magazine quality
+    ═══════════════════════════════════════════ */
+    .report-section {
+      margin-bottom: 2.25rem;
+      scroll-margin-top: 80px;
+    }
+
+    .section-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1e293b;
+      color: white;
+      padding: 0.65rem 1rem;
+      border-radius: 6px 6px 0 0;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .section-hdr .section-num {
+      font-size: 0.6rem;
+      font-weight: 700;
+      opacity: 0.5;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-right: 0.5rem;
+    }
+    .section-hdr .section-icon { margin-right: 0.5rem; opacity: 0.75; }
+    .section-hdr-actions { display: flex; gap: 6px; }
+    .section-hdr .btn-hdr {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .section-hdr .btn-hdr:hover { background: rgba(255,255,255,0.22); }
+
+    .section-body {
+      border: 1px solid #cbd5e1;
+      border-top: none;
+      background: #fff;
+    }
+    .section-body.padded { padding: 1.25rem; }
+
+    /* Table improvements */
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .report-table th {
+      background: #f1f5f9;
+      color: #374151;
+      font-weight: 600;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      white-space: nowrap;
+    }
+    .report-table td {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e2e8f0;
+      color: #1e293b;
+      vertical-align: middle;
+    }
+    .report-table tbody tr:nth-child(even) { background: #f9fafb; }
+    .report-table tbody tr:hover { background: #f0f9ff; }
+    .report-table tr.row-danger { background: #fef2f2 !important; }
+    .report-table tr.row-danger:hover { background: #fee2e2 !important; }
+    .report-table tr.row-warning { background: #fffbeb !important; }
+
+    /* ═══════════════════════════════════════════
+       CHART AREA
+    ═══════════════════════════════════════════ */
+    #chart-container {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 0 0 6px 6px;
+      padding: 1rem 0.5rem 0.5rem;
+    }
+    #stockchart { height: 380px; }
+    
+    /* Audio list */
+    #audios-list {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding: 0.75rem 0;
+      scrollbar-width: thin;
+    }
+    .audio-item {
+      flex: 0 0 auto;
+      min-width: 140px;
+      max-width: 160px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.6rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 0.8rem;
+    }
+    .audio-item:hover { border-color: #93c5fd; background: #f0f9ff; }
+    .audio-item.active { border-color: #2563eb; background: #eff6ff; }
+    .audio-item.has-excesos { border-left: 3px solid #ef4444; }
+
+    /* ═══════════════════════════════════════════
+       INDICATORS
+    ═══════════════════════════════════════════ */
+    .indicator-highlight {
+      text-align: center;
+      padding: 1rem;
+      background: #f8fafc;
+      border-right: 1px solid #cbd5e1;
+      flex: 1;
+      min-width: 130px;
+    }
+    .indicator-highlight:last-child { border-right: none; }
+    .indicator-value { font-size: 1.9rem; font-weight: 700; color: #1e293b; line-height: 1.2; }
+    .indicator-label { font-size: 0.72rem; color: #64748b; margin-top: 4px; }
+    .indicator-status-safe { color: #16a34a; }
+    .indicator-status-danger { color: #dc2626; }
+    .indicator-status-warning { color: #d97706; }
+
+    /* ═══════════════════════════════════════════
+       METHODOLOGY SECTION — magazine quality
+    ═══════════════════════════════════════════ */
     .methodology-section {
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 2rem;
-      margin: 2rem 0;
-      box-shadow: var(--shadow-sm);
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 2rem 2.5rem;
+      margin-bottom: 2rem;
+      scroll-margin-top: 80px;
     }
-    
-    .methodology-section h2 {
-      color: var(--primary-color);
-      border-bottom: 3px solid var(--primary-color);
+    .methodology-section > h2 {
+      color: #1e293b;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-bottom: 3px solid #2563eb;
       padding-bottom: 0.5rem;
       margin-bottom: 1.5rem;
-      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
-    
     .methodology-section h3 {
-      color: var(--text-primary);
-      margin-top: 2rem;
-      margin-bottom: 1rem;
+      color: #1e293b;
+      font-size: 0.95rem;
       font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      border-left: 3px solid #2563eb;
+      padding-left: 0.75rem;
     }
-    
     .formula-box {
       background: #f8fafc;
-      border: 1px solid var(--border-color);
-      border-left: 4px solid var(--primary-color);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin: 1rem 0;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #2563eb;
+      border-radius: 4px;
+      padding: 1rem 1.25rem;
+      margin: 0.75rem 0;
       font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
     }
-    
+    .formula-box pre { margin: 0; white-space: pre-wrap; font-size: 0.82rem; }
     .process-step {
-      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 1.5rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1.25rem;
       margin: 1rem 0;
       position: relative;
     }
-    
     .process-step::before {
       content: attr(data-step);
       position: absolute;
       top: -10px;
-      left: 20px;
-      background: var(--primary-color);
+      left: 16px;
+      background: #1e293b;
       color: white;
-      padding: 0.25rem 0.75rem;
+      padding: 0.15rem 0.65rem;
       border-radius: 20px;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 600;
+      letter-spacing: 0.05em;
     }
-    
+    .process-step h4 { font-size: 0.9rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem; }
     .terms-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 0.75rem;
       margin: 1rem 0;
     }
-    
     .term-item {
       background: #f8fafc;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
     }
-    
-    .term-item strong {
-      color: var(--primary-color);
-      font-weight: 600;
+    .term-item strong { color: #2563eb; font-weight: 600; }
+
+    /* ═══════════════════════════════════════════
+       CONCLUSIONS — magazine quality
+    ═══════════════════════════════════════════ */
+    .clasificacion-banner {
+      padding: 0.85rem 1.1rem;
+      border-left: 4px solid;
+      border-radius: 0 4px 4px 0;
+      margin-top: 1rem;
     }
-    
-    /* Responsive design mejorado */
-    @media (max-width: 768px) {
-      .main-container {
-        padding: 1rem;
-        margin-top: 60px;
+    .clasificacion-banner.status-safe { background:#f0fdf4; border-color:#16a34a; color:#15803d; }
+    .clasificacion-banner.status-warning { background:#fffbeb; border-color:#d97706; color:#92400e; }
+    .clasificacion-banner.status-danger { background:#fef2f2; border-color:#dc2626; color:#b91c1c; }
+
+    /* ═══════════════════════════════════════════
+       NAVBAR & BUTTONS
+    ═══════════════════════════════════════════ */
+    .navbar-custom {
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .navbar-custom .navbar-brand, .navbar-custom .btn {
+      color: white;
+      font-weight: 500;
+    }
+    .navbar-custom .btn-outline-light:hover {
+      background: rgba(255,255,255,0.12);
+    }
+
+    /* ═══════════════════════════════════════════
+       PRINT STYLES — impeccable
+    ═══════════════════════════════════════════ */
+    @media print {
+      @page {
+        size: A4;
+        margin: 15mm 15mm 20mm 15mm;
       }
-      
-      .status-banner h1 {
-        font-size: 1.8rem;
+      @page :first { margin-top: 0; }
+
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+      body { background: white !important; font-family: 'Times New Roman', serif; font-size: 10pt; line-height: 1.5; color: #000 !important; }
+
+      .no-print, .report-sidebar, .navbar-custom { display: none !important; }
+
+      .page-layout { display: block !important; }
+      .report-main { margin: 0 !important; padding: 0 !important; }
+
+      .print-only { display: block !important; }
+
+      .report-section {
+        page-break-inside: avoid;
+        margin-bottom: 12pt;
+        scroll-margin-top: 0;
       }
-      
-      .laeq-value {
-        font-size: 2.5rem;
+      .section-hdr {
+        background: #1e293b !important;
+        color: white !important;
+        padding: 5pt 8pt !important;
+        border-radius: 0 !important;
+        font-size: 10pt !important;
+        page-break-after: avoid;
       }
-      
+      .section-body { border: 1px solid #ccc !important; }
+      .section-body.padded { padding: 8pt !important; }
+
       .methodology-section {
-        padding: 1rem;
+        border: 1px solid #ccc !important;
+        border-radius: 0 !important;
+        padding: 8pt 10pt !important;
+        page-break-before: always;
+        margin-bottom: 0 !important;
       }
+      .methodology-section > h2 {
+        font-size: 12pt !important;
+        border-bottom: 2px solid #000 !important;
+        border-left: none !important;
+        padding-bottom: 4pt !important;
+        margin-bottom: 8pt !important;
+      }
+      .methodology-section h3 {
+        font-size: 10pt !important;
+        border-left: 3px solid #333 !important;
+        page-break-after: avoid;
+      }
+
+      .formula-box {
+        border: 1px solid #999 !important;
+        border-left: 3px solid #333 !important;
+        background: #f9f9f9 !important;
+        padding: 5pt 8pt !important;
+        font-size: 7pt !important;
+        page-break-inside: avoid;
+      }
+      .formula-box pre { font-size: 7pt !important; white-space: pre-wrap !important; }
+
+      .process-step {
+        border: 1px solid #ccc !important;
+        background: #fafafa !important;
+        padding: 6pt !important;
+        margin: 5pt 0 !important;
+        page-break-inside: avoid;
+      }
+      .process-step::before {
+        position: static !important;
+        display: inline-block !important;
+        margin-bottom: 3pt !important;
+        background: #333 !important;
+        font-size: 7pt !important;
+      }
+      .process-step h4 { font-size: 9pt !important; }
+
+      .terms-grid { display: block !important; columns: 2; column-gap: 10pt; }
+      .term-item { break-inside: avoid; border: 1px solid #ddd !important; font-size: 7.5pt !important; padding: 4pt 6pt !important; margin-bottom: 4pt; }
+
+      table { width: 100% !important; border-collapse: collapse !important; font-size: 8pt !important; }
+      th, td { border: 1px solid #999 !important; padding: 3pt 6pt !important; }
+      th { background: #e5e7eb !important; font-weight: 700 !important; }
+      tr.row-danger { background: #fef2f2 !important; }
+
+      #chart-container { border: 1px solid #999 !important; border-radius: 0 !important; page-break-inside: avoid; }
+      #stockchart { height: 320px !important; width: 100% !important; }
+      #audios-list { display: none !important; }
+      .audio-print-table { display: block !important; }
+
+      .badge-safe, .badge-danger, .badge-warning {
+        border: 1px solid #000 !important; background: none !important; color: #000 !important;
+      }
+      .clasificacion-banner { border: 1px solid #999 !important; background: #f5f5f5 !important; color: #000 !important; }
+      .indicator-highlight { border: 1px solid #ccc !important; background: #f9f9f9 !important; padding: 5pt !important; }
+      .indicator-value { font-size: 14pt !important; }
+      .indicator-status-safe, .indicator-status-danger, .indicator-status-warning { color: #000 !important; }
+      .print-footer { display: flex !important; border-top: 1pt solid #000; margin-top: 10pt; font-size: 7.5pt; color: #555; justify-content: space-between; }
+      .portada-informe { page-break-after: always; padding: 30mm 20mm; border: 2pt solid #000; }
+      .portada-informe .portada-title { font-size: 18pt; font-weight: 700; }
+      .portada-informe .portada-subtitle { font-size: 13pt; }
+      .portada-informe .portada-scenario { font-size: 12pt; font-weight: 600; border-top: 1pt solid #000; border-bottom: 1pt solid #000; padding: 8pt 0; margin: 15pt 0; }
+      .portada-informe .portada-norm { font-size: 9pt; line-height: 1.8; }
+      .portada-informe .portada-meta { font-size: 8pt; color: #444; }
+      .report-doc-header { display: none !important; }
+
+      /* Page counter via CSS @counter-style */
+      .report-main::after { content: ''; }
     }
+
+    /* ═══════════════════════════════════════════
+       DOC HEADER (screen only)
+    ═══════════════════════════════════════════ */
+    .report-doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .rh-brand .rh-type { font-size: 0.9rem; font-weight: 700; color: #1e293b; }
+    .rh-brand .rh-norm { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+    .rh-meta { text-align: right; }
+    .rh-generated { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
+    .doc-status-loading { display: inline-block; padding: 0.25rem 0.75rem; background: #f1f5f9; border-radius: 20px; font-size: 0.8rem; color: #64748b; border: 1px solid #e2e8f0; }
+    .doc-status-safe { display: inline-block; padding: 0.25rem 0.75rem; background: #dcfce7; border-radius: 20px; font-size: 0.8rem; color: #15803d; border: 1px solid #86efac; font-weight: 600; }
+    .doc-status-danger { display: inline-block; padding: 0.25rem 0.75rem; background: #fee2e2; border-radius: 20px; font-size: 0.8rem; color: #b91c1c; border: 1px solid #fca5a5; font-weight: 600; }
+    .doc-status-warning { display: inline-block; padding: 0.25rem 0.75rem; background: #fef3c7; border-radius: 20px; font-size: 0.8rem; color: #92400e; border: 1px solid #fde68a; font-weight: 600; }
+
+    /* ═══════════════════════════════════════════
+       BADGES
+    ═══════════════════════════════════════════ */
+    .badge-safe { display: inline-block; padding: 0.15rem 0.5rem; background: #dcfce7; color: #15803d; border: 1px solid #86efac; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .badge-danger { display: inline-block; padding: 0.15rem 0.5rem; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .badge-warning { display: inline-block; padding: 0.15rem 0.5rem; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .exceso-badge { display: inline-block; padding: 0.15rem 0.5rem; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 4px; font-size: 0.75rem; }
+    .safe-badge { display: inline-block; padding: 0.15rem 0.5rem; background: #dcfce7; color: #15803d; border: 1px solid #86efac; border-radius: 4px; font-size: 0.75rem; }
+
+    /* ═══════════════════════════════════════════
+       SECTION-TITLE (legacy alias)
+    ═══════════════════════════════════════════ */
+    .section-title { display: none; } /* replaced by .section-hdr */
+
+    /* ═══════════════════════════════════════════
+       PRINT-ONLY items
+    ═══════════════════════════════════════════ */
+    .print-only { display: none; }
+    .print-footer { display: none; }
+    .portada-informe { display: none; }
+
+    /* Edit scenario modal */
+    .modal-section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+      margin-top: 1rem;
+    }
+    .modal-section-label:first-child { margin-top: 0; }
+
+    /* ═══════════════════════════════════════════
+       PHOTO GALLERY
+    ═══════════════════════════════════════════ */
+    .fotos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.75rem;
+    }
+    .foto-card {
+      position: relative;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #f8fafc;
+      aspect-ratio: 4/3;
+    }
+    .foto-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      cursor: zoom-in;
+      transition: transform 0.2s;
+    }
+    .foto-card img:hover { transform: scale(1.02); }
+    .foto-card .foto-del {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: rgba(0,0,0,0.55);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      width: 24px; height: 24px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .foto-card .foto-del:hover { background: #dc2626; }
+
+    /* Lightbox */
+    .foto-lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    .foto-lightbox.active { display: flex; }
+    .foto-lightbox img {
+      max-width: 92vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 6px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+    .foto-lightbox-close {
+      position: absolute;
+      top: 16px; right: 20px;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      line-height: 1;
+      opacity: 0.75;
+    }
+    .foto-lightbox-close:hover { opacity: 1; }
+    .foto-lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .foto-lightbox-nav:hover { background: rgba(255,255,255,0.28); }
+    #lb-prev { left: 16px; }
+    #lb-next { right: 16px; }
+    .foto-lightbox-caption {
+      position: absolute;
+      bottom: 16px;
+      left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.7);
+      font-size: 0.8rem;
+    }
+
+    /* Print: photos in 2-column grid */
+    @media print {
+      .fotos-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6pt !important;
+        page-break-inside: avoid;
+      }
+      .foto-card {
+        border: 1px solid #ccc !important;
+        border-radius: 0 !important;
+        aspect-ratio: 4/3 !important;
+        page-break-inside: avoid;
+      }
+      .foto-card img { object-fit: cover !important; width: 100% !important; height: 100% !important; }
+      .foto-card .foto-del { display: none !important; }
+      .foto-lightbox { display: none !important; }
+      #fotos-empty-msg { display: none !important; }
+      #foto-upload-input { display: none !important; }
+    }
+
+    /* ═══════════════════════════════════════════
+       PRINT CONFIG MODAL
+    ═══════════════════════════════════════════ */
+    .print-config-check {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 0.4rem;
+      transition: background 0.12s;
+    }
+    .print-config-check:hover { background: #f8fafc; }
+    .print-config-check input[type="checkbox"] { cursor: pointer; }
+    .print-config-check label { cursor: pointer; font-size: 0.88rem; margin: 0; }
+
+    .scenario-pick-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 0.4rem;
+    }
+    .scenario-pick-item:hover { background: #f8fafc; }
+    .scenario-pick-item label { cursor: pointer; font-size: 0.85rem; margin: 0; flex: 1; }
+    .scenario-pick-item .sp-meta { font-size: 0.72rem; color: #94a3b8; display: block; }
   </style>
   <script>
     Highcharts.setOptions({
@@ -436,111 +1096,220 @@
   </script>
 </head>
 <body>
-  <!-- Header moderno -->
-  <nav class="navbar navbar-expand-lg navbar-custom fixed-top no-print">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        <strong>Informe de Análisis Acústico</strong>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg ga-navbar fixed-top no-print">
+    <div class="container-fluid px-3 d-flex align-items-center gap-2">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+        <i class="bi bi-soundwave"></i>
+        <span style="font-size:0.9rem; font-weight:600;">AcústicaLab</span>
       </a>
-      <div class="d-flex ms-auto">
-        <button class="btn btn-outline-light me-2" onclick="window.print()">
-          <i class="bi bi-printer me-1"></i>Imprimir Informe
+      <nav class="ga-breadcrumb">
+        <a href="/"><i class="bi bi-house-door"></i> Dashboard</a>
+        <span class="bc-sep">›</span>
+        <a href="/#culminados">Culminados</a>
+        <span class="bc-sep">›</span>
+        <span class="bc-current">Informe #{{ escenario_id }}</span>
+      </nav>
+      <div class="d-flex ms-auto gap-2">
+        <button class="btn-nav" onclick="abrirConfiguracionImpresion()">
+          <i class="bi bi-printer me-1"></i>Imprimir / Exportar
         </button>
-        <a class="btn btn-outline-light" href="/">
-          <i class="bi bi-arrow-left me-1"></i>Volver
+        <a class="btn-nav" href="/">
+          <i class="bi bi-arrow-left me-1"></i>Dashboard
         </a>
       </div>
     </div>
   </nav>
 
-  <!-- Contenido Principal -->
-  <div class="main-container">
-    <!-- Banner de estado moderno -->
-    <div class="status-banner">
-      <h1><i class="bi bi-check-circle-fill me-3"></i>ANÁLISIS ACÚSTICO COMPLETADO</h1>
-      <!-- Added reference to NTP ISO 9612:2010 -->
-      <p>Evaluación conforme a ISO/TR 25417:2007 y NTP ISO 9612:2010 - Comparación con límite de referencia de 85 dB y LAeq general del escenario</p>
+  <!-- Print cover (portada) — hidden on screen -->
+  <div class="portada-informe print-only">
+    <div style="margin-bottom:30mm; text-align:center;">
+      <div style="font-size:8pt; letter-spacing:0.2em; text-transform:uppercase; color:#555; margin-bottom:8mm;">Informe Técnico</div>
+      <div class="portada-title">Análisis de Exposición al Ruido Ocupacional</div>
+      <div class="portada-subtitle">Monitoreo Acústico de Ambiente Laboral</div>
     </div>
+    <div id="portada-scenario" class="portada-scenario">Escenario #{{ escenario_id }}</div>
+    <div id="portada-fechas" class="portada-norm" style="font-size:10pt; margin:8mm 0;"></div>
+    <div class="portada-norm">
+      <strong>Normas aplicadas:</strong><br>
+      ISO/TR 25417:2007 — Definiciones de cantidades acústicas básicas<br>
+      NTP ISO 9612:2010 — Determinación de la exposición al ruido en el trabajo<br>
+      D.S. N° 005-2012-TR — Reglamento SST, Perú
+    </div>
+    <div id="portada-status" class="portada-norm" style="font-weight:700; font-size:11pt; margin-top:15mm; border:2pt solid #000; padding:6pt; text-align:center;">
+      Calculando evaluación...
+    </div>
+    <div class="portada-meta" style="margin-top:15mm;">
+      Límite de referencia: <strong>{{ limite_referencia }} dB</strong> · Micrófono: <strong>#{{ microfono_id }}</strong><br>
+      Generado: <span id="portada-generated-date"></span>
+    </div>
+  </div>
 
-    <!-- Información del escenario moderna -->
-    <div class="modern-card mb-4">
-      <div class="card-header">
-        <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información del Escenario</h4>
+  <!-- Page layout: sidebar + main -->
+  <div class="page-layout">
+
+    <!-- Sidebar Table of Contents (screen only) -->
+    <aside class="report-sidebar no-print">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><i class="bi bi-soundwave"></i></div>
+        <div class="logo-text">
+          <strong>Informe Acústico</strong>
+          Escenario #{{ escenario_id }}
+        </div>
       </div>
-      <div class="card-body">
-        <div id="scenario-details">
-          <div class="d-flex justify-content-center">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Cargando...</span>
+      <div class="sidebar-toc-label">Contenido</div>
+      <nav class="sidebar-toc" id="toc-nav">
+        <a href="#sec-escenario"><span class="toc-num">I.</span> Información del Escenario</a>
+        <a href="#sec-fotos"><span class="toc-num">II.</span> Fotografías del Lugar</a>
+        <a href="#sec-indicadores"><span class="toc-num">III.</span> Indicadores Acústicos</a>
+        <a href="#sec-grafico"><span class="toc-num">IV.</span> Gráfico Temporal</a>
+        <a href="#sec-excesos"><span class="toc-num">V.</span> Análisis de Excesos</a>
+        <a href="#sec-conclusiones"><span class="toc-num">VI.</span> Conclusiones</a>
+        <a href="#sec-datos"><span class="toc-num">VII.</span> Datos Técnicos</a>
+        <div class="sidebar-divider"></div>
+        <a href="#sec-metodologia"><span class="toc-num">VIII.</span> Metodología</a>
+        <a href="#sec-glosario"><span class="toc-num">IX.</span> Glosario</a>
+        <a href="#sec-referencias"><span class="toc-num">X.</span> Referencias</a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-status-box">
+        <div class="sidebar-laeq-label">L<sub>Aeq</sub> Global</div>
+        <div class="sidebar-laeq-value" id="sidebar-laeq-val">—</div>
+        <div class="sidebar-laeq-unit">dB · Micrófono #{{ microfono_id }}</div>
+        <div style="margin-top:6px;" id="sidebar-status-badge"></div>
+      </div>
+    </aside>
+
+    <!-- Main report content -->
+    <main class="report-main">
+
+      <!-- Document header (screen only) -->
+      <div class="report-doc-header no-print">
+        <div class="rh-brand">
+          <div class="rh-type"><i class="bi bi-file-earmark-text me-1"></i>Informe Técnico — Monitoreo Acústico Ocupacional</div>
+          <div class="rh-norm">ISO/TR 25417:2007 · NTP ISO 9612:2010 · Límite: {{ limite_referencia }} dB · Escenario #{{ escenario_id }}</div>
+        </div>
+        <div class="rh-meta">
+          <div id="doc-status-badge" class="doc-status-loading"><i class="bi bi-hourglass-split me-1"></i>Calculando...</div>
+          <div id="doc-generated" class="rh-generated"></div>
+        </div>
+      </div>
+
+      <!-- I. Información del Escenario -->
+      <section id="sec-escenario" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">I.</span><span class="section-icon"><i class="bi bi-building"></i></span>Información del Escenario</div>
+          <div class="section-hdr-actions">
+            <button class="btn-hdr no-print" onclick="abrirEditarEscenario()"><i class="bi bi-pencil me-1"></i>Editar datos</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <div id="scenario-details">
+            <div class="d-flex justify-content-center p-4">
+              <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Sección LAeq general destacada -->
-    <div class="laeq-summary">
-      <h3><i class="bi bi-graph-up me-2"></i>LAeq General del Escenario</h3>
-      <div class="laeq-value" id="laeq-general-value">-- dB</div>
-      <p>Nivel de sonido continuo equivalente promediado en el tiempo</p>
-      <div class="laeq-details" id="laeq-details">
-        <small>Cargando datos generales...</small>
-      </div>
-    </div>
-
-    <div class="row g-4">
-      <!-- Columna Izquierda: Lista de audios -->
-      <div class="col-lg-3">
-        <div id="audios-list">
-          <h5 class="mb-3"><i class="bi bi-file-earmark-music me-2"></i>Audios del Escenario</h5>
-          <div id="lista-audios"></div>
+      <!-- II. Fotografías del Lugar -->
+      <section id="sec-fotos" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">II.</span><span class="section-icon"><i class="bi bi-images"></i></span>Fotografías del Lugar de Medición</div>
+          <div class="section-hdr-actions">
+            <label class="btn-hdr no-print" style="cursor:pointer;">
+              <i class="bi bi-cloud-upload me-1"></i>Subir fotos
+              <input type="file" id="foto-upload-input" multiple accept="image/*" style="display:none;" onchange="subirFotos(this)">
+            </label>
+          </div>
         </div>
-      </div>
-      
-      <!-- Columna Central: Gráfico -->
-      <div class="col-lg-6">
-        <div id="chart-container">
+        <div class="section-body padded">
+          <div id="fotos-container">
+            <div class="d-flex justify-content-center p-4 text-muted no-print" id="fotos-empty-msg">
+              <div style="text-align:center;">
+                <i class="bi bi-image" style="font-size:2rem; opacity:0.3;"></i>
+                <div style="font-size:0.85rem; margin-top:0.5rem;">No hay fotografías. Use el botón <strong>Subir fotos</strong> para añadir imágenes del lugar.</div>
+              </div>
+            </div>
+            <div id="fotos-grid" class="fotos-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- III. Indicadores Acústicos Globales -->
+      <section id="sec-indicadores" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">III.</span><span class="section-icon"><i class="bi bi-activity"></i></span>Indicadores Acústicos Globales</div>
+        </div>
+        <div id="resumen-global" class="section-body">
+          <div class="d-flex justify-content-center p-4">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- IV. Gráfico Temporal -->
+      <section id="sec-grafico" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">IV.</span><span class="section-icon"><i class="bi bi-graph-up"></i></span>Evolución Temporal de Niveles Sonoros</div>
+        </div>
+        <div class="section-body" style="padding:0.75rem 0.5rem 0.5rem;">
           <div id="stockchart"></div>
         </div>
-      </div>
-      
-      <!-- Columna Derecha: Análisis de excesos -->
-      <div class="col-lg-3">
-        <div id="excesos-analysis">
-          <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Análisis de Excesos</h5>
+        <!-- Audio navigation list (screen only) -->
+        <div class="no-print" style="padding: 0 0.5rem 0.5rem;">
+          <div style="font-size:0.72rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:#94a3b8; margin:0.5rem 0 0.25rem;">Audios del escenario</div>
+          <div id="audios-list"></div>
+        </div>
+        <!-- Audio table for print -->
+        <div class="audio-print-table" style="display:none;">
+          <div id="audio-print-table-content"></div>
+        </div>
+      </section>
+
+      <!-- V. Análisis de Excesos -->
+      <section id="sec-excesos" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">V.</span><span class="section-icon"><i class="bi bi-exclamation-triangle"></i></span>Análisis de Excesos del Límite de Referencia</div>
+        </div>
+        <div class="section-body padded">
           <div id="analisis-excesos-info">
-            <div class="d-flex justify-content-center">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
-              </div>
+            <div class="d-flex justify-content-center p-3">
+              <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Datos técnicos completos -->
-    <div class="print-break">
-      <div class="modern-card mt-4">
-        <div class="card-header">
-          <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Datos Técnicos Completos</h4>
+      <!-- VI. Conclusiones y Recomendaciones -->
+      <section id="sec-conclusiones" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">VI.</span><span class="section-icon"><i class="bi bi-clipboard-check"></i></span>Conclusiones y Recomendaciones</div>
         </div>
-        <div class="card-body">
+        <div class="section-body padded" id="conclusiones-container">
+          <div class="d-flex justify-content-center p-3">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VII. Datos Técnicos por Audio -->
+      <section id="sec-datos" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">VII.</span><span class="section-icon"><i class="bi bi-table"></i></span>Datos Técnicos por Audio</div>
+        </div>
+        <div class="section-body padded">
           <div id="technical-data">
-            <div class="d-flex justify-content-center">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
-              </div>
+            <div class="d-flex justify-content-center p-3">
+              <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Nueva sección: Metodología y Proceso Técnico -->
-    <div class="print-break methodology-section">
-      <h2><i class="bi bi-gear me-2"></i>Metodología y Proceso Técnico</h2>
+      <!-- VIII. Metodología y Proceso Técnico -->
+      <section id="sec-metodologia" class="methodology-section">
+        <h2><i class="bi bi-gear me-2"></i>VIII. Metodología y Proceso Técnico</h2>
       
       <h3>1. Fundamentos Teóricos y Normativos</h3>
       <!-- Added comprehensive information about NTP ISO 9612:2010 -->
@@ -797,11 +1566,11 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         <li><strong>Reproducibilidad:</strong> Algoritmos determinísticos con resultados consistentes</li>
         <li><strong>Aplicabilidad ocupacional:</strong> Cálculos de exposición normalizados para evaluación de riesgo laboral</li>
       </ul>
-    </div>
+      </section>
 
-    <!-- Nueva sección: Diccionario de Términos -->
-    <div class="methodology-section">
-      <h2><i class="bi bi-book me-2"></i>Diccionario de Términos Técnicos</h2>
+      <!-- VIII. Glosario de Términos Técnicos -->
+      <section id="sec-glosario" class="methodology-section">
+        <h2><i class="bi bi-book me-2"></i>IX. Glosario de Términos Técnicos</h2>
       
       <div class="terms-grid">
         <div class="term-item">
@@ -869,16 +1638,15 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           Unidad de frecuencia que indica el número de ciclos por segundo. Utilizada para caracterizar señales de audio.
         </div>
       </div>
-    </div>
+      </section>
 
-    <!-- Nueva sección: Referencias Bibliográficas (APA 7) -->
-    <div class="methodology-section">
-      <h2><i class="bi bi-journal-text me-2"></i>Referencias Bibliográficas</h2>
+      <!-- IX. Referencias Bibliográficas (APA 7) -->
+      <section id="sec-referencias" class="methodology-section">
+        <h2><i class="bi bi-journal-text me-2"></i>X. Referencias Bibliográficas</h2>
       
-      <div style="text-indent: -2rem; margin-left: 2rem; line-height: 1.8;">
+      <div style="text-indent: -2rem; margin-left: 2rem; line-height: 1.8; font-size:0.9rem;">
         <p>International Organization for Standardization. (2007). <em>ISO/TR 25417:2007 - Acoustics — Definitions of basic quantities and terms</em>. ISO.</p>
         
-        <!-- Added NTP ISO 9612:2010 reference in APA 7 format -->
         <p>Instituto Nacional de Calidad. (2010). <em>NTP ISO 9612:2010 - Acústica. Determinación de la exposición al ruido en el trabajo. Método de ingeniería</em>. INACAL.</p>
         
         <p>International Organization for Standardization. (2009). <em>ISO 9612:2009 - Acoustics — Determination of occupational noise exposure — Engineering method</em>. ISO.</p>
@@ -890,6 +1658,188 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         <p>McFee, B., Raffel, C., Liang, D., Ellis, D. P., McVicar, M., Battenberg, E., & Nieto, O. (2015). librosa: Audio and music signal analysis in Python. <em>Proceedings of the 14th Python in Science Conference</em>, 18-25.</p>
         
         <p>Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D., ... & van Mulbregt, P. (2020). SciPy 1.0: fundamental algorithms for scientific computing in Python. <em>Nature Methods</em>, 17(3), 261-272.</p>
+      </div>
+      </section>
+
+      <!-- Print footer -->
+      <div class="print-footer print-only">
+        <div>Informe Técnico de Monitoreo Acústico Ocupacional — Escenario #{{ escenario_id }} · Micrófono #{{ microfono_id }}</div>
+        <div>Generado: <span id="footer-generated-date"></span> · ISO/TR 25417:2007 · NTP ISO 9612:2010</div>
+      </div>
+
+    </main>
+  </div><!-- end .page-layout -->
+
+  <!-- Edit Scenario Modal -->
+  <div class="modal fade" id="editScenarioModal" tabindex="-1" aria-labelledby="editScenarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#1e293b; color:white;">
+          <h5 class="modal-title" id="editScenarioModalLabel" style="font-size:0.95rem; font-weight:600;">
+            <i class="bi bi-pencil-square me-2"></i>Editar Datos del Escenario
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="edit-scenario-alert" style="display:none;" class="alert mb-3"></div>
+          <div class="modal-section-label">Identificación</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Nombre del Escenario</label>
+              <input type="text" class="form-control form-control-sm" id="edit-nombre">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Ubicación</label>
+              <input type="text" class="form-control form-control-sm" id="edit-ubicacion">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Descripción</label>
+              <textarea class="form-control form-control-sm" id="edit-descripcion" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-section-label">Características del Entorno</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Tipo de Ruido</label>
+              <select class="form-select form-select-sm" id="edit-tipo-ruido">
+                <option value="">-- Seleccionar --</option>
+                <option value="continuo">Continuo</option>
+                <option value="intermitente">Intermitente</option>
+                <option value="impulsivo">Impulsivo</option>
+                <option value="variable">Variable</option>
+                <option value="mixto">Mixto</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Tipo de Análisis</label>
+              <select class="form-select form-select-sm" id="edit-tipo-analisis">
+                <option value="">-- Seleccionar --</option>
+                <option value="exposicion_laboral">Exposición Laboral</option>
+                <option value="ambiente_general">Ambiente General</option>
+                <option value="impacto_ambiental">Impacto Ambiental</option>
+                <option value="control_calidad">Control de Calidad</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">N° de Fuentes Sonoras</label>
+              <input type="number" class="form-control form-control-sm" id="edit-num-fuentes" min="0">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">N° de Personas Expuestas</label>
+              <input type="number" class="form-control form-control-sm" id="edit-num-personas" min="0">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Protección Auditiva</label>
+              <select class="form-select form-select-sm" id="edit-proteccion-auditiva">
+                <option value="">-- Seleccionar --</option>
+                <option value="si">Sí — Uso confirmado</option>
+                <option value="no">No — Sin protección</option>
+                <option value="parcial">Parcial — Uso intermitente</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="guardarEscenario()">
+            <i class="bi bi-check-lg me-1"></i>Guardar cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo Lightbox -->
+  <div class="foto-lightbox no-print" id="foto-lightbox" onclick="cerrarLightbox(event)">
+    <span class="foto-lightbox-close" onclick="cerrarLightbox()">&times;</span>
+    <button class="foto-lightbox-nav" id="lb-prev" onclick="lbNavegar(-1); event.stopPropagation();">&#8249;</button>
+    <img id="lb-img" src="" alt="Foto del escenario">
+    <button class="foto-lightbox-nav" id="lb-next" onclick="lbNavegar(1); event.stopPropagation();">&#8250;</button>
+    <div class="foto-lightbox-caption" id="lb-caption"></div>
+  </div>
+
+  <!-- Print Configuration Modal -->
+  <div class="modal fade" id="printConfigModal" tabindex="-1" aria-labelledby="printConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#1e293b; color:white;">
+          <h5 class="modal-title" id="printConfigModalLabel" style="font-size:0.95rem; font-weight:600;">
+            <i class="bi bi-printer-fill me-2"></i>Configurar Impresión / Exportación PDF
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <!-- Sections to include -->
+          <div class="modal-section-label">Secciones a incluir</div>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-fotos" checked>
+                <label for="pc-fotos"><i class="bi bi-images me-1 text-primary"></i>Fotografías del lugar</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-grafico" checked>
+                <label for="pc-grafico"><i class="bi bi-graph-up me-1 text-primary"></i>Gráfico temporal</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-datos" checked>
+                <label for="pc-datos"><i class="bi bi-table me-1 text-primary"></i>Tabla de datos técnicos</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-metodologia" checked>
+                <label for="pc-metodologia"><i class="bi bi-gear me-1 text-primary"></i>Metodología y fórmulas</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-glosario" checked>
+                <label for="pc-glosario"><i class="bi bi-book me-1 text-primary"></i>Glosario de términos</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-referencias" checked>
+                <label for="pc-referencias"><i class="bi bi-journal-text me-1 text-primary"></i>Referencias bibliográficas</label>
+              </div>
+            </div>
+          </div>
+
+          <hr>
+
+          <!-- Multi-scenario batch print -->
+          <div class="modal-section-label">Impresión de múltiples escenarios en un solo PDF</div>
+          <div class="alert alert-info py-2 px-3" style="font-size:0.82rem;">
+            <i class="bi bi-info-circle me-1"></i>
+            Selecciona los escenarios que quieres incluir en el informe combinado. Se abrirá una ventana de impresión unificada con todos los escenarios seleccionados.
+          </div>
+          <div class="d-flex gap-2 mb-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="seleccionarTodosEscenarios(true)">Seleccionar todo</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="seleccionarTodosEscenarios(false)">Deseleccionar todo</button>
+            <button class="btn btn-sm btn-outline-primary ms-auto" onclick="recargarEscenariosDisponibles()"><i class="bi bi-arrow-clockwise me-1"></i>Actualizar lista</button>
+          </div>
+          <div id="scenarios-picker" style="max-height:280px; overflow-y:auto;">
+            <div class="text-center text-muted p-3" id="scenarios-picker-loading">
+              <div class="spinner-border spinner-border-sm me-2"></div>Cargando escenarios...
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="ejecutarImpresionActual()">
+            <i class="bi bi-printer me-1"></i>Imprimir este informe
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="ejecutarImpresionMultiple()">
+            <i class="bi bi-files me-1"></i>Imprimir seleccionados como PDF único
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -906,8 +1856,10 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     var limiteReferencia = {{ limite_referencia }};
     
     var laeqGeneral = null;
+    var datosGeneral = {};
     var chart;
     var datosExcesos = {};
+    var conclusionesGeneradas = false;
 
     function cargarInformacionEscenario() {
       $.getJSON(`/escenarios/${escenarioId}/detalle`, function(data) {
@@ -915,57 +1867,40 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         var endDate = new Date(data.end_time);
         var duration = (endDate - startDate) / (1000 * 60 * 60); // horas
         
+        // Update portada
+        $('#portada-scenario').text((data.nombre || 'Escenario #' + escenarioId) + ' — ' + (data.ubicacion || ''));
+        $('#portada-fechas').html('Período de medición: ' + startDate.toLocaleString('es-PE') + ' — ' + endDate.toLocaleString('es-PE') + '<br>Duración: ' + duration.toFixed(2) + ' horas');
+
+        var micInfo = data.microfonos && data.microfonos.length > 0 ?
+          data.microfonos.map(function(m) { return m.identificador || 'ID ' + m.id; }).join(', ') :
+          'Micrófono ID: ' + microfonoId;
+        
         var html = `
-          <div class="row g-3">
-            <div class="col-md-6">
-              <div class="info-item">
-                <strong><i class="bi bi-tag me-1"></i>Nombre:</strong><br>
-                ${data.nombre || 'N/A'}
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="info-item">
-                <strong><i class="bi bi-geo-alt me-1"></i>Ubicación:</strong><br>
-                ${data.ubicacion || 'N/A'}
-              </div>
-            </div>
-            <div class="col-md-12">
-              <div class="info-item">
-                <strong><i class="bi bi-card-text me-1"></i>Descripción:</strong><br>
-                ${data.descripcion || 'N/A'}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="info-item">
-                <strong><i class="bi bi-calendar-event me-1"></i>Inicio:</strong><br>
-                ${startDate.toLocaleString('es-PE')}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="info-item">
-                <strong><i class="bi bi-calendar-check me-1"></i>Fin:</strong><br>
-                ${endDate.toLocaleString('es-PE')}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="info-item">
-                <strong><i class="bi bi-clock me-1"></i>Duración:</strong><br>
-                ${duration.toFixed(2)} horas
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="info-item">
-                <strong><i class="bi bi-check-circle me-1"></i>Estado:</strong><br>
-                <span class="badge bg-success">${data.estado || 'N/A'}</span>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="info-item">
-                <strong><i class="bi bi-mic me-1"></i>Micrófonos:</strong><br>
-                ${data.microfonos ? data.microfonos.length : 0} dispositivo(s)
-              </div>
-            </div>
-          </div>
+          <table class="report-table">
+            <tr><th style="width:20%">Nombre del Escenario</th><td colspan="3"><strong>${data.nombre || 'N/A'}</strong></td></tr>
+            <tr><th>Ubicación</th><td colspan="3">${data.ubicacion || 'N/A'}</td></tr>
+            <tr><th>Descripción</th><td colspan="3">${data.descripcion || 'N/A'}</td></tr>
+            <tr>
+              <th>Inicio de Medición</th><td>${startDate.toLocaleString('es-PE')}</td>
+              <th>Fin de Medición</th><td>${endDate.toLocaleString('es-PE')}</td>
+            </tr>
+            <tr>
+              <th>Duración Total</th><td>${duration.toFixed(2)} horas</td>
+              <th>Estado</th><td><span class="badge-safe">${data.estado || 'N/A'}</span></td>
+            </tr>
+            <tr>
+              <th>Tipo de Ruido</th><td>${data.tipo_ruido || 'N/A'}</td>
+              <th>Tipo de Análisis</th><td>${data.tipo_analisis || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th>Número de Fuentes</th><td>${data.num_fuentes != null ? data.num_fuentes : 'N/A'}</td>
+              <th>Personas Expuestas</th><td>${data.num_personas != null ? data.num_personas : 'N/A'}</td>
+            </tr>
+            <tr>
+              <th>Protección Auditiva</th><td>${data.proteccion_auditiva || 'N/A'}</td>
+              <th>Micrófonos Asignados</th><td>${micInfo}</td>
+            </tr>
+          </table>
         `;
         $('#scenario-details').html(html);
       }).fail(function() {
@@ -975,52 +1910,75 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
 
     function cargarAnalisisGeneral() {
       $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/analisis_general`, function(data) {
+        datosGeneral = data;
         laeqGeneral = data.Lp_eqT;
-        $('#laeq-general-value').text(data.Lp_eqT.toFixed(2) + ' dB');
         
-        var detalles = `
-          <div class="row text-center g-3">
-            <div class="col-md-4">
-              <!-- Updated to use new detail-box class for better contrast -->
-              <div class="detail-box">
-                <strong>Duración Total</strong><br>
-                <span class="fs-5">${data.duration ? data.duration.toFixed(2) : 'N/A'}</span><br>
-                <small>segundos</small>
-              </div>
+        var lexh8 = data.L_EX_8h;
+        var laeqStatus = laeqGeneral >= limiteReferencia ? 'danger' : (laeqGeneral >= 80 ? 'warning' : 'safe');
+        var lexStatus = (lexh8 !== null && lexh8 !== undefined) ? (lexh8 >= limiteReferencia ? 'danger' : (lexh8 >= 80 ? 'warning' : 'safe')) : 'safe';
+        var durHoras = data.duration ? (data.duration / 3600).toFixed(2) : 'N/A';
+        
+        var resumenHtml = `
+          <div style="display:flex; flex-wrap:wrap; border-bottom:1px solid #cbd5e1;">
+            <div class="indicator-highlight" style="flex:1; min-width:150px;">
+              <div class="indicator-value indicator-status-${laeqStatus}" id="laeq-general-value">${laeqGeneral.toFixed(2)} <span style="font-size:1rem;">dB</span></div>
+              <div class="indicator-label">L<sub>Aeq</sub> — Nivel Continuo Equivalente</div>
+              <div style="margin-top:6px;">${laeqStatus === 'danger' ? '<span class="badge-danger">⚠ Excede límite</span>' : (laeqStatus === 'warning' ? '<span class="badge-warning">▲ Nivel de acción</span>' : '<span class="badge-safe">✓ Dentro del límite</span>')}</div>
             </div>
-            <div class="col-md-4">
-              <div class="detail-box">
-                <strong>Energía Total (ET)</strong><br>
-                <span class="fs-5">${data.ET ? data.ET.toExponential(2) : 'N/A'}</span><br>
-                <small>Pa²·s</small>
-              </div>
+            ${lexh8 !== null && lexh8 !== undefined ? `
+            <div class="indicator-highlight" style="flex:1; min-width:150px;">
+              <div class="indicator-value indicator-status-${lexStatus}">${lexh8.toFixed(2)} <span style="font-size:1rem;">dB</span></div>
+              <div class="indicator-label">L<sub>EX,8h</sub> — Exposición normalizada 8h (NTP ISO 9612)</div>
+              <div style="margin-top:6px;">${lexStatus === 'danger' ? '<span class="badge-danger">⚠ Excede límite</span>' : (lexStatus === 'warning' ? '<span class="badge-warning">▲ Nivel de acción</span>' : '<span class="badge-safe">✓ Dentro del límite</span>')}</div>
+            </div>` : ''}
+            <div class="indicator-highlight" style="flex:1; min-width:120px;">
+              <div class="indicator-value" style="font-size:1.6rem;">${data.duration ? data.duration.toFixed(0) : 'N/A'} <span style="font-size:0.9rem;">s</span></div>
+              <div class="indicator-label">Duración Total de Medición</div>
+              <div style="margin-top:6px; font-size:0.78rem; color:#64748b;">${durHoras} horas · ${data.cantidad_audios || 'N/A'} audio(s)</div>
             </div>
-            <div class="col-md-4">
-              <div class="detail-box">
-                <strong>Nivel de Exposición (LE)</strong><br>
-                <span class="fs-5">${data.LE ? data.LE.toFixed(2) : 'N/A'}</span><br>
-                <small>dB</small>
-              </div>
+            <div class="indicator-highlight" style="flex:1; min-width:120px;">
+              <div class="indicator-value" style="font-size:1.4rem;">${data.ET ? data.ET.toExponential(2) : 'N/A'}</div>
+              <div class="indicator-label">E<sub>T</sub> — Exposición Sonora (Pa²·s)</div>
+            </div>
+            <div class="indicator-highlight" style="flex:1; min-width:120px;">
+              <div class="indicator-value" style="font-size:1.6rem;">${data.LE ? data.LE.toFixed(2) : 'N/A'} <span style="font-size:0.9rem;">dB</span></div>
+              <div class="indicator-label">L<sub>E</sub> — Nivel de Exposición Sonora</div>
             </div>
           </div>
         `;
-        $('#laeq-details').html(detalles);
+        $('#resumen-global').html(resumenHtml);
         
+        // Update sidebar
+        actualizarSidebarLaeq(laeqGeneral, laeqStatus);
+
         if (chart && laeqGeneral) {
           actualizarGraficoConLAeq();
         }
+        intentarGenerarConclusiones();
       }).fail(function() {
-        $('#laeq-general-value').text('Error');
-        $('#laeq-details').html('<div class="alert alert-danger">Error al cargar datos generales.</div>');
+        $('#resumen-global').html('<div class="alert alert-danger p-3">Error al cargar datos generales.</div>');
       });
     }
 
     // Función para cargar TODOS los audios del escenario
     function cargarTodosLosAudios() {
       $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/audios`, function(data) {
-        $('#lista-audios').empty();
+        $('#audios-list').empty();
         var series = [];
-        var technicalDataHtml = '<div class="row g-3">';
+        var technicalDataHtml = `
+          <table class="report-table">
+            <thead>
+              <tr><th>Audio</th><th>Fecha/Hora</th><th>LAeq (dB)</th><th>Lp,max (dB)</th><th>Duración (s)</th><th>Sample Rate (Hz)</th><th>ET</th><th>LE (dB)</th><th>LI (dB)</th><th>LJ (dB)</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+        `;
+        var printTableHtml = `
+          <table class="report-table">
+            <thead>
+              <tr><th>Audio</th><th>Fecha/Hora</th><th>Duración (s)</th><th>Lp,max (dB)</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+        `;
         
         data.forEach(function(audio, index) {
           var baseTime = new Date(audio.timestamp).getTime();
@@ -1043,36 +2001,28 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             series.push({
               name: "Audio " + audio.audio_id,
               data: seriesData,
-              color: tieneExcesos ? '#ef4444' : '#10b981'
+              color: tieneExcesos ? '#dc2626' : '#16a34a'
             });
           }
           
           if (audio.global_result) {
+            var estadoBadge = tieneExcesos ?
+              `<span class="exceso-badge">⚠ Excede</span>` :
+              `<span class="safe-badge">✓ OK</span>`;
             technicalDataHtml += `
-              <div class="col-lg-6 mb-3">
-                <div class="modern-card">
-                  <div class="card-header">
-                    <strong><i class="bi bi-file-earmark-music me-2"></i>Audio ${audio.audio_id}</strong>
-                    <small class="text-muted ms-2">${new Date(audio.timestamp).toLocaleString('es-PE')}</small>
-                  </div>
-                  <div class="card-body">
-                    <div class="row g-2">
-                      <div class="col-6">
-                        <small><strong>LAeq:</strong> ${audio.global_result.Lp_eqT || 'N/A'} dB</small><br>
-                        <small><strong>Lp,max:</strong> ${audio.global_result.Lp_max || 'N/A'} dB</small><br>
-                        <small><strong>Duración:</strong> ${audio.global_result.duration || 'N/A'} s</small><br>
-                        <small><strong>Sample Rate:</strong> ${audio.global_result.sample_rate || 'N/A'} Hz</small>
-                      </div>
-                      <div class="col-6">
-                        <small><strong>ET:</strong> ${audio.global_result.ET ? audio.global_result.ET.toExponential(2) : 'N/A'}</small><br>
-                        <small><strong>LE:</strong> ${audio.global_result.LE || 'N/A'} dB</small><br>
-                        <small><strong>LI:</strong> ${audio.global_result.LI || 'N/A'} dB</small><br>
-                        <small><strong>LJ:</strong> ${audio.global_result.LJ || 'N/A'} dB</small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <tr class="${tieneExcesos ? 'row-danger' : ''}">
+                <td>${audio.audio_id}</td>
+                <td>${new Date(audio.timestamp).toLocaleString('es-PE')}</td>
+                <td>${audio.global_result.Lp_eqT || 'N/A'}</td>
+                <td>${audio.global_result.Lp_max || 'N/A'}</td>
+                <td>${audio.global_result.duration || 'N/A'}</td>
+                <td>${audio.global_result.sample_rate || 'N/A'}</td>
+                <td>${audio.global_result.ET ? audio.global_result.ET.toExponential(2) : 'N/A'}</td>
+                <td>${audio.global_result.LE || 'N/A'}</td>
+                <td>${audio.global_result.LI || 'N/A'}</td>
+                <td>${audio.global_result.LJ || 'N/A'}</td>
+                <td>${estadoBadge}</td>
+              </tr>
             `;
           }
           
@@ -1080,28 +2030,33 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           var maxLevel = (audio.global_result && audio.global_result.Lp_max) ? audio.global_result.Lp_max : 0;
           var excesoClass = tieneExcesos ? 'has-excesos' : '';
           var excesoIndicator = tieneExcesos ? 
-            `<span class="exceso-badge">⚠ Excede ${limiteReferencia} dB</span>` : 
-            `<span class="safe-badge">✓ Dentro del límite</span>`;
+            `<span class="exceso-badge" style="font-size:0.7rem;">⚠ Excede ${limiteReferencia} dB</span>` : 
+            `<span class="safe-badge" style="font-size:0.7rem;">✓ OK</span>`;
+          
+          // Print table row
+          printTableHtml += `
+            <tr class="${tieneExcesos ? 'row-danger' : ''}">
+              <td>Audio ${audio.audio_id}</td>
+              <td>${new Date(audio.timestamp).toLocaleString('es-PE')}</td>
+              <td>${duration}</td>
+              <td>${maxLevel}</td>
+              <td>${tieneExcesos ? 'Excede ' + limiteReferencia + ' dB' : 'Dentro del límite'}</td>
+            </tr>
+          `;
           
           var item = $(`
             <div class="audio-item ${excesoClass}" data-base="${baseTime}" data-duration="${duration}" data-audioid="${audio.audio_id}">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <strong><i class="bi bi-file-earmark-music me-1"></i>Audio ${audio.audio_id}</strong>
-                ${excesoIndicator}
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <strong style="font-size:0.85rem;"><i class="bi bi-file-earmark-music me-1"></i>Audio ${audio.audio_id}</strong>
               </div>
-              <small class="text-muted d-block mb-1">
-                <i class="bi bi-clock me-1"></i>${new Date(audio.timestamp).toLocaleString('es-PE')}
-              </small>
-              <div class="row g-1 mb-2">
-                <div class="col-6">
-                  <small><i class="bi bi-stopwatch me-1"></i>${duration} s</small>
-                </div>
-                <div class="col-6">
-                  <small><i class="bi bi-volume-up me-1"></i>${maxLevel} dB</small>
-                </div>
+              ${excesoIndicator}
+              <div style="font-size:0.78rem; color:#64748b; margin-top:4px;">${new Date(audio.timestamp).toLocaleString('es-PE')}</div>
+              <div style="font-size:0.78rem; margin-top:4px;">
+                <i class="bi bi-stopwatch me-1"></i>${duration} s &nbsp;
+                <i class="bi bi-volume-up me-1"></i>${maxLevel} dB
               </div>
-              <button class="btn btn-sm btn-outline-primary w-100 no-print" onclick="verAnalisisAudio(${audio.audio_id})">
-                <i class="bi bi-graph-up me-1"></i>Ver Análisis Detallado
+              <button class="btn btn-sm btn-outline-primary w-100 mt-2 no-print" style="font-size:0.75rem;" onclick="verAnalisisAudio(${audio.audio_id})">
+                <i class="bi bi-graph-up me-1"></i>Ver Análisis
               </button>
             </div>
           `);
@@ -1115,11 +2070,13 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             centrarChartEn(base, endTime);
           });
           
-          $('#lista-audios').append(item);
+          $('#audios-list').append(item);
         });
         
-        technicalDataHtml += '</div>';
+        technicalDataHtml += '</tbody></table>';
+        printTableHtml += '</tbody></table>';
         $('#technical-data').html(technicalDataHtml);
+        $('#audio-print-table-content').html(printTableHtml);
         
         inicializarChartConReferencia(series);
       });
@@ -1130,21 +2087,18 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         chart.yAxis[0].addPlotLine({
           color: '#2563eb',
           value: laeqGeneral,
-          width: 3,
+          width: 1.5,
           zIndex: 4,
-          dashStyle: 'Solid',
+          dashStyle: 'ShortDash',
           id: 'laeq-line',
           label: {
-            text: `LAeq GENERAL: ${laeqGeneral.toFixed(2)} dB`,
-            align: 'center',
+            text: `LAeq General: ${laeqGeneral.toFixed(2)} dB`,
+            align: 'right',
+            x: -10,
             style: { 
               color: '#2563eb', 
-              fontWeight: 'bold', 
-              fontSize: '0.9rem',
-              backgroundColor: 'rgba(255,255,255,0.95)',
-              padding: '6px 12px',
-              border: '2px solid #2563eb',
-              borderRadius: '6px'
+              fontWeight: '600', 
+              fontSize: '11px'
             }
           }
         });
@@ -1154,89 +2108,98 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     // Inicializa el gráfico manteniendo TODOS los datos + líneas de referencia
     function inicializarChartConReferencia(seriesData) {
       chart = Highcharts.stockChart('stockchart', {
-        rangeSelector: { 
+        chart: {
+          backgroundColor: '#ffffff',
+          style: { fontFamily: "'Inter', sans-serif" },
+          spacing: [20, 20, 20, 20]
+        },
+        rangeSelector: {
           selected: 1,
+          inputEnabled: true,
           buttonTheme: {
-            fill: '#f8fafc',
-            stroke: '#e2e8f0',
+            fill: 'none',
+            stroke: '#94a3b8',
             'stroke-width': 1,
-            style: {
-              color: '#64748b',
-              fontWeight: '500'
-            },
+            r: 4,
+            style: { color: '#475569', fontWeight: '400', fontSize: '12px' },
             states: {
-              hover: {
-                fill: '#e2e8f0'
-              },
-              select: {
-                fill: '#2563eb',
-                style: {
-                  color: 'white'
-                }
-              }
+              hover: { fill: '#f1f5f9', stroke: '#64748b' },
+              select: { fill: '#1e293b', style: { color: '#ffffff' } }
             }
           }
         },
-        title: { 
-          text: `Análisis Acústico Completado - Límite ${limiteReferencia} dB y LAeq General`,
-          style: { 
-            color: '#1e293b', 
-            fontWeight: '600',
-            fontSize: '16px'
-          }
+        title: {
+          text: 'Nivel de Presión Sonora Máxima (Lp,max) vs. Tiempo',
+          style: { color: '#1e293b', fontWeight: '600', fontSize: '14px' }
+        },
+        subtitle: {
+          text: 'Límite de referencia: ' + limiteReferencia + ' dB | Intervalo: 1 segundo',
+          style: { color: '#64748b', fontSize: '12px' }
         },
         xAxis: {
           type: 'datetime',
+          lineColor: '#1e293b',
+          lineWidth: 1,
+          tickColor: '#1e293b',
+          tickWidth: 1,
+          tickLength: 5,
+          gridLineWidth: 0,
+          labels: { style: { color: '#475569', fontSize: '11px' } },
+          title: { text: 'Tiempo', style: { color: '#1e293b', fontSize: '12px', fontWeight: '500' } },
           events: {
             afterSetExtremes: function () {
               resaltarAudioCercano();
             }
-          },
-          gridLineColor: '#f1f5f9',
-          lineColor: '#e2e8f0'
+          }
         },
         yAxis: {
-          title: { 
+          title: {
             text: 'Nivel de Presión Sonora (dB)',
-            style: {
-              color: '#64748b',
-              fontWeight: '500'
-            }
+            style: { color: '#1e293b', fontSize: '12px', fontWeight: '500' }
           },
-          gridLineColor: '#f1f5f9',
+          lineColor: '#1e293b',
+          lineWidth: 1,
+          tickColor: '#1e293b',
+          tickWidth: 1,
+          tickLength: 5,
+          gridLineColor: '#e2e8f0',
+          gridLineWidth: 1,
+          gridLineDashStyle: 'Dot',
+          labels: { style: { color: '#475569', fontSize: '11px' } },
           plotLines: [{
-            color: '#ef4444',
+            color: '#dc2626',
             value: limiteReferencia,
-            width: 3,
+            width: 1.5,
             zIndex: 5,
-            dashStyle: 'Dash',
+            dashStyle: 'LongDash',
             label: {
-              text: `LÍMITE DE REFERENCIA: ${limiteReferencia} dB`,
-              align: 'center',
-              style: { 
-                color: '#ef4444', 
-                fontWeight: 'bold', 
-                fontSize: '0.9rem',
-                backgroundColor: 'rgba(255,255,255,0.95)',
-                padding: '6px 12px',
-                border: '2px solid #ef4444',
-                borderRadius: '6px'
-              }
+              text: 'Límite: ' + limiteReferencia + ' dB',
+              align: 'right',
+              x: -10,
+              style: { color: '#dc2626', fontWeight: '600', fontSize: '11px' }
             }
           }]
         },
+        legend: {
+          enabled: true,
+          align: 'center',
+          verticalAlign: 'bottom',
+          layout: 'horizontal',
+          itemStyle: { color: '#475569', fontWeight: '400', fontSize: '12px' }
+        },
         tooltip: {
           shared: true,
-          xDateFormat: '%Y-%m-%d %H:%M:%S',
-          backgroundColor: 'rgba(255,255,255,0.95)',
-          borderColor: '#e2e8f0',
-          borderRadius: 8,
-          shadow: true,
+          backgroundColor: '#ffffff',
+          borderColor: '#cbd5e1',
+          borderWidth: 1,
+          borderRadius: 4,
+          shadow: false,
+          style: { fontSize: '12px' },
           formatter: function() {
             var s = '<b>' + Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '</b>';
             this.points.forEach(function(point) {
               var excede = point.y > limiteReferencia;
-              var color = excede ? '#ef4444' : '#10b981';
+              var color = excede ? '#dc2626' : '#16a34a';
               var indicador = excede ? ' ⚠ EXCEDE LÍMITE' : ' ✓ Dentro del límite';
               s += '<br/><span style="color:' + color + '; font-weight: 500;">' + point.series.name + ': ' + point.y + ' dB' + indicador + '</span>';
             });
@@ -1248,18 +2211,19 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         },
         navigator: {
           enabled: true,
-          maskFill: 'rgba(37, 99, 235, 0.1)',
-          outlineColor: '#2563eb'
+          height: 30,
+          maskFill: 'rgba(30, 41, 59, 0.08)',
+          outlineColor: '#cbd5e1',
+          outlineWidth: 1,
+          series: { lineWidth: 1, lineColor: '#94a3b8' }
         },
-        scrollbar: {
-          enabled: true,
-          barBackgroundColor: '#f1f5f9',
-          barBorderColor: '#e2e8f0',
-          buttonBackgroundColor: '#f8fafc',
-          buttonBorderColor: '#e2e8f0',
-          rifleColor: '#64748b',
-          trackBackgroundColor: '#f8fafc',
-          trackBorderColor: '#e2e8f0'
+        scrollbar: { enabled: false },
+        plotOptions: {
+          series: {
+            lineWidth: 1.2,
+            states: { hover: { lineWidth: 1.5 } },
+            marker: { enabled: false }
+          }
         },
         series: seriesData
       });
@@ -1278,7 +2242,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     function resaltarAudioCercano() {
       var extremes = chart.xAxis[0].getExtremes();
       var centro = (extremes.min + extremes.max) / 2;
-      var audioItems = $('#lista-audios .audio-item');
+      var audioItems = $('#audios-list .audio-item');
       var minDiff = Infinity, audioParaResaltar = null;
       audioItems.each(function () {
         var base = parseInt($(this).attr('data-base'));
@@ -1299,91 +2263,565 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/analisis_excesos`, function(data) {
         datosExcesos = data;
         
-        var html = '';
+        var evalClass = data.puntos_que_excedieron > 0 ? 'badge-danger' : 'badge-safe';
+        var evalIcon = data.puntos_que_excedieron > 0 ? '⚠' : '✓';
         
-        var evaluacionClass = data.puntos_que_excedieron === 0 ? 'metric-safe' : 'metric-danger';
-        html += `
-          <div class="metric-item ${evaluacionClass}">
-            <div class="d-flex align-items-center">
-              <i class="bi bi-shield-check me-2 fs-5"></i>
-              <div>
-                <strong>Evaluación de Seguridad</strong><br>
-                <span class="fs-6">${data.evaluacion_seguridad}</span>
-              </div>
-            </div>
-          </div>
-        `;
-        
-        html += `
-          <div class="metric-item">
-            <strong><i class="bi bi-bullseye me-1"></i>Límite de referencia:</strong> ${data.limite_referencia} dB
-          </div>
-          <div class="metric-item">
-            <strong><i class="bi bi-graph-up me-1"></i>Total de puntos medidos:</strong> ${data.total_puntos_medidos.toLocaleString()}
-          </div>
-        `;
-        
-        var excesoClass = data.puntos_que_excedieron > 0 ? 'metric-warning' : 'metric-safe';
-        html += `
-          <div class="metric-item ${excesoClass}">
-            <strong><i class="bi bi-exclamation-triangle me-1"></i>Puntos que excedieron:</strong><br>
-            ${data.puntos_que_excedieron.toLocaleString()} (${data.porcentaje_exceso}%)
-          </div>
-        `;
-        
-        if (data.puntos_que_excedieron > 0) {
-          html += `
-            <div class="metric-item metric-warning">
-              <strong><i class="bi bi-clock me-1"></i>Tiempo total de exceso:</strong><br>
-              ${data.duracion_total_exceso_minutos} minutos
-            </div>
-            <div class="metric-item metric-danger">
-              <strong><i class="bi bi-volume-up-fill me-1"></i>Nivel máximo registrado:</strong><br>
-              ${data.nivel_maximo_registrado} dB
-            </div>
-          `;
-        }
-        
-        html += `
-          <div class="metric-item">
-            <strong><i class="bi bi-file-earmark-music me-1"></i>Total de audios:</strong> ${data.cantidad_audios}
-          </div>
+        var html = `
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Evaluación de Seguridad</th>
+                <th>Límite (dB)</th>
+                <th>Puntos Medidos</th>
+                <th>Puntos que Excedieron</th>
+                <th>% del Tiempo</th>
+                <th>Tiempo de Exceso</th>
+                <th>Nivel Máximo Reg. (dB)</th>
+                <th>Total Audios</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="${data.puntos_que_excedieron > 0 ? 'row-danger' : ''}">
+                <td><span class="${evalClass}">${evalIcon} ${data.evaluacion_seguridad}</span></td>
+                <td>${data.limite_referencia}</td>
+                <td>${data.total_puntos_medidos.toLocaleString()}</td>
+                <td>${data.puntos_que_excedieron.toLocaleString()}</td>
+                <td>${data.porcentaje_exceso}%</td>
+                <td>${data.puntos_que_excedieron > 0 ? data.duracion_total_exceso_minutos + ' min' : '—'}</td>
+                <td>${data.puntos_que_excedieron > 0 ? data.nivel_maximo_registrado : '—'}</td>
+                <td>${data.cantidad_audios}</td>
+              </tr>
+            </tbody>
+          </table>
         `;
         
         if (data.excesos_por_audio && data.excesos_por_audio.length > 0) {
-          html += '<hr><h6><i class="bi bi-list-ul me-2"></i>Detalle por Audio:</h6>';
+          html += `
+            <h6 style="margin-top:1rem; margin-bottom:0.5rem;"><i class="bi bi-list-ul me-2"></i>Detalle de Excesos por Audio</h6>
+            <table class="report-table">
+              <thead>
+                <tr><th>Audio ID</th><th>Puntos Excedidos</th><th>Duración Exceso (s)</th><th>Nivel Máximo (dB)</th><th>Estado</th></tr>
+              </thead>
+              <tbody>
+          `;
           data.excesos_por_audio.forEach(function(audio) {
-            var audioClass = audio.puntos_excedidos > 0 ? 'metric-warning' : 'metric-safe';
-            var excesoText = audio.puntos_excedidos > 0 ? 
-              `${audio.puntos_excedidos} excesos (${audio.duracion_exceso_segundos}s)` : 
-              'Sin excesos';
-            
             html += `
-              <div class="metric-item ${audioClass}" style="font-size: 0.85rem;">
-                <strong>Audio ${audio.audio_id}:</strong><br>
-                ${excesoText}<br>
-                <small class="text-muted">Máximo: ${audio.nivel_maximo} dB</small>
-              </div>
+              <tr class="${audio.puntos_excedidos > 0 ? 'row-danger' : ''}">
+                <td>${audio.audio_id}</td>
+                <td>${audio.puntos_excedidos}</td>
+                <td>${audio.duracion_exceso_segundos}</td>
+                <td>${audio.nivel_maximo}</td>
+                <td>${audio.puntos_excedidos > 0 ? '<span class="badge-danger">⚠ Excede</span>' : '<span class="badge-safe">✓ OK</span>'}</td>
+              </tr>
             `;
           });
+          html += '</tbody></table>';
         }
         
         $('#analisis-excesos-info').html(html);
+        intentarGenerarConclusiones();
       }).fail(function() {
         $('#analisis-excesos-info').html('<div class="alert alert-danger">Error al cargar análisis de excesos.</div>');
       });
     }
 
+    // Genera conclusiones cuando tanto general como excesos están cargados
+    function intentarGenerarConclusiones() {
+      if (conclusionesGeneradas) return;
+      if (datosGeneral.Lp_eqT == null || datosExcesos.total_puntos_medidos == null) return;
+      conclusionesGeneradas = true;
+      generarConclusiones();
+    }
+
+    function generarConclusiones() {
+      var laeq = datosGeneral.Lp_eqT;
+      var lexh8 = datosGeneral.L_EX_8h;
+      var pctExceso = datosExcesos.porcentaje_exceso || 0;
+      var maxNivel = datosExcesos.nivel_maximo_registrado || 0;
+      var durMin = datosExcesos.duracion_total_exceso_minutos || 0;
+      var limitRef = limiteReferencia;
+
+      // Clasificación del ambiente
+      var clasificacion, riesgo, colorClass;
+      if (laeq < 70) {
+        clasificacion = 'AMBIENTE CONTROLADO — SIN RIESGO ACÚSTICO';
+        riesgo = 'Los niveles de ruido medidos están muy por debajo del límite de referencia. No se requieren medidas correctivas.';
+        colorClass = 'status-safe';
+      } else if (laeq < 80) {
+        clasificacion = 'NIVEL BAJO — PRECAUCIÓN';
+        riesgo = 'Los niveles están por debajo del límite pero se recomienda monitoreo periódico como medida preventiva.';
+        colorClass = 'status-safe';
+      } else if (laeq < limitRef) {
+        clasificacion = 'NIVEL DE ACCIÓN — INTERVENCIÓN RECOMENDADA';
+        riesgo = 'Los niveles se acercan al límite máximo permisible (' + limitRef + ' dB). Se recomiendan medidas preventivas.';
+        colorClass = 'status-warning';
+      } else {
+        clasificacion = 'LÍMITE EXCEDIDO — ACCIÓN OBLIGATORIA';
+        riesgo = 'La exposición al ruido supera el límite máximo permisible de ' + limitRef + ' dB establecido por la NTP ISO 9612:2010. Se requieren medidas correctivas inmediatas.';
+        colorClass = 'status-danger';
+      }
+
+      // Tabla de evaluación de cumplimiento
+      var tablaEval = `
+        <table class="report-table" style="margin-bottom:1rem;">
+          <thead>
+            <tr><th>Indicador</th><th>Valor Medido</th><th>Límite de Referencia</th><th>Margen</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            <tr class="${laeq >= limitRef ? 'row-danger' : (laeq >= 80 ? 'row-warning' : '')}">
+              <td><strong>L<sub>Aeq</sub> Global</strong><br><small>Nivel continuo equivalente ponderado A</small></td>
+              <td><strong>${laeq.toFixed(2)} dB</strong></td>
+              <td>${limitRef} dB</td>
+              <td>${(laeq - limitRef).toFixed(2)} dB</td>
+              <td>${laeq >= limitRef ? '<span class="badge-danger">⚠ EXCEDE</span>' : (laeq >= 80 ? '<span class="badge-warning">▲ PRECAUCIÓN</span>' : '<span class="badge-safe">✓ CUMPLE</span>')}</td>
+            </tr>
+            ${lexh8 !== null && lexh8 !== undefined ? `
+            <tr class="${lexh8 >= limitRef ? 'row-danger' : (lexh8 >= 80 ? 'row-warning' : '')}">
+              <td><strong>L<sub>EX,8h</sub></strong><br><small>Exposición normalizada a 8h (NTP ISO 9612:2010)</small></td>
+              <td><strong>${lexh8.toFixed(2)} dB</strong></td>
+              <td>${limitRef} dB</td>
+              <td>${(lexh8 - limitRef).toFixed(2)} dB</td>
+              <td>${lexh8 >= limitRef ? '<span class="badge-danger">⚠ EXCEDE</span>' : (lexh8 >= 80 ? '<span class="badge-warning">▲ PRECAUCIÓN</span>' : '<span class="badge-safe">✓ CUMPLE</span>')}</td>
+            </tr>` : ''}
+            <tr class="${pctExceso > 25 ? 'row-danger' : (pctExceso > 5 ? 'row-warning' : '')}">
+              <td><strong>Tiempo con Lp,max &gt; ${limitRef} dB</strong><br><small>Porcentaje del tiempo de medición con exceso de nivel máximo</small></td>
+              <td><strong>${pctExceso}%</strong> (${durMin} min)</td>
+              <td>0%</td>
+              <td>+${pctExceso}%</td>
+              <td>${pctExceso > 25 ? '<span class="badge-danger">⚠ ALTO</span>' : (pctExceso > 5 ? '<span class="badge-warning">▲ MODERADO</span>' : '<span class="badge-safe">✓ BAJO</span>')}</td>
+            </tr>
+            <tr class="${maxNivel > 135 ? 'row-danger' : (maxNivel > 115 ? 'row-warning' : '')}">
+              <td><strong>Nivel Máximo (Lp,max)</strong><br><small>Pico máximo de presión sonora registrado</small></td>
+              <td><strong>${maxNivel} dB</strong></td>
+              <td>135 dB (Trauma Acústico Agudo)</td>
+              <td>${(maxNivel - 135).toFixed(1)} dB</td>
+              <td>${maxNivel > 135 ? '<span class="badge-danger">⚠ PELIGROSO</span>' : (maxNivel > 115 ? '<span class="badge-warning">▲ ALTO</span>' : '<span class="badge-safe">✓ OK</span>')}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+
+      // Recomendaciones basadas en los resultados
+      if (laeq >= limitRef || (lexh8 !== null && lexh8 !== undefined && lexh8 >= limitRef)) {
+        recomendaciones.push('<strong>Protección auditiva individual obligatoria:</strong> Implementar tapones auditivos o protectores tipo copa con atenuación (NRR) suficiente para reducir la exposición efectiva por debajo de ' + limitRef + ' dB.');
+        recomendaciones.push('<strong>Controles de ingeniería:</strong> Evaluar instalación de barreras acústicas, aislamiento de fuentes de ruido o encerramientos acústicos para reducir la emisión en el origen.');
+        recomendaciones.push('<strong>Programa de conservación auditiva:</strong> Implementar audiometrías periódicas (mínimo anual) para todos los trabajadores expuestos según D.S. N° 005-2012-TR Art. 36.');
+        recomendaciones.push('<strong>Re-evaluación urgente:</strong> Realizar nueva medición de ruido en un plazo no mayor a 30 días después de implementar los controles para verificar su efectividad.');
+        recomendaciones.push('<strong>Señalización:</strong> Instalar señales de advertencia de ruido y zonas de uso obligatorio de protección auditiva conforme a NTP 399.010-1:2004.');
+      } else if (laeq >= 80) {
+        recomendaciones.push('<strong>Protección auditiva preventiva:</strong> Se recomienda el uso voluntario de protección auditiva como medida de precaución dado que el LAeq supera el nivel de acción de 80 dB.');
+        recomendaciones.push('<strong>Monitoreo semestral:</strong> Programar evaluaciones acústicas cada 6 meses para detectar posibles incrementos en los niveles de ruido.');
+        recomendaciones.push('<strong>Revisión de equipos:</strong> Evaluar si el mantenimiento preventivo de equipos y maquinaria podría reducir los niveles de emisión sonora.');
+      } else {
+        recomendaciones.push('<strong>Mantener condiciones actuales:</strong> El ambiente acústico se encuentra dentro de los límites normativos. Continuar con las prácticas de control de ruido vigentes.');
+        recomendaciones.push('<strong>Monitoreo anual:</strong> Programar evaluaciones acústicas anuales para verificar que los niveles se mantengan dentro de los límites.');
+      }
+
+      if (pctExceso > 25) {
+        recomendaciones.push('<strong>Picos frecuentes:</strong> El ' + pctExceso + '% del tiempo de medición registró niveles máximos por encima de ' + limitRef + ' dB. Identificar y controlar las fuentes de picos de ruido de alta intensidad.');
+      }
+      if (maxNivel > 115) {
+        recomendaciones.push('<strong>Protección contra picos:</strong> Se registraron niveles máximos de ' + maxNivel + ' dB. Evaluar el uso de protectores auditivos con atenuación impulsiva para eventos de alta presión sonora instantánea.');
+      }
+
+      // Actualizar estado en doc-header y portada
+      var statusHtml, portadaStatus;
+      if (laeq >= limitRef) {
+        statusHtml = '<span class="doc-status-danger">⚠ ATENCIÓN REQUERIDA</span>';
+        portadaStatus = 'RESULTADO: ATENCIÓN REQUERIDA — Excede ' + limitRef + ' dB';
+      } else if (laeq >= 80) {
+        statusHtml = '<span class="doc-status-warning">▲ NIVEL DE ACCIÓN</span>';
+        portadaStatus = 'RESULTADO: NIVEL DE ACCIÓN — Monitoreo recomendado';
+      } else {
+        statusHtml = '<span class="doc-status-safe">✓ AMBIENTE SEGURO</span>';
+        portadaStatus = 'RESULTADO: AMBIENTE SEGURO — Dentro del límite normativo';
+      }
+      $('#doc-status-badge').html(statusHtml);
+      $('#portada-status').text(portadaStatus);
+
+      var html = tablaEval + `
+        <div class="clasificacion-banner ${colorClass}">
+          <strong>${clasificacion}</strong><br>
+          <span style="font-size:0.95rem;">${riesgo}</span>
+        </div>
+        <h6 style="margin-top:1.25rem; margin-bottom:0.5rem; font-weight:600; color:#1e293b;">
+          <i class="bi bi-check2-square me-2"></i>Recomendaciones Técnicas
+        </h6>
+        <ol style="padding-left:1.5rem; line-height:2;">
+          ${recomendaciones.map(function(r) { return '<li style="margin-bottom:0.25rem;">' + r + '</li>'; }).join('')}
+        </ol>
+        <p style="font-size:0.78rem; color:#64748b; margin-top:1rem; border-top:1px solid #e2e8f0; padding-top:0.75rem;">
+          <i class="bi bi-info-circle me-1"></i>
+          Las conclusiones y recomendaciones se derivan de los datos analizados y los criterios de la <strong>NTP ISO 9612:2010</strong>, el <strong>D.S. N° 005-2012-TR</strong> (Reglamento de SST del Perú) y la <strong>OIT — Directrices sobre sistemas de gestión de la seguridad y la salud en el trabajo</strong>. Los resultados deben ser validados por un profesional de salud ocupacional habilitado antes de su uso como sustento legal o médico.
+        </p>
+      `;
+      $('#conclusiones-container').html(html);
+    }
+
     // Al iniciar la página, cargar todos los datos
     $(document).ready(function() {
+      var now = new Date();
+      var fechaGeneracion = now.toLocaleString('es-PE');
+      $('#doc-generated').text('Generado: ' + fechaGeneracion);
+      $('#portada-generated-date').text(fechaGeneracion);
+      $('#footer-generated-date').text(fechaGeneracion);
       cargarInformacionEscenario();
       cargarAnalisisGeneral();
       cargarTodosLosAudios();
       cargarAnalisisExcesos();
+      cargarFotos();
+      initTocObserver();
+
+      // Handle batch print mode: hide sections specified in ?ocultar=...
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('printcfg') === '1') {
+        var ocultar = urlParams.getAll('ocultar');
+        ocultar.forEach(function(sec) {
+          var el = document.getElementById('sec-' + sec);
+          if (el) el.style.display = 'none';
+        });
+        // Hide sidebar and navbar in batch print iframe
+        document.querySelector('.report-sidebar') && (document.querySelector('.report-sidebar').style.display = 'none');
+        document.querySelector('.navbar-custom') && (document.querySelector('.navbar-custom').style.display = 'none');
+      }
     });
 
     function verAnalisisAudio(id) {
       window.open('/analyze/' + id, '_blank');
+    }
+
+    // ─── Sidebar TOC: highlight active section on scroll ───────────────────
+    function initTocObserver() {
+      var sections = document.querySelectorAll('section[id], .methodology-section[id]');
+      if (!sections.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var id = entry.target.getAttribute('id');
+            document.querySelectorAll('#toc-nav a').forEach(function(a) {
+              a.classList.remove('active');
+              if (a.getAttribute('href') === '#' + id) {
+                a.classList.add('active');
+              }
+            });
+          }
+        });
+      }, { rootMargin: '-64px 0px -60% 0px', threshold: 0 });
+      sections.forEach(function(sec) { observer.observe(sec); });
+    }
+
+    // ─── Update sidebar LAeq indicator ─────────────────────────────────────
+    function actualizarSidebarLaeq(laeq, status) {
+      $('#sidebar-laeq-val').text(laeq.toFixed(2));
+      var badge = '';
+      if (status === 'danger') badge = '<span class="badge-danger" style="font-size:0.7rem;">⚠ Excede límite</span>';
+      else if (status === 'warning') badge = '<span class="badge-warning" style="font-size:0.7rem;">▲ Precaución</span>';
+      else badge = '<span class="badge-safe" style="font-size:0.7rem;">✓ Seguro</span>';
+      $('#sidebar-status-badge').html(badge);
+    }
+
+    // ─── Edit Scenario Modal ────────────────────────────────────────────────
+    var escenarioDataCache = {};
+
+    function abrirEditarEscenario() {
+      $.getJSON('/escenarios/' + escenarioId + '/detalle', function(data) {
+        escenarioDataCache = data;
+        $('#edit-nombre').val(data.nombre || '');
+        $('#edit-ubicacion').val(data.ubicacion || '');
+        $('#edit-descripcion').val(data.descripcion || '');
+        $('#edit-tipo-ruido').val(data.tipo_ruido || '');
+        $('#edit-tipo-analisis').val(data.tipo_analisis || '');
+        $('#edit-num-fuentes').val(data.num_fuentes != null ? data.num_fuentes : '');
+        $('#edit-num-personas').val(data.num_personas != null ? data.num_personas : '');
+        $('#edit-proteccion-auditiva').val(data.proteccion_auditiva || '');
+        $('#edit-scenario-alert').hide();
+        var modal = new bootstrap.Modal(document.getElementById('editScenarioModal'));
+        modal.show();
+      }).fail(function() {
+        alert('Error al cargar datos del escenario.');
+      });
+    }
+
+    function guardarEscenario() {
+      var num_fuentes_val = parseInt($('#edit-num-fuentes').val(), 10);
+      var num_personas_val = parseInt($('#edit-num-personas').val(), 10);
+      var payload = {
+        nombre: $('#edit-nombre').val().trim(),
+        ubicacion: $('#edit-ubicacion').val().trim(),
+        descripcion: $('#edit-descripcion').val().trim(),
+        tipo_ruido: $('#edit-tipo-ruido').val(),
+        tipo_analisis: $('#edit-tipo-analisis').val(),
+        num_fuentes: !isNaN(num_fuentes_val) ? num_fuentes_val : null,
+        num_personas: !isNaN(num_personas_val) ? num_personas_val : null,
+        proteccion_auditiva: $('#edit-proteccion-auditiva').val()
+      };
+      $.ajax({
+        url: '/escenarios/' + escenarioId,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function(resp) {
+          $('#edit-scenario-alert')
+            .removeClass('alert-danger').addClass('alert alert-success')
+            .text('✓ Datos guardados correctamente').show();
+          setTimeout(function() {
+            bootstrap.Modal.getInstance(document.getElementById('editScenarioModal')).hide();
+            cargarInformacionEscenario(); // Refresh scenario section
+          }, 800);
+        },
+        error: function(xhr) {
+          var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Error al guardar.';
+          $('#edit-scenario-alert')
+            .removeClass('alert-success').addClass('alert alert-danger')
+            .text('✗ ' + msg).show();
+        }
+      });
+    }
+
+    // ─── Photos ─────────────────────────────────────────────────────────────
+    var fotosActuales = [];   // list of filenames from server
+    var lbIndex = 0;
+
+    function cargarFotos() {
+      $.getJSON('/escenarios/' + escenarioId + '/detalle', function(data) {
+        fotosActuales = data.fotos || [];
+        renderizarFotos();
+      });
+    }
+
+    function renderizarFotos() {
+      var grid = $('#fotos-grid');
+      grid.empty();
+      if (!fotosActuales.length) {
+        $('#fotos-empty-msg').show();
+        return;
+      }
+      $('#fotos-empty-msg').hide();
+      fotosActuales.forEach(function(nombre, idx) {
+        var url = '/fotos/' + encodeURIComponent(nombre);
+        var card = $('<div class="foto-card"></div>');
+        var img = $('<img>').attr('src', url).attr('alt', 'Foto del escenario ' + (idx + 1))
+          .on('click', function() { abrirLightbox(idx); });
+        var delBtn = $('<button class="foto-del no-print" title="Eliminar foto"><i class="bi bi-x"></i></button>')
+          .on('click', function(e) { e.stopPropagation(); eliminarFoto(nombre); });
+        card.append(img).append(delBtn);
+        grid.append(card);
+      });
+    }
+
+    function subirFotos(input) {
+      if (!input.files || !input.files.length) return;
+      var formData = new FormData();
+      Array.from(input.files).forEach(function(f) { formData.append('fotos', f); });
+      $.ajax({
+        url: '/escenarios/' + escenarioId + '/fotos',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(resp) {
+          fotosActuales = resp.fotos || [];
+          renderizarFotos();
+          input.value = ''; // reset input
+        },
+        error: function() { alert('Error al subir las fotos.'); }
+      });
+    }
+
+    function eliminarFoto(nombre) {
+      if (!confirm('¿Eliminar esta foto?')) return;
+      $.ajax({
+        url: '/escenarios/' + escenarioId + '/fotos/' + encodeURIComponent(nombre),
+        method: 'DELETE',
+        success: function() {
+          fotosActuales = fotosActuales.filter(function(f) { return f !== nombre; });
+          renderizarFotos();
+        },
+        error: function() { alert('Error al eliminar la foto.'); }
+      });
+    }
+
+    // ─── Lightbox ───────────────────────────────────────────────────────────
+    function abrirLightbox(idx) {
+      lbIndex = idx;
+      actualizarLightbox();
+      document.getElementById('foto-lightbox').classList.add('active');
+    }
+
+    function actualizarLightbox() {
+      var nombre = fotosActuales[lbIndex];
+      document.getElementById('lb-img').src = '/fotos/' + encodeURIComponent(nombre);
+      document.getElementById('lb-caption').textContent = (lbIndex + 1) + ' / ' + fotosActuales.length;
+      document.getElementById('lb-prev').style.display = fotosActuales.length > 1 ? '' : 'none';
+      document.getElementById('lb-next').style.display = fotosActuales.length > 1 ? '' : 'none';
+    }
+
+    function lbNavegar(dir) {
+      lbIndex = (lbIndex + dir + fotosActuales.length) % fotosActuales.length;
+      actualizarLightbox();
+    }
+
+    function cerrarLightbox(e) {
+      if (!e || e.target === document.getElementById('foto-lightbox') || e.currentTarget.classList.contains('foto-lightbox-close')) {
+        document.getElementById('foto-lightbox').classList.remove('active');
+      }
+    }
+
+    document.addEventListener('keydown', function(e) {
+      var lb = document.getElementById('foto-lightbox');
+      if (!lb.classList.contains('active')) return;
+      if (e.key === 'Escape') cerrarLightbox();
+      if (e.key === 'ArrowLeft') lbNavegar(-1);
+      if (e.key === 'ArrowRight') lbNavegar(1);
+    });
+
+    // ─── Print Configuration ────────────────────────────────────────────────
+    var escenariosDisponibles = [];
+
+    function abrirConfiguracionImpresion() {
+      var modal = new bootstrap.Modal(document.getElementById('printConfigModal'));
+      modal.show();
+      recargarEscenariosDisponibles();
+    }
+
+    function recargarEscenariosDisponibles() {
+      $('#scenarios-picker').html('<div class="text-center text-muted p-3" id="scenarios-picker-loading"><div class="spinner-border spinner-border-sm me-2"></div>Cargando escenarios...</div>');
+      $.getJSON('/escenarios/culminados', function(data) {
+        escenariosDisponibles = data;
+        var html = '';
+        if (!data.length) {
+          html = '<div class="text-muted text-center p-3" style="font-size:0.85rem;">No hay escenarios culminados disponibles.</div>';
+        } else {
+          data.forEach(function(esc) {
+            var checked = (String(esc.id) === String(escenarioId)) ? 'checked' : '';
+            var micsText = esc.microfonos && esc.microfonos.length
+              ? esc.microfonos.map(function(m) { return escapeHtml(m.identificador); }).join(', ')
+              : 'Sin micrófonos';
+            html += '<div class="scenario-pick-item">' +
+              '<input type="checkbox" id="sp-' + esc.id + '" value="' + esc.id + '" ' + checked + ' style="cursor:pointer;">' +
+              '<label for="sp-' + esc.id + '">' +
+              '<strong>' + escapeHtml(esc.nombre) + '</strong>' +
+              '<span class="sp-meta">' + escapeHtml(esc.ubicacion || '') + ' · ' + esc.end_time.substring(0, 10) + ' · ' + micsText + '</span>' +
+              '</label></div>';
+          });
+          // Store mic data in JS map (safe, no injection)
+          escenariosDisponibles = data;
+        }
+        $('#scenarios-picker').html(html);
+      }).fail(function() {
+        $('#scenarios-picker').html('<div class="alert alert-danger p-2" style="font-size:0.82rem;">Error al cargar escenarios.</div>');
+      });
+    }
+
+    function seleccionarTodosEscenarios(sel) {
+      $('#scenarios-picker input[type="checkbox"]').prop('checked', sel);
+    }
+
+    function _getSectionVisibility() {
+      return {
+        fotos: $('#pc-fotos').is(':checked'),
+        grafico: $('#pc-grafico').is(':checked'),
+        datos: $('#pc-datos').is(':checked'),
+        metodologia: $('#pc-metodologia').is(':checked'),
+        glosario: $('#pc-glosario').is(':checked'),
+        referencias: $('#pc-referencias').is(':checked')
+      };
+    }
+
+    function _aplicarVisibilidadParaImpresion(vis) {
+      // Toggle sections based on config
+      document.getElementById('sec-fotos').style.display = vis.fotos ? '' : 'none';
+      document.getElementById('sec-grafico').style.display = vis.grafico ? '' : 'none';
+      document.getElementById('sec-datos').style.display = vis.datos ? '' : 'none';
+      document.getElementById('sec-metodologia').style.display = vis.metodologia ? '' : 'none';
+      document.getElementById('sec-glosario').style.display = vis.glosario ? '' : 'none';
+      document.getElementById('sec-referencias').style.display = vis.referencias ? '' : 'none';
+    }
+
+    function _restaurarVisibilidad() {
+      ['sec-fotos','sec-grafico','sec-datos','sec-metodologia','sec-glosario','sec-referencias'].forEach(function(id) {
+        document.getElementById(id).style.display = '';
+      });
+    }
+
+    function ejecutarImpresionActual() {
+      var vis = _getSectionVisibility();
+      bootstrap.Modal.getInstance(document.getElementById('printConfigModal')).hide();
+      setTimeout(function() {
+        _aplicarVisibilidadParaImpresion(vis);
+        window.print();
+        setTimeout(_restaurarVisibilidad, 1500);
+      }, 400);
+    }
+
+    function ejecutarImpresionMultiple() {
+      // Collect selected scenarios + mic pairs using escenariosDisponibles map
+      var seleccionados = [];
+      $('#scenarios-picker input[type="checkbox"]:checked').each(function() {
+        var escId = parseInt($(this).val(), 10);
+        var esc = escenariosDisponibles.find(function(e) { return e.id === escId; });
+        var mics = esc ? (esc.microfonos || []) : [];
+        if (mics.length) {
+          mics.forEach(function(m) { seleccionados.push({ escId: escId, micId: m.id }); });
+        } else {
+          seleccionados.push({ escId: escId, micId: null });
+        }
+      });
+
+      if (!seleccionados.length) {
+        alert('Selecciona al menos un escenario.');
+        return;
+      }
+
+      var vis = _getSectionVisibility();
+      bootstrap.Modal.getInstance(document.getElementById('printConfigModal')).hide();
+
+      // Build query params to pass print config
+      var params = new URLSearchParams();
+      Object.keys(vis).forEach(function(k) { if (!vis[k]) params.append('ocultar', k); });
+
+      // Open each monitoring page in a new window, collect iframes, then print all
+      var urls = seleccionados.map(function(s) {
+        if (!s.micId) return null;
+        return '/monitoring/' + s.escId + '/microfono/' + s.micId + '?printcfg=1&' + params.toString();
+      }).filter(Boolean);
+
+      if (!urls.length) {
+        alert('Los escenarios seleccionados no tienen micrófonos asignados.');
+        return;
+      }
+
+      # Open batch print page
+      var batchWin = window.open('', '_blank', 'width=900,height=700');
+      if (!batchWin) { alert('El navegador bloqueó la ventana emergente. Permite ventanas emergentes para este sitio.'); return; }
+      var batchDoc = batchWin.document;
+      batchDoc.open();
+      batchDoc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe Combinado</title>' +
+        '<style>body{margin:0;padding:0;} iframe{width:100%;border:none;display:block;} @media print{iframe{page-break-after:always;}}</style>' +
+        '</head><body>' +
+        '<div id="batchHeader" style="font-family:sans-serif;padding:10px;text-align:center;background:#1e293b;color:white;font-size:13px;">' +
+        '<strong>Informe Acústico Combinado &mdash; ' + urls.length + ' escenario(s)</strong>' +
+        ' <button onclick="window.print()" style="background:#2563eb;color:white;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;margin-left:12px;">&#128424; Imprimir PDF</button>' +
+        '</div></body></html>');
+      batchDoc.close();
+      urls.forEach(function(u) {
+        var iframe = batchDoc.createElement('iframe');
+        // u is built from numeric IDs and URLSearchParams, no user content
+        iframe.src = u;
+        iframe.style.height = '100vh';
+        iframe.style.width = '100%';
+        iframe.style.border = 'none';
+        iframe.style.display = 'block';
+        iframe.addEventListener('load', function() {
+          try { iframe.style.height = iframe.contentDocument.body.scrollHeight + 'px'; } catch(e) {}
+        });
+        batchDoc.body.appendChild(iframe);
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
   </script>
 </body>
