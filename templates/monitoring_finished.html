@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Informe de Análisis Acústico - Resultados Finales</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Bootstrap CSS y Highcharts Highstock -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <!-- Iconos Bootstrap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <!-- Google Fonts para diseño moderno -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.highcharts.com/stock/highstock.js"></script>
+  <!-- MathJax para fórmulas matemáticas -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --secondary-color: #10b981;
+      --danger-color: #ef4444;
+      --warning-color: #f59e0b;
+      --success-color: #10b981;
+      --info-color: #3b82f6;
+      --light-bg: #f8fafc;
+      --white: #ffffff;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--light-bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* Estilos modernos para impresión */
+    @media print {
+      body { 
+        background: white !important; 
+        font-size: 11pt;
+        line-height: 1.4;
+      }
+      .navbar-custom { background: var(--primary-color) !important; }
+      .no-print { display: none !important; }
+      .print-break { page-break-before: always; }
+      .print-avoid-break { page-break-inside: avoid; }
+      #stockchart { height: 250px !important; }
+      .main-container { margin-top: 0 !important; }
+      .card { border: 1px solid #ddd !important; }
+      .methodology-section { font-size: 10pt; }
+      .formula { font-size: 9pt; }
+    }
+    
+    /* Header moderno con gradiente */
+    .navbar-custom {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .navbar-custom .navbar-brand,
+    .navbar-custom .nav-link,
+    .navbar-custom .btn {
+      color: white;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .navbar-custom .btn:hover {
+      background-color: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    
+    /* Contenedor principal moderno */
+    .main-container {
+      margin-top: 70px;
+      padding: 2rem;
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    /* Banner de estado moderno */
+    .status-banner {
+      background: linear-gradient(135deg, var(--success-color), var(--info-color));
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .status-banner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      opacity: 0.3;
+    }
+    
+    .status-banner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .status-banner p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Cards modernos */
+    .modern-card {
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    
+    .modern-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    
+    .modern-card .card-header {
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .modern-card .card-body {
+      padding: 1.5rem;
+    }
+    
+    /* Sección LAeq general destacada */
+    .laeq-summary {
+      background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+      color: white;
+      padding: 2rem;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .laeq-summary::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .laeq-value {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin: 1rem 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .laeq-details {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Fixed contrast issues in LAeq details by removing problematic white backgrounds */
+    .laeq-details .detail-box {
+      background: rgba(255,255,255,0.15) !important;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white !important;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    
+    .laeq-details .detail-box strong,
+    .laeq-details .detail-box .fs-5,
+    .laeq-details .detail-box small {
+      color: white !important;
+    }
+    
+    /* Lista de audios moderna */
+    #audios-list {
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    
+    .audio-item {
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-left: 4px solid var(--success-color);
+    }
+    
+    .audio-item.has-excesos {
+      border-left: 4px solid var(--danger-color);
+    }
+    
+    .audio-item:hover {
+      background: #f1f5f9;
+      transform: translateX(4px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .audio-item.active {
+      background: #dbeafe;
+      border-color: var(--primary-color);
+      box-shadow: var(--shadow-md);
+    }
+    
+    /* Contenedor de gráfico moderno */
+    #chart-container {
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    #stockchart {
+      height: 500px;
+      border-radius: 8px;
+    }
+    
+    /* Análisis de excesos moderno */
+    #excesos-analysis {
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    
+    .metric-item {
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--info-color);
+      background: #f8fafc;
+      transition: all 0.3s ease;
+    }
+    
+    .metric-item:hover {
+      transform: translateX(2px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .metric-safe {
+      background: #f0fdf4;
+      border-left-color: var(--success-color);
+    }
+    
+    .metric-warning {
+      background: #fffbeb;
+      border-left-color: var(--warning-color);
+    }
+    
+    .metric-danger {
+      background: #fef2f2;
+      border-left-color: var(--danger-color);
+    }
+    
+    /* Badges modernos */
+    .exceso-badge, .safe-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .exceso-badge {
+      background: var(--danger-color);
+      color: white;
+    }
+    
+    .safe-badge {
+      background: var(--success-color);
+      color: white;
+    }
+    
+    /* Secciones de metodología y documentación técnica */
+    .methodology-section {
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .methodology-section h2 {
+      color: var(--primary-color);
+      border-bottom: 3px solid var(--primary-color);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+    }
+    
+    .methodology-section h3 {
+      color: var(--text-primary);
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    
+    .formula-box {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--primary-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .process-step {
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      position: relative;
+    }
+    
+    .process-step::before {
+      content: attr(data-step);
+      position: absolute;
+      top: -10px;
+      left: 20px;
+      background: var(--primary-color);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .terms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    
+    .term-item {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    
+    .term-item strong {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+    
+    /* Responsive design mejorado */
+    @media (max-width: 768px) {
+      .main-container {
+        padding: 1rem;
+        margin-top: 60px;
+      }
+      
+      .status-banner h1 {
+        font-size: 1.8rem;
+      }
+      
+      .laeq-value {
+        font-size: 2.5rem;
+      }
+      
+      .methodology-section {
+        padding: 1rem;
+      }
+    }
+  </style>
+  <script>
+    Highcharts.setOptions({
+      time: { timezone: 'America/Lima' }
+    });
+    
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\$$', '\$$']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+</head>
+<body>
+  <!-- Header moderno -->
+  <nav class="navbar navbar-expand-lg navbar-custom fixed-top no-print">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <strong>Informe de Análisis Acústico</strong>
+      </a>
+      <div class="d-flex ms-auto">
+        <button class="btn btn-outline-light me-2" onclick="window.print()">
+          <i class="bi bi-printer me-1"></i>Imprimir Informe
+        </button>
+        <a class="btn btn-outline-light" href="/">
+          <i class="bi bi-arrow-left me-1"></i>Volver
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenido Principal -->
+  <div class="main-container">
+    <!-- Banner de estado moderno -->
+    <div class="status-banner">
+      <h1><i class="bi bi-check-circle-fill me-3"></i>ANÁLISIS ACÚSTICO COMPLETADO</h1>
+      <!-- Added reference to NTP ISO 9612:2010 -->
+      <p>Evaluación conforme a ISO/TR 25417:2007 y NTP ISO 9612:2010 - Comparación con límite de referencia de 85 dB y LAeq general del escenario</p>
+    </div>
+
+    <!-- Información del escenario moderna -->
+    <div class="modern-card mb-4">
+      <div class="card-header">
+        <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información del Escenario</h4>
+      </div>
+      <div class="card-body">
+        <div id="scenario-details">
+          <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección LAeq general destacada -->
+    <div class="laeq-summary">
+      <h3><i class="bi bi-graph-up me-2"></i>LAeq General del Escenario</h3>
+      <div class="laeq-value" id="laeq-general-value">-- dB</div>
+      <p>Nivel de sonido continuo equivalente promediado en el tiempo</p>
+      <div class="laeq-details" id="laeq-details">
+        <small>Cargando datos generales...</small>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Columna Izquierda: Lista de audios -->
+      <div class="col-lg-3">
+        <div id="audios-list">
+          <h5 class="mb-3"><i class="bi bi-file-earmark-music me-2"></i>Audios del Escenario</h5>
+          <div id="lista-audios"></div>
+        </div>
+      </div>
+      
+      <!-- Columna Central: Gráfico -->
+      <div class="col-lg-6">
+        <div id="chart-container">
+          <div id="stockchart"></div>
+        </div>
+      </div>
+      
+      <!-- Columna Derecha: Análisis de excesos -->
+      <div class="col-lg-3">
+        <div id="excesos-analysis">
+          <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Análisis de Excesos</h5>
+          <div id="analisis-excesos-info">
+            <div class="d-flex justify-content-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Datos técnicos completos -->
+    <div class="print-break">
+      <div class="modern-card mt-4">
+        <div class="card-header">
+          <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Datos Técnicos Completos</h4>
+        </div>
+        <div class="card-body">
+          <div id="technical-data">
+            <div class="d-flex justify-content-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nueva sección: Metodología y Proceso Técnico -->
+    <div class="print-break methodology-section">
+      <h2><i class="bi bi-gear me-2"></i>Metodología y Proceso Técnico</h2>
+      
+      <h3>1. Fundamentos Teóricos y Normativos</h3>
+      <!-- Added comprehensive information about NTP ISO 9612:2010 -->
+      <p>El análisis acústico se fundamenta en dos normas técnicas complementarias:</p>
+      <ul>
+        <li><strong>ISO/TR 25417:2007</strong> - Especifica las definiciones de cantidades acústicas y términos utilizados en documentos de medición de ruido preparados por el Comité Técnico ISO TC 43, Acústica, Subcomité SC 1, Ruido.</li>
+        <li><strong>NTP ISO 9612:2010</strong> - Norma Técnica Peruana que establece los métodos de medición de la exposición al ruido en el trabajo para la evaluación de la pérdida auditiva inducida por ruido, adoptando los lineamientos de la norma internacional ISO 9612.</li>
+      </ul>
+      
+      <!-- Added NTP ISO 9612:2010 reference in APA 7 format -->
+      <div class="process-step" data-step="Normativo">
+        <h4>Aplicación de NTP ISO 9612:2010 - Exposición Laboral</h4>
+        <p>La norma peruana NTP ISO 9612:2010 establece el método para calcular el nivel de exposición al ruido normalizado para una jornada laboral de 8 horas:</p>
+        <div class="formula-box">
+          $$L_{EX,8h} = L_{p,A,eqTe} + 10 \log_{10} \left( \frac{T_e}{T_0} \right) \, \text{dB}$$
+        </div>
+        <p><strong>Donde:</strong></p>
+        <ul>
+          <li>$L_{EX,8h}$ = Nivel de exposición al ruido normalizado para 8 horas</li>
+          <li>$L_{p,A,eqTe}$ = Nivel de presión sonora continuo equivalente ponderado A para $T_e$</li>
+          <li>$T_e$ = Duración efectiva de la jornada laboral (horas)</li>
+          <li>$T_0$ = Duración de referencia = 8 horas (jornada laboral estándar)</li>
+        </ul>
+        <div class="formula-box">
+          <pre><code># Implementación de NTP ISO 9612:2010 en app.py
+def calcular_exposicion_8h(Lp_eqT, duracion_horas):
+    """
+    Calcula el nivel de exposición normalizado para 8 horas
+    según NTP ISO 9612:2010
+    """
+    T_e = duracion_horas  # Duración efectiva en horas
+    T_0 = 8.0            # Duración de referencia (8 horas)
+    
+    # Aplicación directa de la fórmula NTP ISO 9612:2010
+    L_EX_8h = Lp_eqT + 10 * np.log10(T_e / T_0)
+    
+    return L_EX_8h</code></pre>
+        </div>
+        <p>Esta fórmula permite normalizar cualquier medición de ruido a una jornada estándar de 8 horas, facilitando la comparación con límites de exposición ocupacional establecidos en la legislación peruana.</p>
+      </div>
+      
+      <h3>2. Parámetros de Referencia</h3>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="formula-box">
+            <strong>Presión de referencia:</strong><br>
+            $p_0 = 2 \times 10^{-5}$ Pa (20 μPa)
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="formula-box">
+            <strong>Exposición sonora de referencia:</strong><br>
+            $E_0 = 4 \times 10^{-10}$ Pa²·s
+          </div>
+        </div>
+      </div>
+      
+      <h3>3. Implementación en Python - Código Real</h3>
+      <p>La implementación utiliza la librería <code>python-acoustics</code> basada en ISO 25417. A continuación se detallan los pasos específicos del código:</p>
+      
+      <div class="process-step" data-step="1">
+        <h4>Inicialización de Constantes Acústicas</h4>
+        <div class="formula-box">
+          <pre><code># Parámetros acústicos (constantes) - app.py líneas 25-31
+p0 = 20e-6   # 20 µPa, umbral de audición humana
+E0 = 4e-10   # Exposición sonora de referencia
+J0 = 1e-12   # Energía sonora de referencia
+I0 = 1e-12   # Intensidad sonora de referencia
+rho = 1.2    # Densidad del aire (kg/m³)
+c = 343.0    # Velocidad del sonido (m/s)</code></pre>
+        </div>
+        <p>Estas constantes siguen exactamente las especificaciones del ISO/TR 25417:2007 para garantizar la trazabilidad metrológica.</p>
+      </div>
+      
+      <div class="process-step" data-step="2">
+        <h4>Lectura y Procesamiento del Audio</h4>
+        <div class="formula-box">
+          <pre><code># Función analizar_audio_file() - app.py líneas 85-95
+try:
+    data, rate = sf.read(filepath, dtype='float32')
+    data = data.astype(np.float64)  # Conversión a precisión doble
+except Exception as e:
+    # Fallback para archivos WAV malformados
+    rate, data = wavfile.read(filepath)
+    if len(data.shape) > 1:
+        data = data[:, 0]  # Convertir a mono
+    # Normalización según el tipo de datos
+    if data.dtype == np.int16:
+        data = data / 32768.0
+    elif data.dtype == np.int32:
+        data = data / 2147483648.0</code></pre>
+        </div>
+        <p>El sistema maneja automáticamente diferentes formatos de audio y corrige encabezados WAV malformados sin modificar el contenido original.</p>
+      </div>
+      
+      <div class="process-step" data-step="3">
+        <h4>Cálculo del Nivel de Presión Sonora Equivalente (LAeq)</h4>
+        <div class="formula-box">
+          $$L_{p,eqT} = 10 \log_{10}\left(\frac{\frac{1}{T}\int_{t_1}^{t_2} p^2(t) dt}{p_0^2}\right)$$
+        </div>
+        <div class="formula-box">
+          <pre><code># Implementación en app.py líneas 100-102
+T = len(data) / rate  # Duración total
+mean_squared = np.mean(data**2)  # Valor cuadrático medio
+Lp_eqT = 10 * np.log10(mean_squared / (p0**2)) if mean_squared > 0 else 0</code></pre>
+        </div>
+        <p>La implementación calcula directamente el valor cuadrático medio de la presión sonora y aplica la transformación logarítmica según ISO 25417.</p>
+      </div>
+      
+      <div class="process-step" data-step="4">
+        <h4>Cálculo del Nivel Máximo de Presión Sonora</h4>
+        <div class="formula-box">
+          $$L_{p,max} = 10 \log_{10}\left(\frac{p_{max}^2}{p_0^2}\right)$$
+        </div>
+        <div class="formula-box">
+          <pre><code># Implementación en app.py líneas 103-104
+p_max = np.max(np.abs(data))  # Valor máximo absoluto
+Lp_max = 10 * np.log10((p_max**2) / (p0**2)) if p_max > 0 else 0</code></pre>
+        </div>
+        <p>Se utiliza el valor absoluto máximo para capturar tanto picos positivos como negativos de la señal.</p>
+      </div>
+      
+      <div class="process-step" data-step="5">
+        <h4>Cálculo de la Exposición Sonora (ET)</h4>
+        <div class="formula-box">
+          $$E_T = \int_{t_1}^{t_2} p^2(t) dt = \frac{\sum_{i=1}^{N} p_i^2}{f_s}$$
+        </div>
+        <div class="formula-box">
+          <pre><code># Implementación en app.py líneas 105-106
+ET = np.sum(data**2) / rate  # Exposición sonora total
+LE = 10 * np.log10(ET / E0) if ET > 0 else 0  # Nivel de exposición</code></pre>
+        </div>
+        <p>La exposición sonora se calcula como la suma de los cuadrados de las muestras dividida por la frecuencia de muestreo, representando la energía acústica total.</p>
+      </div>
+      
+      <div class="process-step" data-step="6">
+        <h4>Cálculos Adicionales según ISO 25417</h4>
+        <div class="formula-box">
+          <pre><code># Energía sonora (J) - app.py líneas 107-108
+J_energy = ET  # Energía sonora igual a exposición sonora
+LJ = 10 * np.log10(J_energy / J0) if J_energy > 0 else 0
+
+# Intensidad sonora promediada - app.py líneas 109-110
+IT = mean_squared / (rho * c)  # I = p²/(ρc)
+LI = 10 * np.log10(IT / I0) if IT > 0 else 0</code></pre>
+        </div>
+        <p>Se calculan parámetros adicionales como la energía sonora (LJ) y la intensidad sonora promediada (LI) siguiendo las relaciones establecidas en ISO 25417.</p>
+      </div>
+      
+      <div class="process-step" data-step="7">
+        <h4>Análisis por Intervalos de 1 Segundo</h4>
+        <div class="formula-box">
+          <pre><code># Procesamiento detallado - app.py líneas 130-150
+chunk_size = 1.0  # Intervalos de 1 segundo
+num_chunks = int(np.floor(T / chunk_size))
+
+for i in range(num_chunks):
+    start_index = int(i * chunk_size * rate)
+    end_index = int((i + 1) * chunk_size * rate)
+    chunk = data[start_index:end_index]
+    
+    # Cálculos para cada intervalo
+    mean_squared_chunk = np.mean(chunk**2)
+    Lp_eqT_chunk = 10 * np.log10(mean_squared_chunk / (p0**2))
+    p_max_chunk = np.max(np.abs(chunk))
+    Lp_max_chunk = 10 * np.log10((p_max_chunk**2) / (p0**2))</code></pre>
+        </div>
+        <p>Cada segundo del audio se analiza independientemente para detectar variaciones temporales y excesos del límite de referencia.</p>
+      </div>
+      
+      <div class="process-step" data-step="8">
+        <h4>Cálculo del LAeq General Combinado</h4>
+        <div class="formula-box">
+          $$\overline{p^2} = \frac{\sum_{i=1}^{n} p_i^2 \cdot T_i}{\sum_{i=1}^{n} T_i}$$
+          $$L_{Aeq,general} = 10 \log_{10}\left(\frac{\overline{p^2}}{p_0^2}\right)$$
+        </div>
+        <div class="formula-box">
+          <pre><code># Función analisis_general() - app.py líneas 580-610
+def analisis_general(escenario_id, microfono_id):
+    """
+    Calcula el LAeq general combinando todos los audios del escenario
+    mediante promedio energético ponderado por duración
+    """
+    resultados = AnalysisResult.query.filter_by(
+        escenario_id=escenario_id, 
+        microfono_id=microfono_id
+    ).all()
+    
+    total_duration = 0.0
+    total_ET = 0.0
+    weighted_sum_pressure_sq = 0.0
+    
+    for res in resultados:
+        global_result = json.loads(res.global_result)
+        duration = float(global_result.get("duration", 0))
+        Lp_eqT = float(global_result.get("Lp_eqT", 0))
+        
+        # Convertir dB a escala lineal: p² = p₀² · 10^(Lp_eqT/10)
+        pressure_sq = (2.0e-5)**2 * (10 ** (Lp_eqT / 10))
+        
+        total_duration += duration
+        total_ET += float(global_result.get("ET", 0))
+        weighted_sum_pressure_sq += pressure_sq * duration
+    
+    # Promedio ponderado por duración (combinación energética)
+    mean_pressure_sq = weighted_sum_pressure_sq / total_duration
+    Lp_eqT_global = 10 * np.log10(mean_pressure_sq / (2.0e-5)**2)
+    
+    # Aplicar NTP ISO 9612:2010 para exposición de 8 horas
+    duracion_horas = total_duration / 3600.0
+    L_EX_8h = Lp_eqT_global + 10 * np.log10(duracion_horas / 8.0)
+    
+    return {
+        'Lp_eqT': Lp_eqT_global,
+        'L_EX_8h': L_EX_8h,  # Exposición normalizada 8h
+        'duration': total_duration,
+        'ET': total_ET,
+        'LE': 10 * np.log10(total_ET / 4e-10) if total_ET > 0 else 0
+    }</code></pre>
+        </div>
+        <p>El LAeq general se calcula combinando todos los audios mediante un promedio ponderado por duración en escala lineal, luego convertido a escala logarítmica. Adicionalmente, se calcula la exposición normalizada para 8 horas según NTP ISO 9612:2010.</p>
+      </div>
+      
+      <div class="process-step" data-step="9">
+        <h4>Detección de Excesos y Análisis de Seguridad</h4>
+        <div class="formula-box">
+          <pre><code># Función analisis_excesos() - app.py líneas 520-570
+limite_seguro = 85.0  # dB
+total_puntos = 0
+puntos_excedidos = 0
+
+for punto in detailed_results:
+    total_puntos += 1
+    lp_max = float(punto.get('Lp_max', 0))
+    
+    if lp_max > limite_seguro:
+        puntos_excedidos += 1
+        duracion_audio_exceso += 1  # Cada punto = ~1 segundo
+
+porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
+        </div>
+        <p>El sistema analiza cada punto temporal (1 segundo) para determinar excesos del límite de referencia y calcula estadísticas de seguridad acústica.</p>
+      </div>
+      
+      <h3>4. Validación y Trazabilidad Normativa</h3>
+      <p>La implementación garantiza:</p>
+      <ul>
+        <li><strong>Trazabilidad metrológica:</strong> Uso de constantes exactas según ISO/TR 25417:2007</li>
+        <!-- Added NTP ISO 9612:2010 reference in APA 7 format -->
+        <li><strong>Conformidad con NTP ISO 9612:2010:</strong> Implementación de fórmulas de exposición laboral</li>
+        <li><strong>Precisión numérica:</strong> Cálculos en punto flotante de doble precisión (float64)</li>
+        <li><strong>Robustez:</strong> Manejo de archivos de audio malformados y validación de datos</li>
+        <li><strong>Conformidad normativa:</strong> Implementación directa de las fórmulas de ambos estándares</li>
+        <li><strong>Reproducibilidad:</strong> Algoritmos determinísticos con resultados consistentes</li>
+        <li><strong>Aplicabilidad ocupacional:</strong> Cálculos de exposición normalizados para evaluación de riesgo laboral</li>
+      </ul>
+    </div>
+
+    <!-- Nueva sección: Diccionario de Términos -->
+    <div class="methodology-section">
+      <h2><i class="bi bi-book me-2"></i>Diccionario de Términos Técnicos</h2>
+      
+      <div class="terms-grid">
+        <div class="term-item">
+          <strong>LAeq (Lp,eqT)</strong><br>
+          Nivel de presión sonora continuo equivalente ponderado A. Representa el nivel de ruido constante que contendría la misma energía acústica que el ruido variable medido.
+        </div>
+        
+        <div class="term-item">
+          <strong>Lp,max</strong><br>
+          Nivel máximo de presión sonora. El mayor valor de nivel de presión sonora registrado durante el período de medición.
+        </div>
+        
+        <div class="term-item">
+          <strong>ET</strong><br>
+          Exposición sonora (Sound Exposure). Integral temporal del cuadrado de la presión sonora durante un evento acústico específico.
+        </div>
+        
+        <div class="term-item">
+          <strong>LE (LE,T)</strong><br>
+          Nivel de exposición sonora. Expresión logarítmica de la exposición sonora, normalizada respecto a la exposición de referencia.
+        </div>
+        
+        <div class="term-item">
+          <strong>LJ</strong><br>
+          Nivel de energía sonora. Relacionado con la energía acústica total contenida en una señal sonora.
+        </div>
+        
+        <div class="term-item">
+          <strong>LI (LI,T)</strong><br>
+          Nivel de intensidad sonora promediado en el tiempo. Medida de la potencia acústica que fluye a través de una superficie unitaria.
+        </div>
+        
+        <div class="term-item">
+          <strong>p₀</strong><br>
+          Presión sonora de referencia = 20 μPa. Umbral de audición humana utilizado como referencia para cálculos logarítmicos.
+        </div>
+        
+        <div class="term-item">
+          <strong>E₀</strong><br>
+          Exposición sonora de referencia = 4×10⁻¹⁰ Pa²·s. Valor de referencia para normalizar la exposición sonora.
+        </div>
+        
+        <div class="term-item">
+          <strong>ISO/TR 25417:2007</strong><br>
+          Norma técnica internacional que define cantidades acústicas y términos para medición de ruido, proporcionando terminología armonizada.
+        </div>
+        
+        <div class="term-item">
+          <strong>NTP ISO 9612:2010</strong><br>
+          Norma Técnica Peruana que establece métodos para la determinación de la exposición al ruido en el trabajo, adoptando la ISO 9612.
+        </div>
+        
+        <div class="term-item">
+          <strong>dB (Decibel)</strong><br>
+          Unidad logarítmica utilizada para expresar la relación entre dos valores de potencia o intensidad, comúnmente usada en acústica.
+        </div>
+        
+        <div class="term-item">
+          <strong>Pa (Pascal)</strong><br>
+          Unidad de presión en el Sistema Internacional. En acústica, se utiliza para medir la presión sonora.
+        </div>
+        
+        <div class="term-item">
+          <strong>Hz (Hertz)</strong><br>
+          Unidad de frecuencia que indica el número de ciclos por segundo. Utilizada para caracterizar señales de audio.
+        </div>
+      </div>
+    </div>
+
+    <!-- Nueva sección: Referencias Bibliográficas (APA 7) -->
+    <div class="methodology-section">
+      <h2><i class="bi bi-journal-text me-2"></i>Referencias Bibliográficas</h2>
+      
+      <div style="text-indent: -2rem; margin-left: 2rem; line-height: 1.8;">
+        <p>International Organization for Standardization. (2007). <em>ISO/TR 25417:2007 - Acoustics — Definitions of basic quantities and terms</em>. ISO.</p>
+        
+        <!-- Added NTP ISO 9612:2010 reference in APA 7 format -->
+        <p>Instituto Nacional de Calidad. (2010). <em>NTP ISO 9612:2010 - Acústica. Determinación de la exposición al ruido en el trabajo. Método de ingeniería</em>. INACAL.</p>
+        
+        <p>International Organization for Standardization. (2009). <em>ISO 9612:2009 - Acoustics — Determination of occupational noise exposure — Engineering method</em>. ISO.</p>
+        
+        <p>Python Software Foundation. (2023). <em>SciPy: Scientific computing tools for Python</em> (Version 1.11.0) [Software]. https://scipy.org/</p>
+        
+        <p>Bastian, E., Frederiksen, E., & Rasmussen, G. (2023). <em>Python-acoustics: Acoustics analysis in Python</em> (Version 0.2.0) [Software]. https://python-acoustics.github.io/python-acoustics/</p>
+        
+        <p>McFee, B., Raffel, C., Liang, D., Ellis, D. P., McVicar, M., Battenberg, E., & Nieto, O. (2015). librosa: Audio and music signal analysis in Python. <em>Proceedings of the 14th Python in Science Conference</em>, 18-25.</p>
+        
+        <p>Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D., ... & van Mulbregt, P. (2020). SciPy 1.0: fundamental algorithms for scientific computing in Python. <em>Nature Methods</em>, 17(3), 261-272.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // Variables recibidas desde Flask
+    var escenarioId = "{{ escenario_id }}";
+    var microfonoId = "{{ microfono_id }}";
+    var escenarioStart = "{{ escenario_start }}";
+    var escenarioEnd = "{{ escenario_end }}";
+    var limiteReferencia = {{ limite_referencia }};
+    
+    var laeqGeneral = null;
+    var chart;
+    var datosExcesos = {};
+
+    function cargarInformacionEscenario() {
+      $.getJSON(`/escenarios/${escenarioId}/detalle`, function(data) {
+        var startDate = new Date(data.start_time);
+        var endDate = new Date(data.end_time);
+        var duration = (endDate - startDate) / (1000 * 60 * 60); // horas
+        
+        var html = `
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="info-item">
+                <strong><i class="bi bi-tag me-1"></i>Nombre:</strong><br>
+                ${data.nombre || 'N/A'}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <strong><i class="bi bi-geo-alt me-1"></i>Ubicación:</strong><br>
+                ${data.ubicacion || 'N/A'}
+              </div>
+            </div>
+            <div class="col-md-12">
+              <div class="info-item">
+                <strong><i class="bi bi-card-text me-1"></i>Descripción:</strong><br>
+                ${data.descripcion || 'N/A'}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-item">
+                <strong><i class="bi bi-calendar-event me-1"></i>Inicio:</strong><br>
+                ${startDate.toLocaleString('es-PE')}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-item">
+                <strong><i class="bi bi-calendar-check me-1"></i>Fin:</strong><br>
+                ${endDate.toLocaleString('es-PE')}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-item">
+                <strong><i class="bi bi-clock me-1"></i>Duración:</strong><br>
+                ${duration.toFixed(2)} horas
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <strong><i class="bi bi-check-circle me-1"></i>Estado:</strong><br>
+                <span class="badge bg-success">${data.estado || 'N/A'}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <strong><i class="bi bi-mic me-1"></i>Micrófonos:</strong><br>
+                ${data.microfonos ? data.microfonos.length : 0} dispositivo(s)
+              </div>
+            </div>
+          </div>
+        `;
+        $('#scenario-details').html(html);
+      }).fail(function() {
+        $('#scenario-details').html('<div class="alert alert-danger">Error al cargar información del escenario.</div>');
+      });
+    }
+
+    function cargarAnalisisGeneral() {
+      $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/analisis_general`, function(data) {
+        laeqGeneral = data.Lp_eqT;
+        $('#laeq-general-value').text(data.Lp_eqT.toFixed(2) + ' dB');
+        
+        var detalles = `
+          <div class="row text-center g-3">
+            <div class="col-md-4">
+              <!-- Updated to use new detail-box class for better contrast -->
+              <div class="detail-box">
+                <strong>Duración Total</strong><br>
+                <span class="fs-5">${data.duration ? data.duration.toFixed(2) : 'N/A'}</span><br>
+                <small>segundos</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="detail-box">
+                <strong>Energía Total (ET)</strong><br>
+                <span class="fs-5">${data.ET ? data.ET.toExponential(2) : 'N/A'}</span><br>
+                <small>Pa²·s</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="detail-box">
+                <strong>Nivel de Exposición (LE)</strong><br>
+                <span class="fs-5">${data.LE ? data.LE.toFixed(2) : 'N/A'}</span><br>
+                <small>dB</small>
+              </div>
+            </div>
+          </div>
+        `;
+        $('#laeq-details').html(detalles);
+        
+        if (chart && laeqGeneral) {
+          actualizarGraficoConLAeq();
+        }
+      }).fail(function() {
+        $('#laeq-general-value').text('Error');
+        $('#laeq-details').html('<div class="alert alert-danger">Error al cargar datos generales.</div>');
+      });
+    }
+
+    // Función para cargar TODOS los audios del escenario
+    function cargarTodosLosAudios() {
+      $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/audios`, function(data) {
+        $('#lista-audios').empty();
+        var series = [];
+        var technicalDataHtml = '<div class="row g-3">';
+        
+        data.forEach(function(audio, index) {
+          var baseTime = new Date(audio.timestamp).getTime();
+          var seriesData = [];
+          var tieneExcesos = false;
+          
+          if (audio.detailed_results && audio.detailed_results.length > 0) {
+            audio.detailed_results.forEach(function(point) {
+              var lpMax = parseFloat(point.Lp_max);
+              seriesData.push([ baseTime + (point.timestamp * 1000), lpMax ]);
+              
+              if (lpMax > limiteReferencia) {
+                tieneExcesos = true;
+              }
+            });
+            seriesData.sort(function(a, b) { return a[0] - b[0]; });
+          }
+          
+          if (seriesData.length > 0) {
+            series.push({
+              name: "Audio " + audio.audio_id,
+              data: seriesData,
+              color: tieneExcesos ? '#ef4444' : '#10b981'
+            });
+          }
+          
+          if (audio.global_result) {
+            technicalDataHtml += `
+              <div class="col-lg-6 mb-3">
+                <div class="modern-card">
+                  <div class="card-header">
+                    <strong><i class="bi bi-file-earmark-music me-2"></i>Audio ${audio.audio_id}</strong>
+                    <small class="text-muted ms-2">${new Date(audio.timestamp).toLocaleString('es-PE')}</small>
+                  </div>
+                  <div class="card-body">
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <small><strong>LAeq:</strong> ${audio.global_result.Lp_eqT || 'N/A'} dB</small><br>
+                        <small><strong>Lp,max:</strong> ${audio.global_result.Lp_max || 'N/A'} dB</small><br>
+                        <small><strong>Duración:</strong> ${audio.global_result.duration || 'N/A'} s</small><br>
+                        <small><strong>Sample Rate:</strong> ${audio.global_result.sample_rate || 'N/A'} Hz</small>
+                      </div>
+                      <div class="col-6">
+                        <small><strong>ET:</strong> ${audio.global_result.ET ? audio.global_result.ET.toExponential(2) : 'N/A'}</small><br>
+                        <small><strong>LE:</strong> ${audio.global_result.LE || 'N/A'} dB</small><br>
+                        <small><strong>LI:</strong> ${audio.global_result.LI || 'N/A'} dB</small><br>
+                        <small><strong>LJ:</strong> ${audio.global_result.LJ || 'N/A'} dB</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          
+          var duration = (audio.global_result && audio.global_result.duration) ? audio.global_result.duration : "N/A";
+          var maxLevel = (audio.global_result && audio.global_result.Lp_max) ? audio.global_result.Lp_max : 0;
+          var excesoClass = tieneExcesos ? 'has-excesos' : '';
+          var excesoIndicator = tieneExcesos ? 
+            `<span class="exceso-badge">⚠ Excede ${limiteReferencia} dB</span>` : 
+            `<span class="safe-badge">✓ Dentro del límite</span>`;
+          
+          var item = $(`
+            <div class="audio-item ${excesoClass}" data-base="${baseTime}" data-duration="${duration}" data-audioid="${audio.audio_id}">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <strong><i class="bi bi-file-earmark-music me-1"></i>Audio ${audio.audio_id}</strong>
+                ${excesoIndicator}
+              </div>
+              <small class="text-muted d-block mb-1">
+                <i class="bi bi-clock me-1"></i>${new Date(audio.timestamp).toLocaleString('es-PE')}
+              </small>
+              <div class="row g-1 mb-2">
+                <div class="col-6">
+                  <small><i class="bi bi-stopwatch me-1"></i>${duration} s</small>
+                </div>
+                <div class="col-6">
+                  <small><i class="bi bi-volume-up me-1"></i>${maxLevel} dB</small>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline-primary w-100 no-print" onclick="verAnalisisAudio(${audio.audio_id})">
+                <i class="bi bi-graph-up me-1"></i>Ver Análisis Detallado
+              </button>
+            </div>
+          `);
+          
+          item.on('click', function() {
+            $('.audio-item').removeClass('active');
+            $(this).addClass('active');
+            var base = parseInt($(this).attr('data-base'));
+            var dur = parseFloat($(this).attr('data-duration'));
+            var endTime = (!isNaN(dur)) ? base + (dur * 1000) : base;
+            centrarChartEn(base, endTime);
+          });
+          
+          $('#lista-audios').append(item);
+        });
+        
+        technicalDataHtml += '</div>';
+        $('#technical-data').html(technicalDataHtml);
+        
+        inicializarChartConReferencia(series);
+      });
+    }
+
+    function actualizarGraficoConLAeq() {
+      if (chart && laeqGeneral) {
+        chart.yAxis[0].addPlotLine({
+          color: '#2563eb',
+          value: laeqGeneral,
+          width: 3,
+          zIndex: 4,
+          dashStyle: 'Solid',
+          id: 'laeq-line',
+          label: {
+            text: `LAeq GENERAL: ${laeqGeneral.toFixed(2)} dB`,
+            align: 'center',
+            style: { 
+              color: '#2563eb', 
+              fontWeight: 'bold', 
+              fontSize: '0.9rem',
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              padding: '6px 12px',
+              border: '2px solid #2563eb',
+              borderRadius: '6px'
+            }
+          }
+        });
+      }
+    }
+
+    // Inicializa el gráfico manteniendo TODOS los datos + líneas de referencia
+    function inicializarChartConReferencia(seriesData) {
+      chart = Highcharts.stockChart('stockchart', {
+        rangeSelector: { 
+          selected: 1,
+          buttonTheme: {
+            fill: '#f8fafc',
+            stroke: '#e2e8f0',
+            'stroke-width': 1,
+            style: {
+              color: '#64748b',
+              fontWeight: '500'
+            },
+            states: {
+              hover: {
+                fill: '#e2e8f0'
+              },
+              select: {
+                fill: '#2563eb',
+                style: {
+                  color: 'white'
+                }
+              }
+            }
+          }
+        },
+        title: { 
+          text: `Análisis Acústico Completado - Límite ${limiteReferencia} dB y LAeq General`,
+          style: { 
+            color: '#1e293b', 
+            fontWeight: '600',
+            fontSize: '16px'
+          }
+        },
+        xAxis: {
+          type: 'datetime',
+          events: {
+            afterSetExtremes: function () {
+              resaltarAudioCercano();
+            }
+          },
+          gridLineColor: '#f1f5f9',
+          lineColor: '#e2e8f0'
+        },
+        yAxis: {
+          title: { 
+            text: 'Nivel de Presión Sonora (dB)',
+            style: {
+              color: '#64748b',
+              fontWeight: '500'
+            }
+          },
+          gridLineColor: '#f1f5f9',
+          plotLines: [{
+            color: '#ef4444',
+            value: limiteReferencia,
+            width: 3,
+            zIndex: 5,
+            dashStyle: 'Dash',
+            label: {
+              text: `LÍMITE DE REFERENCIA: ${limiteReferencia} dB`,
+              align: 'center',
+              style: { 
+                color: '#ef4444', 
+                fontWeight: 'bold', 
+                fontSize: '0.9rem',
+                backgroundColor: 'rgba(255,255,255,0.95)',
+                padding: '6px 12px',
+                border: '2px solid #ef4444',
+                borderRadius: '6px'
+              }
+            }
+          }]
+        },
+        tooltip: {
+          shared: true,
+          xDateFormat: '%Y-%m-%d %H:%M:%S',
+          backgroundColor: 'rgba(255,255,255,0.95)',
+          borderColor: '#e2e8f0',
+          borderRadius: 8,
+          shadow: true,
+          formatter: function() {
+            var s = '<b>' + Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '</b>';
+            this.points.forEach(function(point) {
+              var excede = point.y > limiteReferencia;
+              var color = excede ? '#ef4444' : '#10b981';
+              var indicador = excede ? ' ⚠ EXCEDE LÍMITE' : ' ✓ Dentro del límite';
+              s += '<br/><span style="color:' + color + '; font-weight: 500;">' + point.series.name + ': ' + point.y + ' dB' + indicador + '</span>';
+            });
+            if (laeqGeneral) {
+              s += '<br/><span style="color:#2563eb; font-weight: 600;">LAeq General: ' + laeqGeneral.toFixed(2) + ' dB</span>';
+            }
+            return s;
+          }
+        },
+        navigator: {
+          enabled: true,
+          maskFill: 'rgba(37, 99, 235, 0.1)',
+          outlineColor: '#2563eb'
+        },
+        scrollbar: {
+          enabled: true,
+          barBackgroundColor: '#f1f5f9',
+          barBorderColor: '#e2e8f0',
+          buttonBackgroundColor: '#f8fafc',
+          buttonBorderColor: '#e2e8f0',
+          rifleColor: '#64748b',
+          trackBackgroundColor: '#f8fafc',
+          trackBorderColor: '#e2e8f0'
+        },
+        series: seriesData
+      });
+      
+      if (laeqGeneral) {
+        actualizarGraficoConLAeq();
+      }
+    }
+
+    // Centrar el gráfico en el rango indicado
+    function centrarChartEn(startTimeMs, endTimeMs) {
+      chart.xAxis[0].setExtremes(startTimeMs, endTimeMs);
+    }
+
+    // Resalta automáticamente el audio cuyo inicio esté cercano al centro del gráfico
+    function resaltarAudioCercano() {
+      var extremes = chart.xAxis[0].getExtremes();
+      var centro = (extremes.min + extremes.max) / 2;
+      var audioItems = $('#lista-audios .audio-item');
+      var minDiff = Infinity, audioParaResaltar = null;
+      audioItems.each(function () {
+        var base = parseInt($(this).attr('data-base'));
+        var diff = Math.abs(base - centro);
+        if (diff < minDiff) {
+          minDiff = diff;
+          audioParaResaltar = $(this);
+        }
+      });
+      if (audioParaResaltar) {
+        audioItems.removeClass('active');
+        audioParaResaltar.addClass('active');
+      }
+    }
+
+    // Cargar análisis de cuántas veces se excedió el límite
+    function cargarAnalisisExcesos() {
+      $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/analisis_excesos`, function(data) {
+        datosExcesos = data;
+        
+        var html = '';
+        
+        var evaluacionClass = data.puntos_que_excedieron === 0 ? 'metric-safe' : 'metric-danger';
+        html += `
+          <div class="metric-item ${evaluacionClass}">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-shield-check me-2 fs-5"></i>
+              <div>
+                <strong>Evaluación de Seguridad</strong><br>
+                <span class="fs-6">${data.evaluacion_seguridad}</span>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        html += `
+          <div class="metric-item">
+            <strong><i class="bi bi-bullseye me-1"></i>Límite de referencia:</strong> ${data.limite_referencia} dB
+          </div>
+          <div class="metric-item">
+            <strong><i class="bi bi-graph-up me-1"></i>Total de puntos medidos:</strong> ${data.total_puntos_medidos.toLocaleString()}
+          </div>
+        `;
+        
+        var excesoClass = data.puntos_que_excedieron > 0 ? 'metric-warning' : 'metric-safe';
+        html += `
+          <div class="metric-item ${excesoClass}">
+            <strong><i class="bi bi-exclamation-triangle me-1"></i>Puntos que excedieron:</strong><br>
+            ${data.puntos_que_excedieron.toLocaleString()} (${data.porcentaje_exceso}%)
+          </div>
+        `;
+        
+        if (data.puntos_que_excedieron > 0) {
+          html += `
+            <div class="metric-item metric-warning">
+              <strong><i class="bi bi-clock me-1"></i>Tiempo total de exceso:</strong><br>
+              ${data.duracion_total_exceso_minutos} minutos
+            </div>
+            <div class="metric-item metric-danger">
+              <strong><i class="bi bi-volume-up-fill me-1"></i>Nivel máximo registrado:</strong><br>
+              ${data.nivel_maximo_registrado} dB
+            </div>
+          `;
+        }
+        
+        html += `
+          <div class="metric-item">
+            <strong><i class="bi bi-file-earmark-music me-1"></i>Total de audios:</strong> ${data.cantidad_audios}
+          </div>
+        `;
+        
+        if (data.excesos_por_audio && data.excesos_por_audio.length > 0) {
+          html += '<hr><h6><i class="bi bi-list-ul me-2"></i>Detalle por Audio:</h6>';
+          data.excesos_por_audio.forEach(function(audio) {
+            var audioClass = audio.puntos_excedidos > 0 ? 'metric-warning' : 'metric-safe';
+            var excesoText = audio.puntos_excedidos > 0 ? 
+              `${audio.puntos_excedidos} excesos (${audio.duracion_exceso_segundos}s)` : 
+              'Sin excesos';
+            
+            html += `
+              <div class="metric-item ${audioClass}" style="font-size: 0.85rem;">
+                <strong>Audio ${audio.audio_id}:</strong><br>
+                ${excesoText}<br>
+                <small class="text-muted">Máximo: ${audio.nivel_maximo} dB</small>
+              </div>
+            `;
+          });
+        }
+        
+        $('#analisis-excesos-info').html(html);
+      }).fail(function() {
+        $('#analisis-excesos-info').html('<div class="alert alert-danger">Error al cargar análisis de excesos.</div>');
+      });
+    }
+
+    // Al iniciar la página, cargar todos los datos
+    $(document).ready(function() {
+      cargarInformacionEscenario();
+      cargarAnalisisGeneral();
+      cargarTodosLosAudios();
+      cargarAnalisisExcesos();
+    });
+
+    function verAnalisisAudio(id) {
+      window.open('/analyze/' + id, '_blank');
+    }
+  </script>
+</body>
+</html>

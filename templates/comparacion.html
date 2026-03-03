@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Comparación de Audios por Ciclo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <!-- Opcional: Iconos Bootstrap (para el ícono de imprimir) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    body {
+      padding-top: 70px;
+      background-color: #f5f5f5;
+    }
+    .chart-container {
+      position: relative;
+      height: 400px;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+    /* Navbar personalizado */
+    .navbar-custom {
+      background-color: #007bff;
+    }
+    .navbar-custom .navbar-brand,
+    .navbar-custom .nav-link,
+    .navbar-custom .btn {
+      color: #fff;
+    }
+    .navbar-custom .btn:hover {
+      color: #007bff;
+      background-color: #fff;
+    }
+    /* Contenedores redondeados para cada ciclo */
+    .ciclo-container {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar Header -->
+  <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">Inicio</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <div class="d-flex">
+          <button class="btn btn-outline-light me-2" onclick="window.print()">
+            <i class="bi bi-printer"></i> Imprimir
+          </button>
+          <a href="/" class="btn btn-outline-light">Volver</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenido principal -->
+  <div class="container mt-4">
+    <h2 class="mb-4">Comparación de Audios por Ciclo</h2>
+    <div id="escenarioInfo" class="mb-4">
+      <!-- Información del escenario -->
+    </div>
+    <div id="comparacionCiclos">
+      <!-- Bloque por cada ciclo se agregará dinámicamente -->
+    </div>
+  </div>
+
+  <!-- Scripts: jQuery, Bootstrap Bundle (incluye Popper) y Chart.js -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script>
+    // Función para extraer parámetros de la URL
+    function getQueryParams() {
+      const params = {};
+      location.search.substr(1).split("&").forEach(function(item) {
+        const [key, value] = item.split("=");
+        if(key) {
+          params[key] = decodeURIComponent(value);
+        }
+      });
+      return params;
+    }
+
+    // Carga la información del escenario
+    function cargarEscenario(escenarioId) {
+      $.getJSON('/escenarios/' + escenarioId + '/detalle', function(data) {
+        let html = '<h4>Escenario: ' + data.nombre + '</h4>';
+        html += '<p><strong>Descripción:</strong> ' + data.descripcion + '</p>';
+        html += '<p><strong>Ubicación:</strong> ' + data.ubicacion + '</p>';
+        html += '<p><strong>Inicio:</strong> ' + data.start_time + '</p>';
+        html += '<p><strong>Fin:</strong> ' + data.end_time + '</p>';
+        html += '<p><strong>Estado:</strong> ' + data.estado + '</p>';
+        $('#escenarioInfo').html(html);
+      });
+    }
+
+    // Función para obtener los audios de un micrófono
+    function cargarAudiosMic(escenarioId, micId) {
+      return $.getJSON('/escenarios/' + escenarioId + '/microfono/' + micId + '/audios');
+    }
+
+    // Función para calcular estadísticas: media, varianza y desviación estándar
+    function calcularEstadisticas(valores) {
+      const n = valores.length;
+      if(n === 0) return { mean: 0, varianza: 0, desviacion: 0 };
+      const mean = valores.reduce((a, b) => a + b, 0) / n;
+      const varianza = valores.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
+      const desviacion = Math.sqrt(varianza);
+      return { mean, varianza, desviacion };
+    }
+
+    // Función para agrupar audios en ciclos (se utiliza el mínimo número de audios entre micrófonos)
+    function agruparCiclos(audiosPorMic) {
+      let numCiclos = Infinity;
+      for(let mic in audiosPorMic) {
+        if(audiosPorMic[mic].length < numCiclos) {
+          numCiclos = audiosPorMic[mic].length;
+        }
+      }
+      const ciclos = [];
+      for(let i = 0; i < numCiclos; i++) {
+        const ciclo = {};
+        for(let mic in audiosPorMic) {
+          ciclo[mic] = audiosPorMic[mic][i].global_result;
+        }
+        ciclos.push(ciclo);
+      }
+      return ciclos;
+    }
+
+    // Función para renderizar un gráfico comparativo para un ciclo
+    function renderCicloChart(cicloIndex, cicloData, micIds) {
+      const metricas = ["Lp_eqT", "Lp_max", "ET", "LE", "J_energy", "LJ", "IT", "LI"];
+      const datasets = [];
+      micIds.forEach(function(micId, idx) {
+        const valores = metricas.map(function(metrica) {
+          const val = cicloData[micId] && cicloData[micId][metrica];
+          return val !== undefined ? parseFloat(val) : 0;
+        });
+        datasets.push({
+          label: 'Mic ' + micId,
+          data: valores,
+          backgroundColor: idx % 2 === 0 ? 'rgba(54, 162, 235, 0.6)' : 'rgba(255, 99, 132, 0.6)'
+        });
+      });
+      const canvasId = 'chartCiclo' + cicloIndex;
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: metricas,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    // Función para mostrar estadísticas por ciclo
+    function mostrarEstadisticasCiclo(cicloIndex, cicloData, micIds) {
+      const metricas = ["Lp_eqT", "Lp_max", "ET", "LE", "J_energy", "LJ", "IT", "LI"];
+      let html = '<h6>Estadísticas del Ciclo ' + (cicloIndex + 1) + '</h6>';
+      html += '<table class="table table-sm table-bordered"><thead><tr><th>Métrica</th><th>Promedio</th><th>Varianza</th><th>Desv. Estándar</th></tr></thead><tbody>';
+      metricas.forEach(function(metrica) {
+        let valores = [];
+        micIds.forEach(function(micId) {
+          const val = cicloData[micId] && cicloData[micId][metrica];
+          if(val !== undefined) valores.push(parseFloat(val));
+        });
+        const stats = calcularEstadisticas(valores);
+        html += `<tr>
+                   <td>${metrica}</td>
+                   <td>${stats.mean.toFixed(2)}</td>
+                   <td>${stats.varianza.toFixed(2)}</td>
+                   <td>${stats.desviacion.toFixed(2)}</td>
+                 </tr>`;
+      });
+      html += '</tbody></table>';
+      $('#statsCiclo' + cicloIndex).html(html);
+    }
+
+    // Función principal para cargar la comparación
+    function compararCiclos(escenarioId, micIds) {
+      const audiosPorMic = {};
+      let peticiones = [];
+      micIds.forEach(function(micId) {
+        const peticion = cargarAudiosMic(escenarioId, micId)
+          .done(function(audios) {
+            audiosPorMic[micId] = audios;
+          })
+          .fail(function() {
+            alert('Error al cargar audios para el micrófono ' + micId);
+          });
+        peticiones.push(peticion);
+      });
+      $.when.apply($, peticiones).done(function() {
+        const ciclos = agruparCiclos(audiosPorMic);
+        $('#comparacionCiclos').html('');
+        ciclos.forEach(function(cicloData, cicloIndex) {
+          const contenedor = $(`
+            <div class="ciclo-container">
+              <h5>Ciclo ${cicloIndex + 1}</h5>
+              <div class="chart-container">
+                <canvas id="chartCiclo${cicloIndex}"></canvas>
+              </div>
+              <div id="statsCiclo${cicloIndex}" class="mt-3"></div>
+            </div>
+          `);
+          $('#comparacionCiclos').append(contenedor);
+          renderCicloChart(cicloIndex, cicloData, micIds);
+          mostrarEstadisticasCiclo(cicloIndex, cicloData, micIds);
+        });
+      });
+    }
+
+    // Al cargar la página se extraen los parámetros y se ejecuta la comparación
+    $(document).ready(function() {
+      const params = getQueryParams();
+      const escenarioId = params.escenarioId;
+      const micIds = params.micIds ? params.micIds.split(',') : [];
+      if (!escenarioId || micIds.length === 0) {
+        $('body').html('<p class="text-danger">Faltan parámetros para la comparación.</p>');
+        return;
+      }
+      cargarEscenario(escenarioId);
+      compararCiclos(escenarioId, micIds);
+    });
+  </script>
+</body>
+</html>

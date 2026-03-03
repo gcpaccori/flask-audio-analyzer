@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitoreo y Análisis de Audio - Detalle</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Bootstrap CSS y Highcharts Highstock -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <!-- Iconos Bootstrap para el ícono de imprimir -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.highcharts.com/stock/highstock.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    /* Header minimalista y transparente */
+    .navbar-custom {
+      background-color: rgba(0, 123, 255, 0.3);
+      min-height: 40px;
+      padding: 0.25rem 0.5rem;
+    }
+    .navbar-custom .navbar-brand,
+    .navbar-custom .nav-link,
+    .navbar-custom .btn {
+      color: #fff;
+      font-size: 0.85rem;
+      line-height: 1;
+      padding: 0.25rem 0.5rem;
+    }
+    .navbar-custom .btn:hover {
+      background-color: rgba(255,255,255,0.8);
+      color: rgba(0, 123, 255, 0.9);
+    }
+    /* Espaciado para que el contenido no se superponga al header */
+    .main-container {
+      margin-top: 50px;
+      padding: 15px;
+    }
+    /* Lista de audios */
+    #audios-list {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      box-sizing: border-box;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+    .audio-item {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      margin-bottom: 10px;
+      background: #fff;
+      border-radius: 4px;
+    }
+    .audio-item:hover {
+      background-color: #f0f0f0;
+    }
+    .audio-item.active {
+      background-color: #d0e9ff;
+    }
+    /* Gráfico y contenedor */
+    #chart-container {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    #stockchart {
+      height: 400px;
+      min-width: 300px;
+    }
+    /* Análisis general */
+    #general-analysis {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      box-sizing: border-box;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+    #analisis-general-info li {
+      font-size: 0.8em;
+      margin-bottom: 4px;
+    }
+    /* Resultados globales en cada audio */
+    .global-result {
+      font-size: 0.75rem;
+      color: #555;
+      margin-top: 5px;
+    }
+    .global-result span {
+      display: block;
+    }
+  </style>
+  <script>
+    // Configurar Highcharts para el huso horario de Perú
+    Highcharts.setOptions({
+      time: { timezone: 'America/Lima' }
+    });
+  </script>
+</head>
+<body>
+  <!-- Header Minimalista -->
+  <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">Inicio</a>
+      <div class="d-flex ms-auto">
+        <button class="btn btn-outline-light me-2" onclick="window.print()">
+          <i class="bi bi-printer"></i>
+        </button>
+        <a class="btn btn-outline-light" href="/">Volver</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenido Principal -->
+  <div class="container-fluid main-container">
+    <div class="row">
+      <!-- Columna Izquierda: Lista de audios -->
+      <div class="col-md-3" id="audios-list">
+        <h5>Audios Recibidos</h5>
+        <div id="lista-audios"></div>
+      </div>
+      <!-- Columna Central: Gráfico -->
+      <div class="col-md-6" id="chart-container">
+        <div id="stockchart"></div>
+      </div>
+      <!-- Columna Derecha: Análisis General -->
+      <div class="col-md-3" id="general-analysis">
+        <h5>Análisis General</h5>
+        <div id="analisis-general-info">
+          <p>Cargando información...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts de Bootstrap Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // Variables recibidas desde Flask (asegúrate de que existan en la vista)
+    var escenarioId = "{{ escenario_id }}";
+    var microfonoId = "{{ microfono_id }}";
+    var escenarioStart = "{{ escenario_start }}";
+    var escenarioEnd = "{{ escenario_end }}";
+    // Valor de benchmark para la línea horizontal (Nivel de presión sonora equivalente)
+    var benchmark = parseFloat('{{ globalLp_eqT }}');
+
+    var chart; // Objeto Highcharts
+    // Variable global para almacenar la cantidad de audios cargados
+    var lastAudioCount = 0;
+
+    // Mapas de descripciones para el análisis general (para el endpoint de análisis general)
+    var metricDescriptions = {
+      "Lp_eqT": "Nivel de presión sonora equivalente (dB re 20 µPa)",
+      "Lp_max": "Nivel máximo de presión sonora (dB re 20 µPa)",
+      "ET": "Energía total (W·s)",
+      "LE": "Nivel de energía sonora (dB re 4×10⁻¹⁰ J)",
+      "J_energy": "Energía (J)",
+      "LJ": "Nivel de energía (dB re 1×10⁻¹² J)",
+      "IT": "Intensidad sonora (W/m²)",
+      "LI": "Nivel de intensidad sonora (dB re 1×10⁻¹² W/m²)",
+      "duration": "Duración (s)",
+      "sample_rate": "Frecuencia de muestreo (Hz)",
+      "cantidad_audios": "Cantidad de audios"
+    };
+
+    // Función para cargar la lista de audios y construir series para el gráfico usando detailed_results.
+    function cargarAudios() {
+      $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/audios`, function(data) {
+        // Si la cantidad de audios (data.length) no ha cambiado, no hacemos actualización visual.
+        if (data.length === lastAudioCount) {
+          return; // No hay nuevos datos, la función termina.
+        }
+        
+        // Actualizamos el contador global
+        lastAudioCount = data.length;
+        
+        $('#lista-audios').empty();
+        var series = [];
+        
+        data.forEach(function(audio) {
+          // La hora base se extrae del timestamp del audio y se convierte a milisegundos.
+          var baseTime = new Date(audio.timestamp).getTime();
+          var seriesData = [];
+          if (audio.detailed_results && audio.detailed_results.length > 0) {
+            audio.detailed_results.forEach(function(point) {
+              // point.timestamp se asume relativo en segundos, se convierte a ms.
+              seriesData.push([ baseTime + (point.timestamp * 1000), parseFloat(point.Lp_eqT) ]);
+            });
+            seriesData.sort(function(a, b) { return a[0] - b[0]; });
+          }
+          if (seriesData.length > 0) {
+            series.push({
+              name: "Audio " + audio.audio_id,
+              data: seriesData
+            });
+          }
+          
+          // Crear un item en la lista de audios con el resultado global en letra pequeña
+          var duration = (audio.global_result && audio.global_result.duration) ? audio.global_result.duration : "N/A";
+          var globalText = "";
+          if (audio.global_result) {
+            for (var key in audio.global_result) {
+              globalText += `<span>${key}: ${audio.global_result[key]}</span>`;
+            }
+          }
+          
+          var item = $(`
+            <div class="audio-item" data-base="${baseTime}" data-duration="${duration}" data-audioid="${audio.audio_id}" data-timestamp="${audio.timestamp}">
+              <strong>Audio ID ${audio.audio_id} <button class="btn btn-outline-dark" onclick="verAnalisisAudio(${audio.audio_id})">Ver Análisis</button></strong><br>
+              <small>${audio.timestamp}</small><br>
+              <small>Duración: ${duration} s</small>
+              <div class="global-result">${globalText}</div>
+              <audio controls style="width: 100%;">
+                <source src="/uploads/${audio.filename}" type="audio/wav">
+                Tu navegador no soporta audio HTML5.
+              </audio>
+
+            </div>
+          `);
+          
+          item.on('click', function() {
+            $('.audio-item').removeClass('active');
+            $(this).addClass('active');
+            var base = parseInt($(this).attr('data-base'));
+            var dur = parseFloat($(this).attr('data-duration'));
+            var endTime = (!isNaN(dur)) ? base + (dur * 1000) : base;
+            centrarChartEn(base, endTime);
+          });
+          
+          $('#lista-audios').append(item);
+        });
+        
+        inicializarChart(series);
+      });
+    }
+
+    // Inicializa el gráfico Highstock usando las series de datos.
+    function inicializarChart(seriesData) {
+      chart = Highcharts.stockChart('stockchart', {
+        rangeSelector: { selected: 1 },
+        title: { text: 'Análisis de Audio (Detalle - Lp_eqT)' },
+        xAxis: {
+          type: 'datetime',
+          events: {
+            afterSetExtremes: function () {
+              resaltarAudioCercano();
+            }
+          }
+        },
+        yAxis: {
+          title: { text: 'Lp_eqT (dB)' },
+          plotLines: [{
+            color: 'blue',
+            value: benchmark,
+            width: 2,
+            zIndex: 5,
+            label: {
+              text: 'Nivel de presión sonora equivalente (dB re 20 µPa)',
+              align: 'center',
+              style: { color: 'blue', fontWeight: 'bold', fontSize: '0.8rem' }
+            }
+          }]
+        },
+        tooltip: {
+          shared: true,
+          xDateFormat: '%Y-%m-%d %H:%M:%S'
+        },
+        navigator: {
+          enabled: true
+        },
+        scrollbar: {
+          enabled: true
+        },
+        series: seriesData
+      });
+    }
+
+    // Centrar el gráfico en el rango indicado.
+    function centrarChartEn(startTimeMs, endTimeMs) {
+      chart.xAxis[0].setExtremes(startTimeMs, endTimeMs);
+    }
+
+    // Resalta automáticamente el audio cuyo inicio esté cercano al centro del gráfico.
+    function resaltarAudioCercano() {
+      var extremes = chart.xAxis[0].getExtremes();
+      var centro = (extremes.min + extremes.max) / 2;
+      var audioItems = $('#lista-audios .audio-item');
+      var minDiff = Infinity, audioParaResaltar = null;
+      audioItems.each(function () {
+        var base = parseInt($(this).attr('data-base'));
+        var diff = Math.abs(base - centro);
+        if (diff < minDiff) {
+          minDiff = diff;
+          audioParaResaltar = $(this);
+        }
+      });
+      if (audioParaResaltar) {
+        audioItems.removeClass('active');
+        audioParaResaltar.addClass('active');
+      }
+    }
+
+    // Cargar el análisis general desde el endpoint correspondiente.
+    function cargarAnalisisGeneral() {
+      $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/analisis_general`, function(data) {
+        var html = '<ul>';
+        $.each(data, function(key, value) {
+          var desc = metricDescriptions[key] || key;
+          html += `<li><strong>${desc}:</strong> ${value}</li>`;
+        });
+        html += '</ul>';
+        $('#analisis-general-info').html(html);
+      }).fail(function() {
+        $('#analisis-general-info').html('<p>No hay análisis general disponible.</p>');
+      });
+    }
+
+    // Al iniciar la página, se cargan audios y análisis general y se realiza polling cada 10 s.
+    $(document).ready(function() {
+      cargarAudios();
+      cargarAnalisisGeneral();
+      // Verificar cada 10 segundos si hay nuevos audios.
+      setInterval(cargarAudios, 10000);
+    });
+
+    function verAnalisisAudio(id) {
+      window.open('/analyze/' + id, '_blank');
+    }
+  </script>
+</body>
+</html>
