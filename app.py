@@ -20,21 +20,29 @@ import sys
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
+IS_VERCEL = bool(os.environ.get('VERCEL'))
+
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
+if IS_VERCEL:
+    _base = '/tmp'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/database.db'
+else:
+    _base = os.path.dirname(os.path.abspath(__file__))
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-app.config['PHOTOS_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'fotos')
+app.config['UPLOAD_FOLDER'] = os.path.join(_base, 'uploads')
+app.config['PHOTOS_FOLDER'] = os.path.join(_base, 'uploads', 'fotos')
 app.config['ALLOWED_IMAGE_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['API_KEY'] = 'acoustics'
 db = SQLAlchemy(app)
 
 # Crear carpetas de subidas si no existen
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
-    logger.debug(f"Carpeta de subidas creada en: {app.config['UPLOAD_FOLDER']}")
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+logger.debug(f"Carpeta de subidas creada en: {app.config['UPLOAD_FOLDER']}")
 os.makedirs(app.config['PHOTOS_FOLDER'], exist_ok=True)
 
 # Parámetros acústicos (constantes)
@@ -108,7 +116,8 @@ with app.app_context():
 
 # Configuración de APScheduler para finalizar escenarios automáticamente
 scheduler = BackgroundScheduler()
-scheduler.start()
+if not IS_VERCEL:
+    scheduler.start()
 
 def finalizar_escenario_job(escenario_id):
     with app.app_context():
@@ -569,10 +578,10 @@ def iniciar_escenario(escenario_id):
     escenario.estado = 'activo'
     db.session.commit()
     now = datetime.datetime.now()
-    if escenario.end_time > now:
-        scheduler.add_job(func=finalizar_escenario_job, trigger='date', run_date=escenario.end_time, args=[escenario.id])
-    else:
+    if escenario.end_time <= now:
         finalizar_escenario_job(escenario.id)
+    elif not IS_VERCEL:
+        scheduler.add_job(func=finalizar_escenario_job, trigger='date', run_date=escenario.end_time, args=[escenario.id])
     return jsonify({'mensaje': 'Escenario iniciado', 'finalizacion_programada': escenario.end_time.isoformat()})
 
 @app.route('/escenarios/<int:escenario_id>/asignar_microfonos', methods=['POST'])
