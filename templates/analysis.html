@@ -44,12 +44,27 @@
         <span class="bc-current">Análisis de Audio</span>
       </nav>
       <div class="ms-auto d-flex gap-2">
-        <button class="btn-nav" onclick="history.back()">
+        <button class="btn-nav" onclick="volverDesdeAnalisis()">
           <i class="bi bi-arrow-left me-1"></i>Volver
         </button>
       </div>
     </div>
   </nav>
+
+  <script>
+    function volverDesdeAnalisis() {
+      try {
+        if (document.referrer) {
+          const ref = new URL(document.referrer);
+          if (ref.origin === window.location.origin) {
+            history.back();
+            return;
+          }
+        }
+      } catch (e) {}
+      window.location.href = '/';
+    }
+  </script>
 
   <div class="container">
 

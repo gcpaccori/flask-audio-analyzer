@@ -11,10 +11,16 @@
   <!-- Google Fonts para diseño moderno -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/global.css">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://code.highcharts.com/stock/highstock.js"></script>
+  <script src="/static/vendor/highstock.js"></script>
+  <script src="/static/vendor/highcharts-boost.js"></script>
+  <script>
+    if (typeof Highcharts === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/highstock.js"><\\/script>');
+    }
+  </script>
   <!-- MathJax para fórmulas matemáticas -->
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
     :root {
@@ -69,7 +75,7 @@
         page-break-inside: avoid;
       }
       #stockchart {
-        height: 350px !important;
+        height: 900px !important;
         width: 100% !important;
       }
       table {
@@ -614,7 +620,19 @@
       border-radius: 0 0 6px 6px;
       padding: 1rem 0.5rem 0.5rem;
     }
-    #stockchart { height: 380px; }
+    #stockchart { height: 1000px; }
+    .laeq-print-label {
+      display: none;
+      margin-top: 0.45rem;
+      padding: 4pt 6pt;
+      border: 1px solid #7e22ce;
+      background: #faf5ff;
+      color: #581c87;
+      font-size: 8.5pt;
+      font-weight: 700;
+      line-height: 1.25;
+      text-align: left;
+    }
     
     /* Audio list */
     #audios-list {
@@ -640,6 +658,22 @@
     .audio-item:hover { border-color: #93c5fd; background: #f0f9ff; }
     .audio-item.active { border-color: #2563eb; background: #eff6ff; }
     .audio-item.has-excesos { border-left: 3px solid #ef4444; }
+
+    .audio-tools {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin: 0.25rem 0 0.5rem;
+    }
+    .audio-tools .form-control {
+      max-width: 260px;
+      font-size: 0.8rem;
+      padding: 0.25rem 0.5rem;
+      min-height: 30px;
+    }
+    .audio-tools .btn { font-size: 0.76rem; padding: 0.2rem 0.45rem; }
+    #audioPageInfo { font-size: 0.74rem; color: #64748b; }
 
     /* ═══════════════════════════════════════════
        INDICATORS
@@ -768,6 +802,126 @@
       background: rgba(255,255,255,0.12);
     }
 
+    .toc-mobile-btn {
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid rgba(255,255,255,.35);
+      background: rgba(255,255,255,.1);
+      color: #fff;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.28rem 0.55rem;
+      line-height: 1;
+    }
+    .toc-mobile-btn i { font-size: 0.95rem; }
+    .toc-mobile-btn:hover { background: rgba(255,255,255,.2); }
+
+    .sidebar-mobile-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 1150;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .sidebar-mobile-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @media (max-width: 1199.98px) {
+      .ga-breadcrumb { display: none !important; }
+      .toc-mobile-btn {
+        display: inline-flex !important;
+        flex: 0 0 auto;
+        min-width: max-content;
+        height: 32px;
+        padding: 0 0.62rem;
+        border: 1px solid rgba(255,255,255,.48);
+        background: #0f172a;
+        color: #f8fafc;
+        box-shadow: 0 2px 8px rgba(2,6,23,.35);
+        opacity: 1 !important;
+        visibility: visible !important;
+        z-index: 1301;
+      }
+      .navbar .container-fluid { flex-wrap: nowrap; }
+      .navbar-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem !important;
+        flex-wrap: nowrap;
+      }
+      .navbar-actions .btn-nav {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.74rem;
+        white-space: nowrap;
+      }
+      .navbar-brand > span { display: none; }
+
+      html, body {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      .page-layout,
+      .report-main,
+      .report-section {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      .section-body {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .section-body .report-table {
+        width: max-content;
+        min-width: 700px;
+      }
+
+      @media (max-width: 540px) {
+        .navbar-actions .btn-nav .btn-label { display: none; }
+        .navbar-actions .btn-nav { padding: 0.3rem 0.42rem; }
+        .navbar-actions .btn-nav i { margin-right: 0 !important; }
+        .section-body .report-table {
+          min-width: 640px;
+        }
+      }
+
+      .page-layout { display: block; }
+      .report-main {
+        margin-top: 56px;
+        padding: 1rem 0.8rem 2rem;
+      }
+
+      .report-sidebar {
+        position: fixed;
+        left: 0;
+        top: 52px;
+        width: 270px;
+        min-width: 270px;
+        max-height: calc(100vh - 52px);
+        height: calc(100vh - 52px);
+        margin-top: 0;
+        transform: translateX(-105%);
+        transition: transform 0.22s ease;
+        z-index: 1200;
+        box-shadow: 0 18px 34px rgba(2, 6, 23, 0.25);
+      }
+      .report-sidebar.open-mobile { transform: translateX(0); }
+      .sidebar-mobile-backdrop { display: block; }
+    }
+
+    @media (min-width: 1200px) {
+      .sidebar-mobile-backdrop,
+      .toc-mobile-btn { display: none !important; }
+    }
+
     /* ═══════════════════════════════════════════
        PRINT STYLES — impeccable
     ═══════════════════════════════════════════ */
@@ -859,8 +1013,46 @@
       th { background: #e5e7eb !important; font-weight: 700 !important; }
       tr.row-danger { background: #fef2f2 !important; }
 
-      #chart-container { border: 1px solid #999 !important; border-radius: 0 !important; page-break-inside: avoid; }
-      #stockchart { height: 320px !important; width: 100% !important; }
+      #chart-container {
+        border: 1px solid #999 !important;
+        border-radius: 0 !important;
+        page-break-inside: avoid;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+      }
+      #sec-grafico .section-body { padding: 6pt 4pt 4pt !important; }
+      #stockchart {
+        height: 936px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+      }
+      #stockchart .highcharts-container,
+      #stockchart .highcharts-root,
+      #stockchart svg {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+      }
+      #stockchart .highcharts-axis-labels text,
+      #stockchart .highcharts-axis-title,
+      #stockchart .highcharts-axis-title text {
+        fill: #111 !important;
+        color: #111 !important;
+      }
+      #stockchart .highcharts-axis-line,
+      #stockchart .highcharts-tick,
+      #stockchart .highcharts-grid-line,
+      #stockchart .highcharts-yaxis-grid .highcharts-grid-line {
+        stroke: #333 !important;
+        stroke-width: 1px !important;
+      }
+      #stockchart .highcharts-xaxis-grid .highcharts-grid-line {
+        stroke: transparent !important;
+        stroke-width: 0 !important;
+      }
+      .laeq-print-label { display: block !important; }
       #audios-list { display: none !important; }
       .audio-print-table { display: block !important; }
 
@@ -1083,9 +1275,11 @@
     .scenario-pick-item .sp-meta { font-size: 0.72rem; color: #94a3b8; display: block; }
   </style>
   <script>
-    Highcharts.setOptions({
-      time: { timezone: 'America/Lima' }
-    });
+    if (typeof Highcharts !== 'undefined') {
+      Highcharts.setOptions({
+        time: { timezone: 'America/Lima' }
+      });
+    }
     
     window.MathJax = {
       tex: {
@@ -1110,16 +1304,21 @@
         <span class="bc-sep">›</span>
         <span class="bc-current">Informe #{{ escenario_id }}</span>
       </nav>
-      <div class="d-flex ms-auto gap-2">
+      <div class="d-flex ms-auto gap-2 navbar-actions">
+        <button class="toc-mobile-btn no-print" id="tocMobileBtn" type="button" aria-label="Mostrar contenido">
+          <i class="bi bi-list"></i><span>Contenido</span>
+        </button>
         <button class="btn-nav" onclick="abrirConfiguracionImpresion()">
-          <i class="bi bi-printer me-1"></i>Imprimir / Exportar
+          <i class="bi bi-printer me-1"></i><span class="btn-label">Imprimir / Exportar</span>
         </button>
         <a class="btn-nav" href="/">
-          <i class="bi bi-arrow-left me-1"></i>Dashboard
+          <i class="bi bi-arrow-left me-1"></i><span class="btn-label">Dashboard</span>
         </a>
       </div>
     </div>
   </nav>
+
+  <div id="sidebarMobileBackdrop" class="sidebar-mobile-backdrop no-print"></div>
 
   <!-- Print cover (portada) — hidden on screen -->
   <div class="portada-informe print-only">
@@ -1255,10 +1454,20 @@
         </div>
         <div class="section-body" style="padding:0.75rem 0.5rem 0.5rem;">
           <div id="stockchart"></div>
+          <div id="laeqPrintLabel" class="print-only laeq-print-label">LAeq General: — dB</div>
         </div>
         <!-- Audio navigation list (screen only) -->
         <div class="no-print" style="padding: 0 0.5rem 0.5rem;">
           <div style="font-size:0.72rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:#94a3b8; margin:0.5rem 0 0.25rem;">Audios del escenario</div>
+          <div class="audio-tools">
+            <input id="audioSearchInput" class="form-control" type="text" placeholder="Buscar audio por ID o fecha...">
+            <button id="audioPrevPage" class="btn btn-sm btn-outline-secondary" type="button"><i class="bi bi-chevron-left"></i></button>
+            <span id="audioPageInfo">Página 1/1</span>
+            <button id="audioNextPage" class="btn btn-sm btn-outline-secondary" type="button"><i class="bi bi-chevron-right"></i></button>
+            <button id="btnAnalizarSeleccionado" class="btn btn-sm btn-primary" type="button" disabled>
+              <i class="bi bi-graph-up me-1"></i>Analizar audio seleccionado
+            </button>
+          </div>
           <div id="audios-list"></div>
         </div>
         <!-- Audio table for print -->
@@ -1860,6 +2069,24 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     var chart;
     var datosExcesos = {};
     var conclusionesGeneradas = false;
+    var todosLosAudios = [];
+    var audiosFiltrados = [];
+    var currentAudioPage = 1;
+    var audiosPorPagina = 40;
+    var selectedAudioId = null;
+    var audioMetaById = {};
+    var chartReloadTimer = null;
+    var chartLoadingRange = false;
+    var latestSeriesMeta = { bucket_ms: 1000, is_aggregated: false };
+    var initialChartRange = null;
+    var isRestoringInitialRange = false;
+    var pendingRestoreInitialRange = false;
+
+    function formatLimaDate(value) {
+      var d = new Date(value);
+      if (Number.isNaN(d.getTime())) return value || 'N/A';
+      return d.toLocaleString('es-PE', { timeZone: 'America/Lima' });
+    }
 
     function cargarInformacionEscenario() {
       $.getJSON(`/escenarios/${escenarioId}/detalle`, function(data) {
@@ -1869,7 +2096,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         
         // Update portada
         $('#portada-scenario').text((data.nombre || 'Escenario #' + escenarioId) + ' — ' + (data.ubicacion || ''));
-        $('#portada-fechas').html('Período de medición: ' + startDate.toLocaleString('es-PE') + ' — ' + endDate.toLocaleString('es-PE') + '<br>Duración: ' + duration.toFixed(2) + ' horas');
+        $('#portada-fechas').html('Período de medición: ' + formatLimaDate(data.start_time) + ' — ' + formatLimaDate(data.end_time) + '<br>Duración: ' + duration.toFixed(2) + ' horas');
 
         var micInfo = data.microfonos && data.microfonos.length > 0 ?
           data.microfonos.map(function(m) { return m.identificador || 'ID ' + m.id; }).join(', ') :
@@ -1881,8 +2108,8 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             <tr><th>Ubicación</th><td colspan="3">${data.ubicacion || 'N/A'}</td></tr>
             <tr><th>Descripción</th><td colspan="3">${data.descripcion || 'N/A'}</td></tr>
             <tr>
-              <th>Inicio de Medición</th><td>${startDate.toLocaleString('es-PE')}</td>
-              <th>Fin de Medición</th><td>${endDate.toLocaleString('es-PE')}</td>
+              <th>Inicio de Medición</th><td>${formatLimaDate(data.start_time)}</td>
+              <th>Fin de Medición</th><td>${formatLimaDate(data.end_time)}</td>
             </tr>
             <tr>
               <th>Duración Total</th><td>${duration.toFixed(2)} horas</td>
@@ -1912,6 +2139,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/analisis_general`, function(data) {
         datosGeneral = data;
         laeqGeneral = data.Lp_eqT;
+        actualizarEtiquetaLAeqImpresion();
         
         var lexh8 = data.L_EX_8h;
         var laeqStatus = laeqGeneral >= limiteReferencia ? 'danger' : (laeqGeneral >= 80 ? 'warning' : 'safe');
@@ -1964,7 +2192,8 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     function cargarTodosLosAudios() {
       $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/audios`, function(data) {
         $('#audios-list').empty();
-        var series = [];
+        audioMetaById = {};
+        todosLosAudios = data || [];
         var technicalDataHtml = `
           <table class="report-table">
             <thead>
@@ -1980,30 +2209,29 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             <tbody>
         `;
         
-        data.forEach(function(audio, index) {
+        todosLosAudios.forEach(function(audio, index) {
           var baseTime = new Date(audio.timestamp).getTime();
-          var seriesData = [];
           var tieneExcesos = false;
+          var audioId = parseInt(audio.audio_id, 10);
           
           if (audio.detailed_results && audio.detailed_results.length > 0) {
             audio.detailed_results.forEach(function(point) {
               var lpMax = parseFloat(point.Lp_max);
-              seriesData.push([ baseTime + (point.timestamp * 1000), lpMax ]);
               
               if (lpMax > limiteReferencia) {
                 tieneExcesos = true;
               }
             });
-            seriesData.sort(function(a, b) { return a[0] - b[0]; });
           }
-          
-          if (seriesData.length > 0) {
-            series.push({
-              name: "Audio " + audio.audio_id,
-              data: seriesData,
-              color: tieneExcesos ? '#dc2626' : '#16a34a'
-            });
-          }
+
+          audioMetaById[audioId] = {
+            audioId: audioId,
+            timestamp: audio.timestamp,
+            baseTime: baseTime,
+            duration: (audio.global_result && audio.global_result.duration) ? parseFloat(audio.global_result.duration) : NaN,
+            maxLevel: (audio.global_result && audio.global_result.Lp_max) ? parseFloat(audio.global_result.Lp_max) : 0,
+            tieneExcesos: tieneExcesos
+          };
           
           if (audio.global_result) {
             var estadoBadge = tieneExcesos ?
@@ -2012,7 +2240,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             technicalDataHtml += `
               <tr class="${tieneExcesos ? 'row-danger' : ''}">
                 <td>${audio.audio_id}</td>
-                <td>${new Date(audio.timestamp).toLocaleString('es-PE')}</td>
+                <td>${formatLimaDate(audio.timestamp)}</td>
                 <td>${audio.global_result.Lp_eqT || 'N/A'}</td>
                 <td>${audio.global_result.Lp_max || 'N/A'}</td>
                 <td>${audio.global_result.duration || 'N/A'}</td>
@@ -2037,67 +2265,185 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           printTableHtml += `
             <tr class="${tieneExcesos ? 'row-danger' : ''}">
               <td>Audio ${audio.audio_id}</td>
-              <td>${new Date(audio.timestamp).toLocaleString('es-PE')}</td>
+              <td>${formatLimaDate(audio.timestamp)}</td>
               <td>${duration}</td>
               <td>${maxLevel}</td>
               <td>${tieneExcesos ? 'Excede ' + limiteReferencia + ' dB' : 'Dentro del límite'}</td>
             </tr>
           `;
           
-          var item = $(`
-            <div class="audio-item ${excesoClass}" data-base="${baseTime}" data-duration="${duration}" data-audioid="${audio.audio_id}">
-              <div class="d-flex justify-content-between align-items-start mb-1">
-                <strong style="font-size:0.85rem;"><i class="bi bi-file-earmark-music me-1"></i>Audio ${audio.audio_id}</strong>
-              </div>
-              ${excesoIndicator}
-              <div style="font-size:0.78rem; color:#64748b; margin-top:4px;">${new Date(audio.timestamp).toLocaleString('es-PE')}</div>
-              <div style="font-size:0.78rem; margin-top:4px;">
-                <i class="bi bi-stopwatch me-1"></i>${duration} s &nbsp;
-                <i class="bi bi-volume-up me-1"></i>${maxLevel} dB
-              </div>
-              <button class="btn btn-sm btn-outline-primary w-100 mt-2 no-print" style="font-size:0.75rem;" onclick="verAnalisisAudio(${audio.audio_id})">
-                <i class="bi bi-graph-up me-1"></i>Ver Análisis
-              </button>
-            </div>
-          `);
-          
-          item.on('click', function() {
-            $('.audio-item').removeClass('active');
-            $(this).addClass('active');
-            var base = parseInt($(this).attr('data-base'));
-            var dur = parseFloat($(this).attr('data-duration'));
-            var endTime = (!isNaN(dur)) ? base + (dur * 1000) : base;
-            centrarChartEn(base, endTime);
-          });
-          
-          $('#audios-list').append(item);
         });
+
+        audiosFiltrados = todosLosAudios.slice();
+        renderAudioListPage(1);
         
         technicalDataHtml += '</tbody></table>';
         printTableHtml += '</tbody></table>';
         $('#technical-data').html(technicalDataHtml);
         $('#audio-print-table-content').html(printTableHtml);
-        
-        inicializarChartConReferencia(series);
+
+        cargarSerieTemporal();
+      });
+    }
+
+    function calcularMaxPointsPorRango(rangeMs) {
+      if (rangeMs >= 7 * 24 * 3600 * 1000) return 1200;   // semanas
+      if (rangeMs >= 24 * 3600 * 1000) return 1600;       // días
+      if (rangeMs >= 6 * 3600 * 1000) return 2200;        // horas
+      return 3500;                                         // minutos/segundos
+    }
+
+    function etiquetaResolucion(bucketMs) {
+      if (bucketMs < 1000) return bucketMs + ' ms';
+      var sec = bucketMs / 1000;
+      if (sec < 60) return sec.toFixed(sec >= 10 ? 0 : 1) + ' s';
+      var min = sec / 60;
+      if (min < 60) return min.toFixed(min >= 10 ? 0 : 1) + ' min';
+      var hr = min / 60;
+      if (hr < 24) return hr.toFixed(hr >= 10 ? 0 : 1) + ' h';
+      var day = hr / 24;
+      return day.toFixed(day >= 10 ? 0 : 1) + ' días';
+    }
+
+    function actualizarSubtituloSerie(meta) {
+      if (!chart || !meta) return;
+      var detalle = meta.is_aggregated
+        ? ('Resolución actual: ' + etiquetaResolucion(meta.bucket_ms) + ' (promedio por ventana)')
+        : 'Resolución actual: base (punto a punto)';
+      chart.setTitle(null, {
+        text: 'Límite de referencia: ' + limiteReferencia + ' dB | ' + detalle
+      });
+    }
+
+    function enlazarBotonAllRangeSelector() {
+      if (!chart || !chart.rangeSelector || !chart.rangeSelector.buttons) return;
+      chart.rangeSelector.buttons.forEach(function(btn) {
+        if (!btn || !btn.text) return;
+        var txt = ((btn.text.textStr || (btn.text.element && btn.text.element.textContent) || '') + '').trim().toLowerCase();
+        if (txt !== 'all') return;
+        if (btn.__restoreInitialBound) return;
+        btn.__restoreInitialBound = true;
+        Highcharts.addEvent(btn.element, 'click', function(ev) {
+          if (ev && ev.preventDefault) ev.preventDefault();
+          restaurarVistaInicialChart();
+          return false;
+        });
+      });
+    }
+
+    function calcularRangoCompletoAudios() {
+      var allMeta = Object.values(audioMetaById);
+      if (!allMeta.length) return null;
+
+      var sorted = allMeta.slice().sort(function(a, b) { return a.baseTime - b.baseTime; });
+      var first = sorted[0];
+      var last = sorted[sorted.length - 1];
+      var lastDurMs = (!isNaN(last.duration) && last.duration > 0) ? (last.duration * 1000) : 60000;
+
+      return {
+        start: first.baseTime,
+        end: last.baseTime + lastDurMs
+      };
+    }
+
+    function restaurarVistaInicialChart() {
+      if (!chart) return;
+      var rango = initialChartRange || calcularRangoCompletoAudios();
+      if (!rango || !isFinite(rango.start) || !isFinite(rango.end) || rango.end <= rango.start) return;
+
+      if (chartLoadingRange) {
+        pendingRestoreInitialRange = true;
+        return;
+      }
+
+      initialChartRange = rango;
+      pendingRestoreInitialRange = false;
+      isRestoringInitialRange = true;
+      cargarSerieTemporal(rango.start, rango.end);
+      chart.xAxis[0].setExtremes(rango.start, rango.end, true, false, { trigger: 'restore-initial' });
+    }
+
+    function cargarSerieTemporal(startMs, endMs) {
+      if (chartLoadingRange) return;
+
+      var fromMs = startMs;
+      var toMs = endMs;
+      if (fromMs == null || toMs == null || !isFinite(fromMs) || !isFinite(toMs) || toMs <= fromMs) {
+        var rangoCompleto = calcularRangoCompletoAudios();
+        if (!rangoCompleto) return;
+        fromMs = rangoCompleto.start;
+        toMs = rangoCompleto.end;
+        if (!initialChartRange) {
+          initialChartRange = { start: fromMs, end: toMs };
+        }
+      }
+
+      var rangeMs = Math.max(1000, toMs - fromMs);
+      var maxPoints = calcularMaxPointsPorRango(rangeMs);
+      chartLoadingRange = true;
+
+      $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/serie_temporal`, {
+        start_ms: Math.floor(fromMs),
+        end_ms: Math.floor(toMs),
+        max_points: maxPoints
+      }, function(resp) {
+        latestSeriesMeta = resp.meta || { bucket_ms: 1000, is_aggregated: false };
+        var points = (resp.points || []).map(function(p) {
+          return {
+            x: p.x,
+            y: p.y,
+            yMax: p.y_max,
+            audioId: p.audio_id,
+            count: p.count || 1
+          };
+        });
+
+        if (!points.length) {
+          return;
+        }
+
+        if (!chart) {
+          inicializarChartConReferencia(points, resp.meta || {});
+        } else {
+          chart.series[0].setData(points, false);
+          actualizarSubtituloSerie(resp.meta || {});
+          if (laeqGeneral) actualizarGraficoConLAeq();
+          chart.redraw();
+        }
+
+        if (chart && chart.xAxis && chart.xAxis[0]) {
+          resaltarAudioCercano();
+        }
+      }).always(function() {
+        chartLoadingRange = false;
+        if (pendingRestoreInitialRange) {
+          pendingRestoreInitialRange = false;
+          setTimeout(function() {
+            restaurarVistaInicialChart();
+          }, 0);
+        }
       });
     }
 
     function actualizarGraficoConLAeq() {
       if (chart && laeqGeneral) {
+        chart.yAxis[0].removePlotLine('laeq-line');
         chart.yAxis[0].addPlotLine({
-          color: '#2563eb',
+          color: '#7e22ce',
           value: laeqGeneral,
-          width: 1.5,
-          zIndex: 4,
-          dashStyle: 'ShortDash',
+          width: 2.6,
+          zIndex: 8,
+          dashStyle: 'Solid',
           id: 'laeq-line',
           label: {
             text: `LAeq General: ${laeqGeneral.toFixed(2)} dB`,
-            align: 'right',
-            x: -10,
+            align: 'left',
+            x: 110,
+            y: -2,
             style: { 
-              color: '#2563eb', 
-              fontWeight: '600', 
+              color: '#7e22ce', 
+              fontWeight: '700', 
+              textOutline: 'none',
               fontSize: '11px'
             }
           }
@@ -2105,13 +2451,110 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       }
     }
 
-    // Inicializa el gráfico manteniendo TODOS los datos + líneas de referencia
-    function inicializarChartConReferencia(seriesData) {
+    // Inicializa el gráfico con serie temporal adaptativa (agregada por rango)
+    function inicializarChartConReferencia(seriesData, metaInfo) {
+      if (typeof Highcharts === 'undefined') {
+        $('#stockchart').html('<div class="alert alert-warning">No se pudo cargar el motor del gráfico (Highcharts). Recarga la página o verifica la red/CDN.</div>');
+        return;
+      }
       chart = Highcharts.stockChart('stockchart', {
         chart: {
           backgroundColor: '#ffffff',
           style: { fontFamily: "'Inter', sans-serif" },
-          spacing: [20, 20, 20, 20]
+          spacing: [20, 20, 20, 20],
+          animation: false,
+          events: {
+            beforePrint: function() {
+              var chartBox = document.getElementById('stockchart');
+              var printableWidth = chartBox ? Math.floor(chartBox.getBoundingClientRect().width) : null;
+              if (!printableWidth || printableWidth < 560) printableWidth = 680;
+
+              this.update({
+                chart: {
+                  spacing: [16, 10, 18, 12],
+                  marginLeft: 68,
+                  marginRight: 10
+                },
+                rangeSelector: {
+                  enabled: false,
+                  inputEnabled: false
+                },
+                navigator: {
+                  enabled: false
+                },
+                scrollbar: {
+                  enabled: false
+                },
+                xAxis: {
+                  gridLineWidth: 0,
+                  minorGridLineWidth: 0,
+                  tickWidth: 0
+                },
+                yAxis: {
+                  opposite: false,
+                  offset: 0,
+                  lineWidth: 1,
+                  tickWidth: 1,
+                  labels: {
+                    enabled: true,
+                    style: { color: '#111111', fontSize: '11px' }
+                  },
+                  title: {
+                    text: 'Nivel de Presión Sonora (dB)',
+                    style: { color: '#111111', fontSize: '12px', fontWeight: '600' }
+                  }
+                }
+              }, false);
+              this.setSize(printableWidth, 860, false);
+              this.redraw();
+            },
+            afterPrint: function() {
+              this.update({
+                chart: {
+                  spacing: [20, 20, 20, 20],
+                  marginLeft: null,
+                  marginRight: null
+                },
+                rangeSelector: {
+                  enabled: true,
+                  inputEnabled: true
+                },
+                navigator: {
+                  enabled: true
+                },
+                scrollbar: {
+                  enabled: false
+                },
+                xAxis: {
+                  gridLineWidth: 0,
+                  minorGridLineWidth: 0,
+                  tickWidth: 0
+                },
+                yAxis: {
+                  opposite: false,
+                  offset: 0,
+                  lineWidth: 1,
+                  tickWidth: 1,
+                  labels: {
+                    enabled: true,
+                    style: { color: '#475569', fontSize: '11px' }
+                  },
+                  title: {
+                    text: 'Nivel de Presión Sonora (dB)',
+                    style: { color: '#1e293b', fontSize: '12px', fontWeight: '500' }
+                  }
+                }
+              }, false);
+              this.setSize(null, null, false);
+              this.redraw();
+              setTimeout(enlazarBotonAllRangeSelector, 0);
+            }
+          }
+        },
+        boost: {
+          useGPUTranslations: true,
+          usePreallocated: true,
+          seriesThreshold: 25
         },
         rangeSelector: {
           selected: 1,
@@ -2133,7 +2576,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           style: { color: '#1e293b', fontWeight: '600', fontSize: '14px' }
         },
         subtitle: {
-          text: 'Límite de referencia: ' + limiteReferencia + ' dB | Intervalo: 1 segundo',
+          text: 'Límite de referencia: ' + limiteReferencia + ' dB | Resolución adaptativa',
           style: { color: '#64748b', fontSize: '12px' }
         },
         xAxis: {
@@ -2141,18 +2584,34 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           lineColor: '#1e293b',
           lineWidth: 1,
           tickColor: '#1e293b',
-          tickWidth: 1,
+          tickWidth: 0,
           tickLength: 5,
           gridLineWidth: 0,
+          minorGridLineWidth: 0,
           labels: { style: { color: '#475569', fontSize: '11px' } },
           title: { text: 'Tiempo', style: { color: '#1e293b', fontSize: '12px', fontWeight: '500' } },
           events: {
-            afterSetExtremes: function () {
+            afterSetExtremes: function (e) {
+              if (isRestoringInitialRange || (e && e.trigger === 'restore-initial')) {
+                isRestoringInitialRange = false;
+                return;
+              }
+              if (e && e.trigger === 'rangeSelectorButton' && (!e.rangeSelectorButton || e.rangeSelectorButton.type === 'all')) {
+                restaurarVistaInicialChart();
+                return;
+              }
+              if (!e || e.min == null || e.max == null || !isFinite(e.min) || !isFinite(e.max) || e.max <= e.min) return;
+              if (chartReloadTimer) clearTimeout(chartReloadTimer);
+              chartReloadTimer = setTimeout(function() {
+                cargarSerieTemporal(e.min, e.max);
+              }, 220);
               resaltarAudioCercano();
             }
           }
         },
         yAxis: {
+          opposite: false,
+          offset: 0,
           title: {
             text: 'Nivel de Presión Sonora (dB)',
             style: { color: '#1e293b', fontSize: '12px', fontWeight: '500' }
@@ -2169,26 +2628,26 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           plotLines: [{
             color: '#dc2626',
             value: limiteReferencia,
-            width: 1.5,
+            width: 2,
             zIndex: 5,
             dashStyle: 'LongDash',
             label: {
-              text: 'Límite: ' + limiteReferencia + ' dB',
-              align: 'right',
-              x: -10,
-              style: { color: '#dc2626', fontWeight: '600', fontSize: '11px' }
+              text: 'Límite 85 dB',
+              align: 'left',
+              x: 10,
+              style: { color: '#b91c1c', fontWeight: '700', fontSize: '11px' }
             }
           }]
         },
         legend: {
-          enabled: true,
+          enabled: false,
           align: 'center',
           verticalAlign: 'bottom',
           layout: 'horizontal',
           itemStyle: { color: '#475569', fontWeight: '400', fontSize: '12px' }
         },
         tooltip: {
-          shared: true,
+          shared: false,
           backgroundColor: '#ffffff',
           borderColor: '#cbd5e1',
           borderWidth: 1,
@@ -2197,12 +2656,19 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           style: { fontSize: '12px' },
           formatter: function() {
             var s = '<b>' + Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '</b>';
-            this.points.forEach(function(point) {
-              var excede = point.y > limiteReferencia;
-              var color = excede ? '#dc2626' : '#16a34a';
-              var indicador = excede ? ' ⚠ EXCEDE LÍMITE' : ' ✓ Dentro del límite';
-              s += '<br/><span style="color:' + color + '; font-weight: 500;">' + point.series.name + ': ' + point.y + ' dB' + indicador + '</span>';
-            });
+            var point = this.point || this;
+            var yValue = parseFloat(point.y || 0);
+            var excede = yValue > limiteReferencia;
+            var color = excede ? '#dc2626' : '#16a34a';
+            var indicador = excede ? ' ⚠ EXCEDE LÍMITE' : ' ✓ Dentro del límite';
+            var muestras = point.count || 1;
+            s += '<br/><span style="color:' + color + '; font-weight: 500;">Lp,max prom.: ' + yValue.toFixed(2) + ' dB' + indicador + '</span>';
+            if (muestras > 1) {
+              s += '<br/><span style="color:#475569;">Ventana agregada: ' + muestras + ' punto(s)</span>';
+            }
+            if (point.yMax != null) {
+              s += '<br/><span style="color:#0f172a;">Pico en ventana: ' + parseFloat(point.yMax).toFixed(2) + ' dB</span>';
+            }
             if (laeqGeneral) {
               s += '<br/><span style="color:#2563eb; font-weight: 600;">LAeq General: ' + laeqGeneral.toFixed(2) + ' dB</span>';
             }
@@ -2222,11 +2688,34 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           series: {
             lineWidth: 1.2,
             states: { hover: { lineWidth: 1.5 } },
-            marker: { enabled: false }
+            marker: { enabled: false },
+            turboThreshold: 0,
+            boostThreshold: 2000,
+            dataGrouping: { enabled: true, approximation: 'average' },
+            point: {
+              events: {
+                click: function() {
+                  if ((this.count || 1) > 1 && latestSeriesMeta && latestSeriesMeta.bucket_ms > 1000 && chart) {
+                    var halfWindow = Math.max(latestSeriesMeta.bucket_ms * 4, 10000);
+                    chart.xAxis[0].setExtremes(this.x - halfWindow, this.x + halfWindow);
+                    return;
+                  }
+                  var aid = this.audioId || null;
+                  if (aid != null) seleccionarAudioPorId(parseInt(aid, 10), false, true);
+                }
+              }
+            }
           }
         },
-        series: seriesData
+        series: [{
+          name: 'Lp,max (promedio por ventana)',
+          data: seriesData,
+          color: '#16a34a'
+        }]
       });
+
+      actualizarSubtituloSerie(metaInfo || {});
+      setTimeout(enlazarBotonAllRangeSelector, 0);
       
       if (laeqGeneral) {
         actualizarGraficoConLAeq();
@@ -2240,22 +2729,124 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
 
     // Resalta automáticamente el audio cuyo inicio esté cercano al centro del gráfico
     function resaltarAudioCercano() {
+      if (!chart) return;
       var extremes = chart.xAxis[0].getExtremes();
       var centro = (extremes.min + extremes.max) / 2;
-      var audioItems = $('#audios-list .audio-item');
-      var minDiff = Infinity, audioParaResaltar = null;
-      audioItems.each(function () {
-        var base = parseInt($(this).attr('data-base'));
-        var diff = Math.abs(base - centro);
+      var minDiff = Infinity;
+      var audioIdSeleccionado = null;
+      Object.keys(audioMetaById).forEach(function(key) {
+        var meta = audioMetaById[key];
+        var diff = Math.abs(meta.baseTime - centro);
         if (diff < minDiff) {
           minDiff = diff;
-          audioParaResaltar = $(this);
+          audioIdSeleccionado = meta.audioId;
         }
       });
-      if (audioParaResaltar) {
-        audioItems.removeClass('active');
-        audioParaResaltar.addClass('active');
+      if (audioIdSeleccionado != null) seleccionarAudioPorId(audioIdSeleccionado, false, false);
+    }
+
+    function construirAudioItem(audio) {
+      var baseTime = new Date(audio.timestamp).getTime();
+      var duration = (audio.global_result && audio.global_result.duration) ? audio.global_result.duration : "N/A";
+      var maxLevel = (audio.global_result && audio.global_result.Lp_max) ? audio.global_result.Lp_max : 0;
+      var meta = audioMetaById[parseInt(audio.audio_id, 10)] || {};
+      var excesoClass = meta.tieneExcesos ? 'has-excesos' : '';
+      var excesoIndicator = meta.tieneExcesos ?
+        `<span class="exceso-badge" style="font-size:0.7rem;">⚠ Excede ${limiteReferencia} dB</span>` :
+        `<span class="safe-badge" style="font-size:0.7rem;">✓ OK</span>`;
+
+      var item = $(`
+        <div class="audio-item ${excesoClass}" data-base="${baseTime}" data-duration="${duration}" data-audioid="${audio.audio_id}">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <strong style="font-size:0.85rem;"><i class="bi bi-file-earmark-music me-1"></i>Audio ${audio.audio_id}</strong>
+          </div>
+          ${excesoIndicator}
+          <div style="font-size:0.78rem; color:#64748b; margin-top:4px;">${formatLimaDate(audio.timestamp)}</div>
+          <div style="font-size:0.78rem; margin-top:4px;">
+            <i class="bi bi-stopwatch me-1"></i>${duration} s &nbsp;
+            <i class="bi bi-volume-up me-1"></i>${maxLevel} dB
+          </div>
+          <button class="btn btn-sm btn-outline-primary w-100 mt-2 no-print" style="font-size:0.75rem;" onclick="event.stopPropagation(); verAnalisisAudio(${audio.audio_id})">
+            <i class="bi bi-graph-up me-1"></i>Ver Análisis
+          </button>
+        </div>
+      `);
+
+      item.on('click', function() {
+        seleccionarAudioPorId(parseInt(audio.audio_id, 10), true, false);
+      });
+      return item;
+    }
+
+    function renderAudioListPage(page) {
+      var total = audiosFiltrados.length;
+      var totalPages = Math.max(1, Math.ceil(total / audiosPorPagina));
+      currentAudioPage = Math.max(1, Math.min(page, totalPages));
+      var start = (currentAudioPage - 1) * audiosPorPagina;
+      var end = start + audiosPorPagina;
+
+      $('#audios-list').empty();
+      audiosFiltrados.slice(start, end).forEach(function(audio) {
+        var item = construirAudioItem(audio);
+        $('#audios-list').append(item);
+      });
+
+      $('#audioPageInfo').text('Página ' + currentAudioPage + '/' + totalPages + ' · ' + total + ' audio(s)');
+      $('#audioPrevPage').prop('disabled', currentAudioPage <= 1);
+      $('#audioNextPage').prop('disabled', currentAudioPage >= totalPages);
+
+      if (selectedAudioId != null) {
+        $('#audios-list .audio-item').removeClass('active');
+        $('#audios-list .audio-item[data-audioid="' + selectedAudioId + '"]').addClass('active');
       }
+    }
+
+    function aplicarFiltroAudios() {
+      var term = ($('#audioSearchInput').val() || '').toLowerCase().trim();
+      if (!term) {
+        audiosFiltrados = todosLosAudios.slice();
+      } else {
+        audiosFiltrados = todosLosAudios.filter(function(audio) {
+          var idTxt = String(audio.audio_id || '').toLowerCase();
+          var fechaTxt = formatLimaDate(audio.timestamp).toLowerCase();
+          return idTxt.includes(term) || fechaTxt.includes(term);
+        });
+      }
+      renderAudioListPage(1);
+    }
+
+    function seleccionarAudioPorId(audioId, centrarEnGrafico, scrollToView) {
+      if (!audioMetaById[audioId]) return;
+      selectedAudioId = audioId;
+      var meta = audioMetaById[audioId];
+
+      var idx = audiosFiltrados.findIndex(function(a) { return parseInt(a.audio_id, 10) === audioId; });
+      if (idx >= 0) {
+        var targetPage = Math.floor(idx / audiosPorPagina) + 1;
+        if (targetPage !== currentAudioPage || $('#audios-list .audio-item').length === 0) {
+          renderAudioListPage(targetPage);
+        }
+      }
+
+      $('#audios-list .audio-item').removeClass('active');
+      var targetItem = $('#audios-list .audio-item[data-audioid="' + audioId + '"]');
+      targetItem.addClass('active');
+      if (scrollToView && targetItem.length) {
+        var list = document.getElementById('audios-list');
+        if (list) {
+          var itemEl = targetItem[0];
+          var targetLeft = itemEl.offsetLeft - Math.max(0, (list.clientWidth - itemEl.clientWidth) / 2);
+          list.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+        }
+      }
+
+      if (centrarEnGrafico && chart) {
+        var dur = isNaN(meta.duration) ? 0 : meta.duration;
+        var endTime = meta.baseTime + (dur * 1000);
+        centrarChartEn(meta.baseTime, endTime);
+      }
+
+      $('#btnAnalizarSeleccionado').prop('disabled', false).data('audioid', audioId);
     }
 
     // Cargar análisis de cuántas veces se excedió el límite
@@ -2340,6 +2931,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       var maxNivel = datosExcesos.nivel_maximo_registrado || 0;
       var durMin = datosExcesos.duracion_total_exceso_minutos || 0;
       var limitRef = limiteReferencia;
+      var recomendaciones = [];
 
       // Clasificación del ambiente
       var clasificacion, riesgo, colorClass;
@@ -2461,7 +3053,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     // Al iniciar la página, cargar todos los datos
     $(document).ready(function() {
       var now = new Date();
-      var fechaGeneracion = now.toLocaleString('es-PE');
+      var fechaGeneracion = now.toLocaleString('es-PE', { timeZone: 'America/Lima' });
       $('#doc-generated').text('Generado: ' + fechaGeneracion);
       $('#portada-generated-date').text(fechaGeneracion);
       $('#footer-generated-date').text(fechaGeneracion);
@@ -2471,6 +3063,15 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       cargarAnalisisExcesos();
       cargarFotos();
       initTocObserver();
+      initMobileSidebar();
+
+      $('#audioSearchInput').on('input', aplicarFiltroAudios);
+      $('#audioPrevPage').on('click', function() { renderAudioListPage(currentAudioPage - 1); });
+      $('#audioNextPage').on('click', function() { renderAudioListPage(currentAudioPage + 1); });
+      $('#btnAnalizarSeleccionado').on('click', function() {
+        var id = $(this).data('audioid');
+        if (id != null) verAnalisisAudio(id);
+      });
 
       // Handle batch print mode: hide sections specified in ?ocultar=...
       var urlParams = new URLSearchParams(window.location.search);
@@ -2510,6 +3111,36 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       sections.forEach(function(sec) { observer.observe(sec); });
     }
 
+    function initMobileSidebar() {
+      var btn = document.getElementById('tocMobileBtn');
+      var sidebar = document.querySelector('.report-sidebar');
+      var backdrop = document.getElementById('sidebarMobileBackdrop');
+      if (!btn || !sidebar || !backdrop) return;
+
+      function closeSidebar() {
+        sidebar.classList.remove('open-mobile');
+        backdrop.classList.remove('show');
+      }
+
+      btn.addEventListener('click', function() {
+        var opening = !sidebar.classList.contains('open-mobile');
+        sidebar.classList.toggle('open-mobile', opening);
+        backdrop.classList.toggle('show', opening);
+      });
+
+      backdrop.addEventListener('click', closeSidebar);
+
+      document.querySelectorAll('#toc-nav a').forEach(function(a) {
+        a.addEventListener('click', function() {
+          if (window.innerWidth < 992) closeSidebar();
+        });
+      });
+
+      window.addEventListener('resize', function() {
+        if (window.innerWidth >= 992) closeSidebar();
+      });
+    }
+
     // ─── Update sidebar LAeq indicator ─────────────────────────────────────
     function actualizarSidebarLaeq(laeq, status) {
       $('#sidebar-laeq-val').text(laeq.toFixed(2));
@@ -2518,6 +3149,16 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       else if (status === 'warning') badge = '<span class="badge-warning" style="font-size:0.7rem;">▲ Precaución</span>';
       else badge = '<span class="badge-safe" style="font-size:0.7rem;">✓ Seguro</span>';
       $('#sidebar-status-badge').html(badge);
+    }
+
+    function actualizarEtiquetaLAeqImpresion() {
+      var el = document.getElementById('laeqPrintLabel');
+      if (!el) return;
+      if (laeqGeneral != null && isFinite(laeqGeneral)) {
+        el.textContent = 'LAeq General (línea de referencia): ' + laeqGeneral.toFixed(2) + ' dB';
+      } else {
+        el.textContent = 'LAeq General: — dB';
+      }
     }
 
     // ─── Edit Scenario Modal ────────────────────────────────────────────────
@@ -2791,7 +3432,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         return;
       }
 
-      # Open batch print page
+      // Open batch print page
       var batchWin = window.open('', '_blank', 'width=900,height=700');
       if (!batchWin) { alert('El navegador bloqueó la ventana emergente. Permite ventanas emergentes para este sitio.'); return; }
       var batchDoc = batchWin.document;

@@ -54,6 +54,23 @@
       color: #64748b;
       margin-top: 1px;
     }
+    .topbar .ga-hamburger {
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      border-radius: 8px;
+      width: 36px;
+      height: 34px;
+      padding: 0;
+      justify-content: center;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .12);
+    }
+    .topbar .ga-hamburger:hover,
+    .topbar .ga-hamburger:focus {
+      background: #cbd5e1;
+      border-color: #94a3b8;
+      color: #020617;
+    }
 
     /* Sidebar */
     #sidebar {
@@ -163,6 +180,100 @@
       margin: 2px 0 0;
     }
 
+    .science-reports-wrap {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 10px;
+      border: 1px solid rgba(37,99,235,.35);
+      box-shadow: 0 8px 24px rgba(15,23,42,.18);
+      padding: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .science-reports-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.65rem;
+      flex-wrap: wrap;
+    }
+    .science-reports-title {
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 0;
+    }
+    .science-reports-sub {
+      color: #93c5fd;
+      font-size: 0.72rem;
+      margin: 0;
+    }
+    .science-reports-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 0.6rem;
+    }
+    .science-report-card {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(148,163,184,.3);
+      border-radius: 8px;
+      padding: 0.65rem;
+      color: #f8fafc;
+    }
+    .science-report-id {
+      font-size: 0.66rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #93c5fd;
+      margin-bottom: 0.2rem;
+    }
+    .science-report-name {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 0.25rem;
+      min-height: 2.2rem;
+    }
+    .science-report-meta {
+      font-size: 0.72rem;
+      color: #cbd5e1;
+      margin-bottom: 0.45rem;
+      line-height: 1.35;
+    }
+    .science-report-badges {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.45rem;
+    }
+    .science-report-badge {
+      font-size: 0.64rem;
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: rgba(16,185,129,.15);
+      color: #86efac;
+      border: 1px solid rgba(34,197,94,.3);
+    }
+    .science-report-action {
+      width: 100%;
+      border: 1px solid rgba(59,130,246,.5);
+      background: rgba(37,99,235,.2);
+      color: #dbeafe;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.5rem;
+      text-align: center;
+      display: inline-block;
+      text-decoration: none;
+    }
+    .science-report-action[aria-disabled="true"] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
     /* ── Processing notifications ────────────────── */
     #processingSection {
       position: fixed;
@@ -186,6 +297,15 @@
       color: #94a3b8;
       text-align: center;
     }
+    .dash-footer-inner {
+      margin-left: var(--sidebar-w);
+      padding: 0 1.25rem;
+    }
+    @media (max-width: 768px) {
+      .dash-footer-inner {
+        margin-left: 0;
+      }
+    }
 
     /* ── Noise level bar ─────────────────────────── */
     .noise-bar-wrap { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
@@ -193,6 +313,80 @@
     .noise-safe   { background: #22c55e; }
     .noise-warn   { background: #f59e0b; }
     .noise-danger { background: #ef4444; }
+
+    .recent-wrap { padding: 0.65rem 0.85rem 0.8rem; }
+    .recent-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+    }
+    .recent-health {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.72rem;
+      color: #0f172a;
+      background: #e2e8f0;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-weight: 600;
+    }
+    .recent-health.ok { background: #dcfce7; color: #166534; }
+    .recent-health.warn { background: #fef3c7; color: #92400e; }
+    .recent-stats {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+      font-size: 0.7rem;
+    }
+    .recent-stat {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-weight: 600;
+    }
+    #recentAudiosListCompact {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+    .recent-audio-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.45rem 0.55rem;
+      background: #fff;
+    }
+    .recent-audio-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+      gap: 0.4rem;
+    }
+    .recent-audio-id { font-size: 0.74rem; font-weight: 700; color: #0f172a; }
+    .recent-audio-time { font-size: 0.7rem; color: #334155; font-weight: 600; }
+    .recent-audio-meta { font-size: 0.69rem; color: #64748b; line-height: 1.25; }
+    .recent-audio-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 3px; }
+    .recent-tag {
+      font-size: 0.62rem;
+      border-radius: 999px;
+      padding: 1px 7px;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      background: #f8fafc;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .recent-tag.scenario { background: #dcfce7; border-color: #86efac; color: #166534; }
+    .recent-tag.no-scenario { background: #f1f5f9; border-color: #cbd5e1; color: #475569; }
+    @media (max-width: 1100px) {
+      #recentAudiosListCompact { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 
@@ -281,7 +475,7 @@
 
         <div class="pane-header">
           <div>
-            <h1 class="pane-title">Dashboard</h1>
+            <h1 class="pane-title">Resumen General</h1>
             <p class="pane-sub">Resumen en tiempo real del sistema de análisis acústico</p>
           </div>
           <div class="d-flex gap-2 align-items-center">
@@ -290,6 +484,19 @@
               <span id="dash-live-label">Actualizando...</span>
             </span>
           </div>
+        </div>
+
+        <div class="science-reports-wrap">
+          <div class="science-reports-hdr">
+            <div>
+              <p class="science-reports-title"><i class="bi bi-stars me-1"></i>Informes científicos destacados</p>
+              <p class="science-reports-sub" id="informesMeta">Cargando informes culminados...</p>
+            </div>
+            <a href="#" id="btnIrCulminados" class="btn btn-sm btn-outline-light" style="font-size:0.72rem;">
+              Ver todos en Culminados
+            </a>
+          </div>
+          <div class="science-reports-grid" id="informesDestacados"></div>
         </div>
 
         <!-- KPI Row 1 -->
@@ -413,26 +620,20 @@
             <div class="dash-card">
               <div class="dash-card-hdr">
                 <span class="dash-card-title"><i class="bi bi-clock-history me-1"></i>Actividad Reciente</span>
-                <span style="font-size:0.7rem;color:#94a3b8;">Últimos 10 audios procesados · actualiza cada 5s</span>
+                <span style="font-size:0.7rem;color:#94a3b8;">Últimos 6 audios · tiempo humano · actualiza cada 5s</span>
               </div>
-              <div class="dash-card-body p-0">
-                <div class="ga-table-wrap">
-                  <table class="table table-sm mb-0" id="recentAudiosTable" style="font-size:0.82rem;">
-                    <thead style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
-                      <tr>
-                        <th class="px-3 py-2" style="font-weight:700;color:#475569;font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;">ID</th>
-                        <th class="py-2" style="font-weight:700;color:#475569;font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;">Hace</th>
-                        <th class="py-2" style="font-weight:700;color:#475569;font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;">Micrófono</th>
-                        <th class="py-2" style="font-weight:700;color:#475569;font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;">Escenario</th>
-                        <th class="py-2" style="font-weight:700;color:#475569;font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;">Alerta</th>
-                      </tr>
-                    </thead>
-                    <tbody id="recentAudiosBody"></tbody>
-                  </table>
-                  <div class="ga-empty" id="recentEmpty" style="display:none;">
-                    <i class="bi bi-inbox"></i>
-                    <p>Aún no hay audios procesados</p>
+              <div class="dash-card-body recent-wrap">
+                <div class="recent-top">
+                  <span id="systemHealthBadge" class="recent-health">● Estado del sistema: iniciando...</span>
+                  <div class="recent-stats">
+                    <span class="recent-stat" id="recentConEscenario">Con escenario: 0</span>
+                    <span class="recent-stat" id="recentSinEscenario">Sin escenario: 0</span>
                   </div>
+                </div>
+                <div id="recentAudiosListCompact"></div>
+                <div class="ga-empty" id="recentEmpty" style="display:none;">
+                  <i class="bi bi-inbox"></i>
+                  <p>Aún no hay audios procesados</p>
                 </div>
               </div>
             </div>
@@ -493,6 +694,71 @@
             options: { responsive:true, plugins:{legend:{display:false}}, scales:{ x:{ticks:{font:{size:10}}}, y:{beginAtZero:true,ticks:{font:{size:10}}} } }
           });
 
+          function safeText(value) {
+            return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          }
+
+          function formatFechaReporte(value) {
+            if (!value) return '—';
+            const d = new Date(value);
+            return Number.isNaN(d.getTime()) ? value : d.toLocaleString('es-PE');
+          }
+
+          function formatTiempoRelativo(totalSegundos) {
+            const secs = Math.max(0, Math.floor(totalSegundos || 0));
+            const d = Math.floor(secs / 86400);
+            const h = Math.floor((secs % 86400) / 3600);
+            const m = Math.floor((secs % 3600) / 60);
+            const s = secs % 60;
+            if (d > 0) return `${d}d ${h}h`;
+            if (h > 0) return `${h}h ${m}m`;
+            if (m > 0) return `${m}m ${s}s`;
+            return `${s}s`;
+          }
+
+          function renderInformesDestacados(escenarios) {
+            const container = document.getElementById('informesDestacados');
+            const meta = document.getElementById('informesMeta');
+            if (!container || !meta) return;
+
+            const culminados = (escenarios || [])
+              .filter(e => e && e.estado === 'culminado')
+              .sort((a, b) => new Date(b.end_time || 0) - new Date(a.end_time || 0));
+
+            meta.textContent = `${culminados.length} informe(s) disponibles para revisión técnica`;
+
+            if (!culminados.length) {
+              container.innerHTML = '<div class="science-report-card"><div class="science-report-name" style="min-height:unset;">No hay informes culminados aún</div><div class="science-report-meta">Finaliza un escenario para generar el informe científico correspondiente.</div></div>';
+              return;
+            }
+
+            const cards = culminados.slice(0, 8).map(escenario => {
+              const mics = Array.isArray(escenario.microfonos) ? escenario.microfonos : [];
+              const firstMic = mics.length ? parseInt(mics[0].id, 10) : null;
+              const reportUrl = Number.isInteger(firstMic) ? `/monitoring/${escenario.id}/microfono/${firstMic}` : '#';
+              const micsLabel = mics.length
+                ? mics.slice(0, 2).map(m => safeText(m.identificador || ('Mic ' + m.id))).join(' · ') + (mics.length > 2 ? ' · +' + (mics.length - 2) : '')
+                : 'Sin micrófono en historial';
+
+              return `
+                <article class="science-report-card">
+                  <div class="science-report-id">Informe #${escenario.id}</div>
+                  <div class="science-report-name">${safeText(escenario.nombre || 'Escenario culminado')}</div>
+                  <div class="science-report-meta">${safeText(escenario.ubicacion || 'Ubicación no registrada')}<br>${safeText(formatFechaReporte(escenario.end_time))}</div>
+                  <div class="science-report-badges">
+                    <span class="science-report-badge">${mics.length} mic(s)</span>
+                    <span class="science-report-badge">${safeText(micsLabel)}</span>
+                  </div>
+                  <a class="science-report-action" href="${reportUrl}" ${Number.isInteger(firstMic) ? '' : 'aria-disabled="true"'}>
+                    <i class="bi bi-file-earmark-text me-1"></i>${Number.isInteger(firstMic) ? 'Abrir informe' : 'Sin informe navegable'}
+                  </a>
+                </article>
+              `;
+            }).join('');
+
+            container.innerHTML = cards;
+          }
+
           function updateProcessingSection(processingData) {
             const sec = document.getElementById('processingSection');
             const newIds = new Set();
@@ -546,6 +812,12 @@
               const tlbBadge = document.getElementById('topbar-live-badge');
               if(tlbBadge) { document.getElementById('topbar-live-count').textContent=activos; tlbBadge.style.display=activos>0?'flex':'none'; }
 
+              const escenariosRes = await fetch('/escenarios');
+              if (escenariosRes.ok) {
+                const escenariosData = await escenariosRes.json();
+                renderInformesDestacados(escenariosData);
+              }
+
               // Alerts panel
               const alertsContainer = document.getElementById('alertsContainer');
               const alertsEmpty = document.getElementById('alertsEmpty');
@@ -568,20 +840,55 @@
               }
 
               // Recent audios
-              const tbody = document.getElementById('recentAudiosBody');
+              const listRecent = document.getElementById('recentAudiosListCompact');
               const recentEmpty = document.getElementById('recentEmpty');
-              tbody.innerHTML = '';
+              const recentConEscenario = document.getElementById('recentConEscenario');
+              const recentSinEscenario = document.getElementById('recentSinEscenario');
+              const systemHealthBadge = document.getElementById('systemHealthBadge');
+              listRecent.innerHTML = '';
               if(!data.recent_audios||!data.recent_audios.length) {
                 recentEmpty.style.display = '';
+                if (recentConEscenario) recentConEscenario.textContent = 'Con escenario: 0';
+                if (recentSinEscenario) recentSinEscenario.textContent = 'Sin escenario: 0';
               } else {
                 recentEmpty.style.display = 'none';
-                data.recent_audios.forEach(audio => {
-                  const m = Math.floor(audio.time_since/60), s = Math.floor(audio.time_since%60);
-                  const alertText = audio.global_result&&audio.global_result.alert ? `<span class="badge bg-danger" style="font-size:.65rem;">${audio.global_result.alert}</span>` : '<span class="text-muted">—</span>';
-                  const tr = document.createElement('tr');
-                  tr.innerHTML = `<td class="px-3">#${audio.audio_id}</td><td>${m}m ${s}s</td><td>${audio.mic}</td><td>${audio.escenario}</td><td>${alertText}</td>`;
-                  tbody.appendChild(tr);
+                const recent = data.recent_audios.slice(0, 6);
+                let conEscenario = 0;
+                recent.forEach(audio => {
+                  const tieneEscenario = audio.escenario && audio.escenario !== 'N/A' && audio.escenario !== '—';
+                  if (tieneEscenario) conEscenario++;
+                  const alertText = audio.global_result&&audio.global_result.alert
+                    ? `<span class="recent-tag" style="background:#fee2e2;border-color:#fecaca;color:#b91c1c;">${safeText(audio.global_result.alert)}</span>`
+                    : '<span class="recent-tag">sin alerta</span>';
+                  const div = document.createElement('article');
+                  div.className = 'recent-audio-item';
+                  div.innerHTML = `
+                    <div class="recent-audio-head">
+                      <span class="recent-audio-id">Audio #${audio.audio_id}</span>
+                      <span class="recent-audio-time">hace ${formatTiempoRelativo(audio.time_since)}</span>
+                    </div>
+                    <div class="recent-audio-meta">Mic: ${safeText(audio.mic || '—')} · Escenario: ${safeText(audio.escenario || 'N/A')}</div>
+                    <div class="recent-audio-tags">
+                      <span class="recent-tag ${tieneEscenario ? 'scenario' : 'no-scenario'}">${tieneEscenario ? 'con escenario' : 'sin escenario'}</span>
+                      ${alertText}
+                    </div>
+                  `;
+                  listRecent.appendChild(div);
                 });
+                const sinEscenario = Math.max(0, recent.length - conEscenario);
+                if (recentConEscenario) recentConEscenario.textContent = `Con escenario: ${conEscenario}`;
+                if (recentSinEscenario) recentSinEscenario.textContent = `Sin escenario: ${sinEscenario}`;
+              }
+
+              if (systemHealthBadge) {
+                const activosProc = (data.processing || []).filter(p => !p.finished).length;
+                if (activosProc > 0) {
+                  systemHealthBadge.className = 'recent-health warn';
+                  systemHealthBadge.textContent = `● Sistema activo: procesando ${activosProc} audio(s)`;
+                } else {
+                  systemHealthBadge.className = 'recent-health ok';
+                  systemHealthBadge.textContent = '● Sistema activo: monitoreo en tiempo real';
+                }
               }
 
               // Charts
@@ -602,6 +909,15 @@
 
           updateDashboard();
           setInterval(updateDashboard, 5000);
+
+          const btnIrCulminados = document.getElementById('btnIrCulminados');
+          if (btnIrCulminados) {
+            btnIrCulminados.addEventListener('click', function(event) {
+              event.preventDefault();
+              const linkCulminados = document.querySelector('#sidebar .nav-link[href="#culminados"]');
+              if (linkCulminados) linkCulminados.click();
+            });
+          }
         });
       </script>
 
@@ -762,25 +1078,42 @@
       overlay.classList.remove('visible');
     });
 
+    function activarTabSidebar(link) {
+      const targetSelector = link.getAttribute('href');
+      const targetPane = targetSelector ? document.querySelector(targetSelector) : null;
+      if (!targetPane) return;
+
+      document.querySelectorAll('#sidebar .nav-link[data-bs-toggle="tab"]').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll('#mainTabsContent .tab-pane').forEach(p => p.classList.remove('show', 'active'));
+
+      link.classList.add('active');
+      targetPane.classList.add('show', 'active');
+
+      const label = link.getAttribute('data-label') || 'Dashboard';
+      const el = document.getElementById('topbar-section-name');
+      if (el) el.textContent = label;
+    }
+
     // Update topbar title when switching tabs + close sidebar on mobile
     document.querySelectorAll('#sidebar .nav-link[data-bs-toggle="tab"]').forEach(link => {
-      link.addEventListener('shown.bs.tab', () => {
-        const label = link.getAttribute('data-label') || 'Dashboard';
-        const el = document.getElementById('topbar-section-name');
-        if (el) el.textContent = label;
-      });
-      link.addEventListener('click', () => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        activarTabSidebar(link);
         if (window.innerWidth <= 768) {
           sidebar.classList.remove('open');
           overlay.classList.remove('visible');
         }
       });
     });
+
+    const activeSidebarLink = document.querySelector('#sidebar .nav-link[data-bs-toggle="tab"].active')
+      || document.querySelector('#sidebar .nav-link[data-bs-toggle="tab"]');
+    if (activeSidebarLink) activarTabSidebar(activeSidebarLink);
   </script>
 
   <!-- Footer -->
   <footer class="dash-footer">
-    <div class="content">
+    <div class="dash-footer-inner">
       &copy; 2025 Evaluación Acústica Ocupacional · Proyecto Tesis UNI · INICTEL-UNI · Laboratorio de IoT
     </div>
   </footer>
@@ -1254,6 +1587,14 @@
       });
     }
 
+    function recargarTodasLasVistas() {
+      cargarEscenarios();
+      cargarEscenariosVivos();
+      cargarEscenariosCulminados();
+      cargarMicrofonos();
+      cargarAudios();
+    }
+
     // Función para construir la cadena de micrófonos asignados (para la columna "N° de Fuentes")
     function obtenerMicString(escenario) {
       var valorFormulario = escenario.num_fuentes || 0;
@@ -1283,11 +1624,8 @@
       $('#tablaMicrofonos').DataTable({ language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json' } });
       $('#tablaAudios').DataTable({ language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json' } });
 
-      cargarEscenarios();
-      cargarEscenariosVivos();
-      cargarEscenariosCulminados();
-      cargarMicrofonos();
-      cargarAudios();
+      recargarTodasLasVistas();
+      setInterval(recargarTodasLasVistas, 10000);
       $('#startTimeEscenario, #endTimeEscenario').change(updateDurationCalculation);
       $('#editarStartTimeEscenario, #editarEndTimeEscenario').change(updateEditarDurationCalculation);
     });
@@ -1309,8 +1647,7 @@
     function iniciarEscenario(id) {
       $.post('/escenarios/' + id + '/iniciar', function (response) {
         alert(response.mensaje);
-        cargarEscenarios();
-        cargarEscenariosVivos();
+        recargarTodasLasVistas();
       }).fail(function (xhr) {
         alert('Error: ' + xhr.responseJSON.error);
       });
@@ -1318,8 +1655,7 @@
     function finalizarEscenario(id) {
       $.post('/escenarios/' + id + '/finalizar', function (response) {
         alert(response.mensaje);
-        cargarEscenarios();
-        cargarEscenariosVivos();
+        recargarTodasLasVistas();
       }).fail(function (xhr) {
         alert('Error: ' + xhr.responseJSON.error);
       });
@@ -1331,7 +1667,7 @@
           type: 'DELETE',
           success: function (response) {
             alert(response.mensaje);
-            cargarEscenarios();
+            recargarTodasLasVistas();
           },
           error: function (xhr) {
             alert('Error: ' + xhr.responseJSON.error);
@@ -1390,8 +1726,7 @@
         success: function (response) {
           alert(response.mensaje);
           $('#modalEditarEscenario').modal('hide');
-          cargarEscenarios();
-          cargarEscenariosVivos();
+          recargarTodasLasVistas();
         },
         error: function (xhr) {
           alert('Error: ' + xhr.responseJSON.error);
@@ -1419,9 +1754,7 @@
         success: function (response) {
           alert(response.mensaje);
           $('#modalAsignarMicrofonos').modal('hide');
-          cargarEscenarios();
-          cargarEscenariosVivos();
-          cargarMicrofonos();
+          recargarTodasLasVistas();
         },
         error: function (xhr) {
           alert('Error: ' + xhr.responseJSON.error);
@@ -1437,7 +1770,7 @@
           type: 'DELETE',
           success: function (response) {
             alert(response.mensaje);
-            cargarMicrofonos();
+            recargarTodasLasVistas();
           },
           error: function (xhr) {
             alert('Error: ' + xhr.responseJSON.error);
@@ -1460,7 +1793,7 @@
         success: function (response) {
           alert(response.mensaje);
           $('#modalCrearMicrofono').modal('hide');
-          cargarMicrofonos();
+          recargarTodasLasVistas();
         },
         error: function (xhr) {
           alert('Error: ' + xhr.responseJSON.error);
@@ -1565,8 +1898,7 @@
         success: function (response) {
           alert(response.mensaje);
           $('#modalCrearEscenario').modal('hide');
-          cargarEscenarios();
-          cargarEscenariosVivos();
+          recargarTodasLasVistas();
         },
         error: function (xhr) {
           alert('Error: ' + xhr.responseJSON.error);

@@ -12,6 +12,7 @@ import numpy as np
 import datetime
 import json
 import pytz
+import math
 import traceback
 import sys
 
@@ -52,9 +53,25 @@ processing_audios = {}
 SAFE_NOISE_LEVEL = 85.0
 
 # Función para obtener la hora actual en la zona "America/Lima"
+LIMA_TZ = pytz.timezone("America/Lima")
+
 def lima_now():
-    lima_tz = pytz.timezone("America/Lima")
-    return datetime.datetime.now(lima_tz)
+    return datetime.datetime.now(LIMA_TZ)
+
+def to_lima_datetime(dt):
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return LIMA_TZ.localize(dt)
+    return dt.astimezone(LIMA_TZ)
+
+def lima_iso(dt):
+    dt_lima = to_lima_datetime(dt)
+    return dt_lima.isoformat() if dt_lima else None
+
+def lima_epoch_ms(dt):
+    dt_lima = to_lima_datetime(dt)
+    return int(dt_lima.timestamp() * 1000) if dt_lima else 0
 
 # Modelos de la base de datos
 
@@ -131,7 +148,7 @@ def analizar_audio_file(filepath, audio_id=None):
         if audio_id:
             processing_audios[audio_id] = {
                 "audio_id": audio_id,
-                "start_time": datetime.datetime.utcnow().isoformat(),
+                "start_time": lima_now().isoformat(),
                 "duration": 0,
                 "progress": 0,
                 "finished": False,
@@ -191,7 +208,7 @@ def analizar_audio_file(filepath, audio_id=None):
         if audio_id:
             processing_audios[audio_id] = {
                 "audio_id": audio_id,
-                "start_time": datetime.datetime.utcnow().isoformat(),
+                "start_time": lima_now().isoformat(),
                 "duration": round(T, 2),
                 "progress": 0,
                 "finished": False,
@@ -264,6 +281,10 @@ def comparacion():
 def uploaded_file(filename):
     logger.debug(f"Solicitando archivo: {filename}")
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.svg', mimetype='image/svg+xml')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -489,8 +510,8 @@ def listar_escenarios():
             'nombre': e.nombre,
             'descripcion': e.descripcion,
             'ubicacion': e.ubicacion,
-            'start_time': e.start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            'end_time': e.end_time.strftime("%Y-%m-%d %H:%M:%S"),
+            'start_time': to_lima_datetime(e.start_time).strftime("%Y-%m-%d %H:%M:%S"),
+            'end_time': to_lima_datetime(e.end_time).strftime("%Y-%m-%d %H:%M:%S"),
             'estado': e.estado,
             'horas_medicion': e.horas_medicion,
             'dias_medicion': e.dias_medicion,
@@ -568,12 +589,12 @@ def iniciar_escenario(escenario_id):
         return jsonify({'error': 'El escenario ya se ha iniciado o finalizado'}), 400
     escenario.estado = 'activo'
     db.session.commit()
-    now = datetime.datetime.now()
+    now = lima_now()
     if escenario.end_time > now:
         scheduler.add_job(func=finalizar_escenario_job, trigger='date', run_date=escenario.end_time, args=[escenario.id])
     else:
         finalizar_escenario_job(escenario.id)
-    return jsonify({'mensaje': 'Escenario iniciado', 'finalizacion_programada': escenario.end_time.isoformat()})
+    return jsonify({'mensaje': 'Escenario iniciado', 'finalizacion_programada': lima_iso(escenario.end_time)})
 
 @app.route('/escenarios/<int:escenario_id>/asignar_microfonos', methods=['POST'])
 def asignar_microfonos(escenario_id):
@@ -650,8 +671,8 @@ def detalle_escenario(escenario_id):
         'nombre': escenario.nombre,
         'descripcion': escenario.descripcion,
         'ubicacion': escenario.ubicacion,
-        'start_time': escenario.start_time.strftime("%Y-%m-%d %H:%M:%S"),
-        'end_time': escenario.end_time.strftime("%Y-%m-%d %H:%M:%S"),
+        'start_time': to_lima_datetime(escenario.start_time).strftime("%Y-%m-%d %H:%M:%S"),
+        'end_time': to_lima_datetime(escenario.end_time).strftime("%Y-%m-%d %H:%M:%S"),
         'estado': escenario.estado,
         'horas_medicion': escenario.horas_medicion,
         'dias_medicion': escenario.dias_medicion,
@@ -754,8 +775,8 @@ def listar_escenarios_culminados():
             'id': e.id,
             'nombre': e.nombre,
             'ubicacion': e.ubicacion or '',
-            'start_time': e.start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            'end_time': e.end_time.strftime("%Y-%m-%d %H:%M:%S"),
+            'start_time': to_lima_datetime(e.start_time).strftime("%Y-%m-%d %H:%M:%S"),
+            'end_time': to_lima_datetime(e.end_time).strftime("%Y-%m-%d %H:%M:%S"),
             'microfonos': mics
         })
     return jsonify(resultado)
@@ -768,7 +789,7 @@ def detalle_microfono(microfono_id):
             'audio_id': resultado.audio_id,
             'microfono_id': resultado.microfono_id,
             'escenario_id': resultado.escenario_id,
-            'timestamp': resultado.timestamp.isoformat(),
+            'timestamp': lima_iso(resultado.timestamp),
             'global_result': json.loads(resultado.global_result) if resultado.global_result else {},
             'detailed_results': json.loads(resultado.detailed_results) if resultado.detailed_results else {}
         }
@@ -801,12 +822,182 @@ def obtener_audios(escenario_id, microfono_id):
         filename = audio_entry.filename if audio_entry else ""
         audios.append({
             "audio_id": res.audio_id,
-            "timestamp": res.timestamp.isoformat(),
+            "timestamp": lima_iso(res.timestamp),
             "global_result": global_result,
             "detailed_results": detailed_results,
             "filename": filename
         })
     return jsonify(audios)
+
+@app.route('/escenarios/<int:escenario_id>/microfono/<int:microfono_id>/serie_temporal', methods=['GET'])
+def obtener_serie_temporal(escenario_id, microfono_id):
+    resultados = AudioResultado.query.filter_by(
+        escenario_id=escenario_id,
+        microfono_id=microfono_id
+    ).order_by(AudioResultado.timestamp.asc()).all()
+
+    if not resultados:
+        return jsonify({
+            "points": [],
+            "meta": {
+                "is_aggregated": False,
+                "total_raw_points": 0,
+                "returned_points": 0,
+                "bucket_ms": 1000,
+                "resolution_seconds": 1
+            }
+        })
+
+    raw_points = []
+    for res in resultados:
+        try:
+            detailed_results = json.loads(res.detailed_results) if res.detailed_results else []
+        except Exception:
+            detailed_results = []
+
+        base_ms = lima_epoch_ms(res.timestamp)
+        for point in detailed_results:
+            try:
+                rel_seconds = float(point.get('timestamp', 0))
+                lp_max = float(point.get('Lp_max', 0))
+            except Exception:
+                continue
+            x_ms = base_ms + int(rel_seconds * 1000)
+            raw_points.append((x_ms, lp_max, res.audio_id))
+
+    if not raw_points:
+        return jsonify({
+            "points": [],
+            "meta": {
+                "is_aggregated": False,
+                "total_raw_points": 0,
+                "returned_points": 0,
+                "bucket_ms": 1000,
+                "resolution_seconds": 1
+            }
+        })
+
+    raw_points.sort(key=lambda p: p[0])
+    global_min = raw_points[0][0]
+    global_max = raw_points[-1][0]
+
+    start_ms = request.args.get('start_ms', type=int)
+    end_ms = request.args.get('end_ms', type=int)
+    max_points = request.args.get('max_points', default=1800, type=int)
+
+    if start_ms is None:
+        start_ms = global_min
+    if end_ms is None:
+        end_ms = global_max
+    if end_ms <= start_ms:
+        end_ms = start_ms + 1000
+
+    max_points = max(300, min(max_points, 8000))
+
+    filtered = [p for p in raw_points if start_ms <= p[0] <= end_ms]
+    total_raw = len(filtered)
+    range_fallback = False
+
+    if total_raw == 0:
+        filtered = raw_points
+        total_raw = len(filtered)
+        start_ms = global_min
+        end_ms = global_max
+        range_fallback = True
+
+    range_ms = max(1, end_ms - start_ms)
+    is_aggregated = total_raw > max_points
+    bucket_ms = 1000
+
+    if not is_aggregated:
+        points = []
+        prev_audio = None
+        prev_x = None
+        for (x, y, aid) in filtered:
+            if prev_audio is not None and aid != prev_audio:
+                points.append({
+                    "x": prev_x + 1 if prev_x is not None else x,
+                    "y": None,
+                    "audio_id": None,
+                    "count": 0,
+                    "y_max": None
+                })
+            points.append({
+                "x": x,
+                "y": round(y, 4),
+                "audio_id": aid,
+                "count": 1,
+                "y_max": round(y, 4)
+            })
+            prev_audio = aid
+            prev_x = x
+    else:
+        bucket_ms = max(1, int(math.ceil(range_ms / max_points)))
+        buckets = {}
+        for x, y, aid in filtered:
+            bidx = (x - start_ms) // bucket_ms
+            bstart = start_ms + (bidx * bucket_ms)
+            b = buckets.get(bstart)
+            if not b:
+                b = {
+                    "sum": 0.0,
+                    "count": 0,
+                    "y_max": float('-inf'),
+                    "audio_counts": {}
+                }
+                buckets[bstart] = b
+            b["sum"] += y
+            b["count"] += 1
+            if y > b["y_max"]:
+                b["y_max"] = y
+            b["audio_counts"][aid] = b["audio_counts"].get(aid, 0) + 1
+
+        points = []
+        prev_center = None
+        prev_audio = None
+        for bstart in sorted(buckets.keys()):
+            b = buckets[bstart]
+            dominant_audio = max(b["audio_counts"], key=b["audio_counts"].get)
+            avg_y = b["sum"] / b["count"] if b["count"] else 0.0
+            center_x = int(bstart + (bucket_ms // 2))
+
+            if prev_center is not None:
+                has_gap = (center_x - prev_center) > int(bucket_ms * 1.5)
+                audio_changed = dominant_audio != prev_audio
+                if has_gap or audio_changed:
+                    points.append({
+                        "x": prev_center + 1,
+                        "y": None,
+                        "audio_id": None,
+                        "count": 0,
+                        "y_max": None
+                    })
+
+            points.append({
+                "x": center_x,
+                "y": round(avg_y, 4),
+                "audio_id": dominant_audio,
+                "count": b["count"],
+                "y_max": round(b["y_max"], 4)
+            })
+            prev_center = center_x
+            prev_audio = dominant_audio
+
+    return jsonify({
+        "points": points,
+        "meta": {
+            "is_aggregated": is_aggregated,
+            "total_raw_points": total_raw,
+            "returned_points": len(points),
+            "bucket_ms": bucket_ms,
+            "resolution_seconds": round(bucket_ms / 1000.0, 3),
+            "start_ms": start_ms,
+            "end_ms": end_ms,
+            "global_min": global_min,
+            "global_max": global_max,
+            "range_fallback": range_fallback
+        }
+    })
 
 # Modificaciones necesarias en app.py
 
@@ -822,8 +1013,8 @@ def monitoring(escenario_id, microfono_id):
             'monitoring_finished.html',  # NUEVO TEMPLATE
             escenario_id=escenario_id,
             microfono_id=microfono_id,
-            escenario_start=escenario.start_time.isoformat(),
-            escenario_end=escenario.end_time.isoformat(),
+            escenario_start=lima_iso(escenario.start_time),
+            escenario_end=lima_iso(escenario.end_time),
             limite_referencia=85.0  # Línea de referencia en 85 dB
         )
     else:
@@ -832,8 +1023,8 @@ def monitoring(escenario_id, microfono_id):
             'monitoring.html',
             escenario_id=escenario_id,
             microfono_id=microfono_id,
-            escenario_start=escenario.start_time.isoformat(),
-            escenario_end=escenario.end_time.isoformat()
+            escenario_start=lima_iso(escenario.start_time),
+            escenario_end=lima_iso(escenario.end_time)
         )
 
 # AGREGAR nuevo endpoint para estadísticas de excesos del límite
@@ -878,7 +1069,7 @@ def analisis_excesos(escenario_id, mic_id):
             
             excesos_por_audio.append({
                 "audio_id": res.audio_id,
-                "timestamp": res.timestamp.isoformat(),
+                "timestamp": lima_iso(res.timestamp),
                 "puntos_excedidos": audio_excesos,
                 "duracion_exceso_segundos": duracion_audio_exceso,
                 "nivel_maximo": float(global_result.get("Lp_max", 0))
@@ -977,7 +1168,7 @@ def dashboard_data():
       - Datos para el gráfico de niveles de ruido (noise_data).
       - Frecuencia de llegada de audios por micrófono activo (frequency_data) por hora.
     """
-    now = datetime.datetime.now()
+    now = lima_now()
     total_audios = Audio.query.count()
     total_microphones = Microfono.query.count()
     active_microphones = Microfono.query.filter(Microfono.escenario_id.isnot(None)).count()
@@ -989,10 +1180,8 @@ def dashboard_data():
     recent_audios = []
     alerts = []
     for res in recent_results:
-        audio = Audio.query.get(res.audio_id)
         mic = Microfono.query.get(res.microfono_id) if res.microfono_id else None
         escenario = Escenario.query.get(res.escenario_id) if res.escenario_id else None
-        time_since = (now - res.timestamp).total_seconds()  # en segundos
         global_result = json.loads(res.global_result) if res.global_result else {}
         if "alert" in global_result:
             alerts.append({
@@ -1001,9 +1190,20 @@ def dashboard_data():
                 "escenario": escenario.nombre if escenario else "N/A",
                 "alert": global_result["alert"]
             })
+
+    # Actividad reciente: usar Audio como fuente base para incluir también audios sin escenario
+    recent_audio_entries = Audio.query.order_by(Audio.timestamp.desc()).limit(12).all()
+    for audio_entry in recent_audio_entries:
+        latest_result = AudioResultado.query.filter_by(audio_id=audio_entry.id).order_by(AudioResultado.timestamp.desc()).first()
+        mic = Microfono.query.get(latest_result.microfono_id) if latest_result and latest_result.microfono_id else None
+        escenario = Escenario.query.get(latest_result.escenario_id) if latest_result and latest_result.escenario_id else None
+        global_result = json.loads(latest_result.global_result) if latest_result and latest_result.global_result else {}
+        ref_timestamp = latest_result.timestamp if latest_result else audio_entry.timestamp
+        time_since = (now - to_lima_datetime(ref_timestamp)).total_seconds()  # en segundos
+
         recent_audios.append({
-            "audio_id": res.audio_id,
-            "timestamp": res.timestamp.isoformat(),
+            "audio_id": audio_entry.id,
+            "timestamp": lima_iso(ref_timestamp),
             "time_since": time_since,
             "mic": mic.identificador if mic else "N/A",
             "escenario": escenario.nombre if escenario else "N/A",
