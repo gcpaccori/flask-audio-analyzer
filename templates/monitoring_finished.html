@@ -42,22 +42,168 @@
       padding: 0;
     }
     
-    /* Estilos modernos para impresión */
+    /* CSS completo de impresión — tipo informe técnico */
     @media print {
-      body { 
-        background: white !important; 
-        font-size: 11pt;
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body {
+        background: white !important;
+        font-size: 10pt;
         line-height: 1.4;
+        color: #000 !important;
+        margin: 0;
+        padding: 0;
       }
-      .navbar-custom { background: var(--primary-color) !important; }
       .no-print { display: none !important; }
-      .print-break { page-break-before: always; }
-      .print-avoid-break { page-break-inside: avoid; }
-      #stockchart { height: 250px !important; }
-      .main-container { margin-top: 0 !important; }
-      .card { border: 1px solid #ddd !important; }
-      .methodology-section { font-size: 10pt; }
-      .formula { font-size: 9pt; }
+      .main-container {
+        margin: 0 !important;
+        padding: 15mm 15mm !important;
+        max-width: 100% !important;
+      }
+      #chart-container {
+        width: 100% !important;
+        border: 1px solid #000 !important;
+        padding: 10px !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+      #stockchart {
+        height: 350px !important;
+        width: 100% !important;
+      }
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        page-break-inside: avoid;
+      }
+      th, td {
+        border: 1px solid #000 !important;
+        padding: 4px 8px !important;
+        font-size: 9pt !important;
+        color: #000 !important;
+      }
+      th {
+        background: #e5e7eb !important;
+        font-weight: 700 !important;
+      }
+      .report-section {
+        page-break-inside: avoid;
+        margin-bottom: 15px;
+      }
+      .section-title {
+        background: #1e293b !important;
+        color: white !important;
+        padding: 6px 12px !important;
+        font-size: 11pt !important;
+        font-weight: 700 !important;
+        margin: 0 0 0 0 !important;
+        border: 1px solid #000 !important;
+      }
+      .formula-box {
+        border: 1px solid #999 !important;
+        border-left: 3px solid #333 !important;
+        background: #f9f9f9 !important;
+        padding: 8px !important;
+        font-size: 8pt !important;
+        page-break-inside: avoid;
+      }
+      .formula-box pre {
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+      }
+      .process-step {
+        border: 1px solid #999 !important;
+        background: #fafafa !important;
+        padding: 10px !important;
+        margin: 8px 0 !important;
+        page-break-inside: avoid;
+      }
+      .process-step::before {
+        position: static !important;
+        display: inline-block !important;
+        margin-bottom: 5px !important;
+        background: #333 !important;
+      }
+      .methodology-section {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 10px 0 !important;
+        page-break-before: always;
+      }
+      .methodology-section h2 {
+        background: #1e293b !important;
+        color: white !important;
+        padding: 6px 12px !important;
+        border: 1px solid #000 !important;
+        border-bottom: none !important;
+        border-radius: 0 !important;
+        font-size: 12pt !important;
+      }
+      .terms-grid {
+        display: block !important;
+        columns: 2;
+        column-gap: 15px;
+      }
+      .term-item {
+        break-inside: avoid;
+        border: 1px solid #ccc !important;
+        margin-bottom: 5px !important;
+        padding: 5px 8px !important;
+        font-size: 8pt !important;
+      }
+      .report-header-print {
+        text-align: center;
+        border: 2px solid #000;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      .laeq-summary {
+        background: none !important;
+        color: #000 !important;
+        border: 2px solid #1e293b !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 10px !important;
+        text-align: center;
+        page-break-inside: avoid;
+      }
+      .laeq-summary * { color: #000 !important; }
+      .laeq-value {
+        font-size: 24pt !important;
+        text-shadow: none !important;
+      }
+      .laeq-summary::before { display: none !important; }
+      .status-banner {
+        background: none !important;
+        color: #000 !important;
+        border: 2px solid #000 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 10px !important;
+      }
+      .status-banner * { color: #000 !important; }
+      .status-banner::before { display: none !important; }
+      .status-banner h1 { font-size: 16pt !important; }
+      .exceso-badge, .safe-badge {
+        border: 1px solid #000 !important;
+        background: none !important;
+        color: #000 !important;
+      }
+      #audios-list { display: none !important; }
+      .audio-print-table { display: table !important; }
+      .methodology-section div[style*="text-indent"] {
+        font-size: 8pt !important;
+        line-height: 1.5 !important;
+      }
+      .modern-card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+      .modern-card .card-header {
+        background: #e5e7eb !important;
+      }
     }
     
     /* Header moderno con gradiente */
@@ -103,17 +249,6 @@
       overflow: hidden;
     }
     
-    .status-banner::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-      opacity: 0.3;
-    }
-    
     .status-banner h1 {
       font-size: 2.5rem;
       font-weight: 700;
@@ -141,7 +276,6 @@
     
     .modern-card:hover {
       box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
     }
     
     .modern-card .card-header {
@@ -165,38 +299,15 @@
       text-align: center;
       box-shadow: var(--shadow-lg);
       margin-bottom: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .laeq-summary::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-      animation: pulse 4s ease-in-out infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 0.5; }
-      50% { transform: scale(1.1); opacity: 0.8; }
     }
     
     .laeq-value {
       font-size: 3.5rem;
       font-weight: 800;
       margin: 1rem 0;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      position: relative;
-      z-index: 1;
     }
     
     .laeq-details {
-      position: relative;
-      z-index: 1;
     }
     
     /* Fixed contrast issues in LAeq details by removing problematic white backgrounds */
@@ -214,25 +325,23 @@
       color: white !important;
     }
     
-    /* Lista de audios moderna */
+    /* Lista de audios — barra horizontal scrolleable (solo pantalla) */
     #audios-list {
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow-sm);
-      max-height: 70vh;
-      overflow-y: auto;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 10px 0;
+      margin: 1rem 0;
     }
     
     .audio-item {
-      padding: 1rem;
-      margin-bottom: 0.75rem;
+      flex: 0 0 180px;
+      width: 180px;
+      padding: 0.75rem;
       background: var(--white);
       border: 1px solid var(--border-color);
       border-radius: 8px;
       cursor: pointer;
-      transition: all 0.3s ease;
       border-left: 4px solid var(--success-color);
     }
     
@@ -242,39 +351,71 @@
     
     .audio-item:hover {
       background: #f1f5f9;
-      transform: translateX(4px);
-      box-shadow: var(--shadow-md);
+      box-shadow: var(--shadow-sm);
     }
     
     .audio-item.active {
       background: #dbeafe;
       border-color: var(--primary-color);
-      box-shadow: var(--shadow-md);
+      box-shadow: var(--shadow-sm);
     }
     
-    /* Contenedor de gráfico moderno */
+    /* Tabla de audios para impresión (oculta en pantalla) */
+    .audio-print-table {
+      display: none;
+    }
+    
+    /* Contenedor de gráfico profesional */
     #chart-container {
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow-sm);
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      padding: 1rem;
+      margin: 1.5rem 0;
     }
     
     #stockchart {
-      height: 500px;
-      border-radius: 8px;
+      height: 550px;
+      width: 100%;
     }
     
-    /* Análisis de excesos moderno */
+    /* Título de sección tipo informe */
+    .section-title {
+      background: #1e293b;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 2rem 0 0 0;
+      border-radius: 4px 4px 0 0;
+    }
+    
+    /* Tablas de datos tipo informe */
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+    .report-table th, .report-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    .report-table th {
+      background: #f1f5f9;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .report-table tr.row-danger {
+      background: #fef2f2;
+    }
+    
+    /* Análisis de excesos */
     #excesos-analysis {
       background: var(--white);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
+      border-radius: 0 0 8px 8px;
       padding: 1.5rem;
-      box-shadow: var(--shadow-sm);
-      max-height: 70vh;
-      overflow-y: auto;
     }
     
     .metric-item {
@@ -490,25 +631,28 @@
     </div>
 
     <div class="row g-4">
-      <!-- Columna Izquierda: Lista de audios -->
-      <div class="col-lg-3">
-        <div id="audios-list">
-          <h5 class="mb-3"><i class="bi bi-file-earmark-music me-2"></i>Audios del Escenario</h5>
-          <div id="lista-audios"></div>
-        </div>
-      </div>
-      
-      <!-- Columna Central: Gráfico -->
-      <div class="col-lg-6">
+      <!-- Gráfico a ancho completo -->
+      <div class="col-12">
         <div id="chart-container">
           <div id="stockchart"></div>
         </div>
+        
+        <!-- Lista de audios: barra horizontal (solo pantalla) -->
+        <h6 class="section-title no-print"><i class="bi bi-file-earmark-music me-2"></i>Audios del Escenario</h6>
+        <div id="audios-list" class="no-print">
+          <!-- audio items rendered inline by JS -->
+        </div>
+        
+        <!-- Tabla de audios para impresión -->
+        <div class="audio-print-table">
+          <div id="audio-print-table-content"></div>
+        </div>
       </div>
       
-      <!-- Columna Derecha: Análisis de excesos -->
-      <div class="col-lg-3">
+      <!-- Análisis de excesos — ancho completo -->
+      <div class="col-12">
+        <h6 class="section-title"><i class="bi bi-exclamation-triangle me-2"></i>Análisis de Excesos</h6>
         <div id="excesos-analysis">
-          <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Análisis de Excesos</h5>
           <div id="analisis-excesos-info">
             <div class="d-flex justify-content-center">
               <div class="spinner-border text-primary" role="status">
@@ -521,17 +665,13 @@
     </div>
 
     <!-- Datos técnicos completos -->
-    <div class="print-break">
-      <div class="modern-card mt-4">
-        <div class="card-header">
-          <h4 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Datos Técnicos Completos</h4>
-        </div>
-        <div class="card-body">
-          <div id="technical-data">
-            <div class="d-flex justify-content-center">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
-              </div>
+    <div class="report-section mt-4">
+      <h6 class="section-title"><i class="bi bi-clipboard-data me-2"></i>Datos Técnicos por Audio</h6>
+      <div style="border: 1px solid #cbd5e1; border-top: none; padding: 1rem; background: #fff;">
+        <div id="technical-data">
+          <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
             </div>
           </div>
         </div>
@@ -916,56 +1056,13 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         var duration = (endDate - startDate) / (1000 * 60 * 60); // horas
         
         var html = `
-          <div class="row g-3">
-            <div class="col-md-6">
-              <div class="info-item">
-                <strong><i class="bi bi-tag me-1"></i>Nombre:</strong><br>
-                ${data.nombre || 'N/A'}
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="info-item">
-                <strong><i class="bi bi-geo-alt me-1"></i>Ubicación:</strong><br>
-                ${data.ubicacion || 'N/A'}
-              </div>
-            </div>
-            <div class="col-md-12">
-              <div class="info-item">
-                <strong><i class="bi bi-card-text me-1"></i>Descripción:</strong><br>
-                ${data.descripcion || 'N/A'}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="info-item">
-                <strong><i class="bi bi-calendar-event me-1"></i>Inicio:</strong><br>
-                ${startDate.toLocaleString('es-PE')}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="info-item">
-                <strong><i class="bi bi-calendar-check me-1"></i>Fin:</strong><br>
-                ${endDate.toLocaleString('es-PE')}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="info-item">
-                <strong><i class="bi bi-clock me-1"></i>Duración:</strong><br>
-                ${duration.toFixed(2)} horas
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="info-item">
-                <strong><i class="bi bi-check-circle me-1"></i>Estado:</strong><br>
-                <span class="badge bg-success">${data.estado || 'N/A'}</span>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="info-item">
-                <strong><i class="bi bi-mic me-1"></i>Micrófonos:</strong><br>
-                ${data.microfonos ? data.microfonos.length : 0} dispositivo(s)
-              </div>
-            </div>
-          </div>
+          <table class="report-table">
+            <tr><th style="width:25%">Nombre</th><td>${data.nombre || 'N/A'}</td><th style="width:25%">Ubicación</th><td>${data.ubicacion || 'N/A'}</td></tr>
+            <tr><th>Descripción</th><td colspan="3">${data.descripcion || 'N/A'}</td></tr>
+            <tr><th>Inicio</th><td>${startDate.toLocaleString('es-PE')}</td><th>Fin</th><td>${endDate.toLocaleString('es-PE')}</td></tr>
+            <tr><th>Duración</th><td>${duration.toFixed(2)} horas</td><th>Estado</th><td>${data.estado || 'N/A'}</td></tr>
+            <tr><th>Micrófonos</th><td colspan="3">${data.microfonos ? data.microfonos.length : 0} dispositivo(s)</td></tr>
+          </table>
         `;
         $('#scenario-details').html(html);
       }).fail(function() {
@@ -979,30 +1076,14 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         $('#laeq-general-value').text(data.Lp_eqT.toFixed(2) + ' dB');
         
         var detalles = `
-          <div class="row text-center g-3">
-            <div class="col-md-4">
-              <!-- Updated to use new detail-box class for better contrast -->
-              <div class="detail-box">
-                <strong>Duración Total</strong><br>
-                <span class="fs-5">${data.duration ? data.duration.toFixed(2) : 'N/A'}</span><br>
-                <small>segundos</small>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="detail-box">
-                <strong>Energía Total (ET)</strong><br>
-                <span class="fs-5">${data.ET ? data.ET.toExponential(2) : 'N/A'}</span><br>
-                <small>Pa²·s</small>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="detail-box">
-                <strong>Nivel de Exposición (LE)</strong><br>
-                <span class="fs-5">${data.LE ? data.LE.toFixed(2) : 'N/A'}</span><br>
-                <small>dB</small>
-              </div>
-            </div>
-          </div>
+          <table class="report-table" style="margin-top:1rem">
+            <tr><th>Duración Total</th><th>Energía Total (ET)</th><th>Nivel de Exposición (LE)</th></tr>
+            <tr>
+              <td>${data.duration ? data.duration.toFixed(2) : 'N/A'} s</td>
+              <td>${data.ET ? data.ET.toExponential(2) : 'N/A'} Pa²·s</td>
+              <td>${data.LE ? data.LE.toFixed(2) : 'N/A'} dB</td>
+            </tr>
+          </table>
         `;
         $('#laeq-details').html(detalles);
         
@@ -1018,9 +1099,22 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     // Función para cargar TODOS los audios del escenario
     function cargarTodosLosAudios() {
       $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/audios`, function(data) {
-        $('#lista-audios').empty();
+        $('#audios-list').empty();
         var series = [];
-        var technicalDataHtml = '<div class="row g-3">';
+        var technicalDataHtml = `
+          <table class="report-table">
+            <thead>
+              <tr><th>Audio</th><th>Fecha/Hora</th><th>LAeq (dB)</th><th>Lp,max (dB)</th><th>Duración (s)</th><th>Sample Rate (Hz)</th><th>ET</th><th>LE (dB)</th><th>LI (dB)</th><th>LJ (dB)</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+        `;
+        var printTableHtml = `
+          <table class="report-table">
+            <thead>
+              <tr><th>Audio</th><th>Fecha/Hora</th><th>Duración (s)</th><th>Lp,max (dB)</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+        `;
         
         data.forEach(function(audio, index) {
           var baseTime = new Date(audio.timestamp).getTime();
@@ -1043,36 +1137,28 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             series.push({
               name: "Audio " + audio.audio_id,
               data: seriesData,
-              color: tieneExcesos ? '#ef4444' : '#10b981'
+              color: tieneExcesos ? '#dc2626' : '#16a34a'
             });
           }
           
           if (audio.global_result) {
+            var estadoBadge = tieneExcesos ?
+              `<span class="exceso-badge">⚠ Excede</span>` :
+              `<span class="safe-badge">✓ OK</span>`;
             technicalDataHtml += `
-              <div class="col-lg-6 mb-3">
-                <div class="modern-card">
-                  <div class="card-header">
-                    <strong><i class="bi bi-file-earmark-music me-2"></i>Audio ${audio.audio_id}</strong>
-                    <small class="text-muted ms-2">${new Date(audio.timestamp).toLocaleString('es-PE')}</small>
-                  </div>
-                  <div class="card-body">
-                    <div class="row g-2">
-                      <div class="col-6">
-                        <small><strong>LAeq:</strong> ${audio.global_result.Lp_eqT || 'N/A'} dB</small><br>
-                        <small><strong>Lp,max:</strong> ${audio.global_result.Lp_max || 'N/A'} dB</small><br>
-                        <small><strong>Duración:</strong> ${audio.global_result.duration || 'N/A'} s</small><br>
-                        <small><strong>Sample Rate:</strong> ${audio.global_result.sample_rate || 'N/A'} Hz</small>
-                      </div>
-                      <div class="col-6">
-                        <small><strong>ET:</strong> ${audio.global_result.ET ? audio.global_result.ET.toExponential(2) : 'N/A'}</small><br>
-                        <small><strong>LE:</strong> ${audio.global_result.LE || 'N/A'} dB</small><br>
-                        <small><strong>LI:</strong> ${audio.global_result.LI || 'N/A'} dB</small><br>
-                        <small><strong>LJ:</strong> ${audio.global_result.LJ || 'N/A'} dB</small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <tr class="${tieneExcesos ? 'row-danger' : ''}">
+                <td>${audio.audio_id}</td>
+                <td>${new Date(audio.timestamp).toLocaleString('es-PE')}</td>
+                <td>${audio.global_result.Lp_eqT || 'N/A'}</td>
+                <td>${audio.global_result.Lp_max || 'N/A'}</td>
+                <td>${audio.global_result.duration || 'N/A'}</td>
+                <td>${audio.global_result.sample_rate || 'N/A'}</td>
+                <td>${audio.global_result.ET ? audio.global_result.ET.toExponential(2) : 'N/A'}</td>
+                <td>${audio.global_result.LE || 'N/A'}</td>
+                <td>${audio.global_result.LI || 'N/A'}</td>
+                <td>${audio.global_result.LJ || 'N/A'}</td>
+                <td>${estadoBadge}</td>
+              </tr>
             `;
           }
           
@@ -1080,28 +1166,33 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           var maxLevel = (audio.global_result && audio.global_result.Lp_max) ? audio.global_result.Lp_max : 0;
           var excesoClass = tieneExcesos ? 'has-excesos' : '';
           var excesoIndicator = tieneExcesos ? 
-            `<span class="exceso-badge">⚠ Excede ${limiteReferencia} dB</span>` : 
-            `<span class="safe-badge">✓ Dentro del límite</span>`;
+            `<span class="exceso-badge" style="font-size:0.7rem;">⚠ Excede ${limiteReferencia} dB</span>` : 
+            `<span class="safe-badge" style="font-size:0.7rem;">✓ OK</span>`;
+          
+          // Print table row
+          printTableHtml += `
+            <tr class="${tieneExcesos ? 'row-danger' : ''}">
+              <td>Audio ${audio.audio_id}</td>
+              <td>${new Date(audio.timestamp).toLocaleString('es-PE')}</td>
+              <td>${duration}</td>
+              <td>${maxLevel}</td>
+              <td>${tieneExcesos ? 'Excede ' + limiteReferencia + ' dB' : 'Dentro del límite'}</td>
+            </tr>
+          `;
           
           var item = $(`
             <div class="audio-item ${excesoClass}" data-base="${baseTime}" data-duration="${duration}" data-audioid="${audio.audio_id}">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <strong><i class="bi bi-file-earmark-music me-1"></i>Audio ${audio.audio_id}</strong>
-                ${excesoIndicator}
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <strong style="font-size:0.85rem;"><i class="bi bi-file-earmark-music me-1"></i>Audio ${audio.audio_id}</strong>
               </div>
-              <small class="text-muted d-block mb-1">
-                <i class="bi bi-clock me-1"></i>${new Date(audio.timestamp).toLocaleString('es-PE')}
-              </small>
-              <div class="row g-1 mb-2">
-                <div class="col-6">
-                  <small><i class="bi bi-stopwatch me-1"></i>${duration} s</small>
-                </div>
-                <div class="col-6">
-                  <small><i class="bi bi-volume-up me-1"></i>${maxLevel} dB</small>
-                </div>
+              ${excesoIndicator}
+              <div style="font-size:0.78rem; color:#64748b; margin-top:4px;">${new Date(audio.timestamp).toLocaleString('es-PE')}</div>
+              <div style="font-size:0.78rem; margin-top:4px;">
+                <i class="bi bi-stopwatch me-1"></i>${duration} s &nbsp;
+                <i class="bi bi-volume-up me-1"></i>${maxLevel} dB
               </div>
-              <button class="btn btn-sm btn-outline-primary w-100 no-print" onclick="verAnalisisAudio(${audio.audio_id})">
-                <i class="bi bi-graph-up me-1"></i>Ver Análisis Detallado
+              <button class="btn btn-sm btn-outline-primary w-100 mt-2 no-print" style="font-size:0.75rem;" onclick="verAnalisisAudio(${audio.audio_id})">
+                <i class="bi bi-graph-up me-1"></i>Ver Análisis
               </button>
             </div>
           `);
@@ -1115,11 +1206,13 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             centrarChartEn(base, endTime);
           });
           
-          $('#lista-audios').append(item);
+          $('#audios-list').append(item);
         });
         
-        technicalDataHtml += '</div>';
+        technicalDataHtml += '</tbody></table>';
+        printTableHtml += '</tbody></table>';
         $('#technical-data').html(technicalDataHtml);
+        $('#audio-print-table-content').html(printTableHtml);
         
         inicializarChartConReferencia(series);
       });
@@ -1130,21 +1223,18 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         chart.yAxis[0].addPlotLine({
           color: '#2563eb',
           value: laeqGeneral,
-          width: 3,
+          width: 1.5,
           zIndex: 4,
-          dashStyle: 'Solid',
+          dashStyle: 'ShortDash',
           id: 'laeq-line',
           label: {
-            text: `LAeq GENERAL: ${laeqGeneral.toFixed(2)} dB`,
-            align: 'center',
+            text: `LAeq General: ${laeqGeneral.toFixed(2)} dB`,
+            align: 'right',
+            x: -10,
             style: { 
               color: '#2563eb', 
-              fontWeight: 'bold', 
-              fontSize: '0.9rem',
-              backgroundColor: 'rgba(255,255,255,0.95)',
-              padding: '6px 12px',
-              border: '2px solid #2563eb',
-              borderRadius: '6px'
+              fontWeight: '600', 
+              fontSize: '11px'
             }
           }
         });
@@ -1154,89 +1244,98 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     // Inicializa el gráfico manteniendo TODOS los datos + líneas de referencia
     function inicializarChartConReferencia(seriesData) {
       chart = Highcharts.stockChart('stockchart', {
-        rangeSelector: { 
+        chart: {
+          backgroundColor: '#ffffff',
+          style: { fontFamily: "'Inter', sans-serif" },
+          spacing: [20, 20, 20, 20]
+        },
+        rangeSelector: {
           selected: 1,
+          inputEnabled: true,
           buttonTheme: {
-            fill: '#f8fafc',
-            stroke: '#e2e8f0',
+            fill: 'none',
+            stroke: '#94a3b8',
             'stroke-width': 1,
-            style: {
-              color: '#64748b',
-              fontWeight: '500'
-            },
+            r: 4,
+            style: { color: '#475569', fontWeight: '400', fontSize: '12px' },
             states: {
-              hover: {
-                fill: '#e2e8f0'
-              },
-              select: {
-                fill: '#2563eb',
-                style: {
-                  color: 'white'
-                }
-              }
+              hover: { fill: '#f1f5f9', stroke: '#64748b' },
+              select: { fill: '#1e293b', style: { color: '#ffffff' } }
             }
           }
         },
-        title: { 
-          text: `Análisis Acústico Completado - Límite ${limiteReferencia} dB y LAeq General`,
-          style: { 
-            color: '#1e293b', 
-            fontWeight: '600',
-            fontSize: '16px'
-          }
+        title: {
+          text: 'Nivel de Presión Sonora Máxima (Lp,max) vs. Tiempo',
+          style: { color: '#1e293b', fontWeight: '600', fontSize: '14px' }
+        },
+        subtitle: {
+          text: 'Límite de referencia: ' + limiteReferencia + ' dB | Intervalo: 1 segundo',
+          style: { color: '#64748b', fontSize: '12px' }
         },
         xAxis: {
           type: 'datetime',
+          lineColor: '#1e293b',
+          lineWidth: 1,
+          tickColor: '#1e293b',
+          tickWidth: 1,
+          tickLength: 5,
+          gridLineWidth: 0,
+          labels: { style: { color: '#475569', fontSize: '11px' } },
+          title: { text: 'Tiempo', style: { color: '#1e293b', fontSize: '12px', fontWeight: '500' } },
           events: {
             afterSetExtremes: function () {
               resaltarAudioCercano();
             }
-          },
-          gridLineColor: '#f1f5f9',
-          lineColor: '#e2e8f0'
+          }
         },
         yAxis: {
-          title: { 
+          title: {
             text: 'Nivel de Presión Sonora (dB)',
-            style: {
-              color: '#64748b',
-              fontWeight: '500'
-            }
+            style: { color: '#1e293b', fontSize: '12px', fontWeight: '500' }
           },
-          gridLineColor: '#f1f5f9',
+          lineColor: '#1e293b',
+          lineWidth: 1,
+          tickColor: '#1e293b',
+          tickWidth: 1,
+          tickLength: 5,
+          gridLineColor: '#e2e8f0',
+          gridLineWidth: 1,
+          gridLineDashStyle: 'Dot',
+          labels: { style: { color: '#475569', fontSize: '11px' } },
           plotLines: [{
-            color: '#ef4444',
+            color: '#dc2626',
             value: limiteReferencia,
-            width: 3,
+            width: 1.5,
             zIndex: 5,
-            dashStyle: 'Dash',
+            dashStyle: 'LongDash',
             label: {
-              text: `LÍMITE DE REFERENCIA: ${limiteReferencia} dB`,
-              align: 'center',
-              style: { 
-                color: '#ef4444', 
-                fontWeight: 'bold', 
-                fontSize: '0.9rem',
-                backgroundColor: 'rgba(255,255,255,0.95)',
-                padding: '6px 12px',
-                border: '2px solid #ef4444',
-                borderRadius: '6px'
-              }
+              text: 'Límite: ' + limiteReferencia + ' dB',
+              align: 'right',
+              x: -10,
+              style: { color: '#dc2626', fontWeight: '600', fontSize: '11px' }
             }
           }]
         },
+        legend: {
+          enabled: true,
+          align: 'center',
+          verticalAlign: 'bottom',
+          layout: 'horizontal',
+          itemStyle: { color: '#475569', fontWeight: '400', fontSize: '12px' }
+        },
         tooltip: {
           shared: true,
-          xDateFormat: '%Y-%m-%d %H:%M:%S',
-          backgroundColor: 'rgba(255,255,255,0.95)',
-          borderColor: '#e2e8f0',
-          borderRadius: 8,
-          shadow: true,
+          backgroundColor: '#ffffff',
+          borderColor: '#cbd5e1',
+          borderWidth: 1,
+          borderRadius: 4,
+          shadow: false,
+          style: { fontSize: '12px' },
           formatter: function() {
             var s = '<b>' + Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '</b>';
             this.points.forEach(function(point) {
               var excede = point.y > limiteReferencia;
-              var color = excede ? '#ef4444' : '#10b981';
+              var color = excede ? '#dc2626' : '#16a34a';
               var indicador = excede ? ' ⚠ EXCEDE LÍMITE' : ' ✓ Dentro del límite';
               s += '<br/><span style="color:' + color + '; font-weight: 500;">' + point.series.name + ': ' + point.y + ' dB' + indicador + '</span>';
             });
@@ -1248,18 +1347,19 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         },
         navigator: {
           enabled: true,
-          maskFill: 'rgba(37, 99, 235, 0.1)',
-          outlineColor: '#2563eb'
+          height: 30,
+          maskFill: 'rgba(30, 41, 59, 0.08)',
+          outlineColor: '#cbd5e1',
+          outlineWidth: 1,
+          series: { lineWidth: 1, lineColor: '#94a3b8' }
         },
-        scrollbar: {
-          enabled: true,
-          barBackgroundColor: '#f1f5f9',
-          barBorderColor: '#e2e8f0',
-          buttonBackgroundColor: '#f8fafc',
-          buttonBorderColor: '#e2e8f0',
-          rifleColor: '#64748b',
-          trackBackgroundColor: '#f8fafc',
-          trackBorderColor: '#e2e8f0'
+        scrollbar: { enabled: false },
+        plotOptions: {
+          series: {
+            lineWidth: 1.2,
+            states: { hover: { lineWidth: 1.5 } },
+            marker: { enabled: false }
+          }
         },
         series: seriesData
       });
@@ -1278,7 +1378,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     function resaltarAudioCercano() {
       var extremes = chart.xAxis[0].getExtremes();
       var centro = (extremes.min + extremes.max) / 2;
-      var audioItems = $('#lista-audios .audio-item');
+      var audioItems = $('#audios-list .audio-item');
       var minDiff = Infinity, audioParaResaltar = null;
       audioItems.each(function () {
         var base = parseInt($(this).attr('data-base'));
@@ -1299,73 +1399,45 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/analisis_excesos`, function(data) {
         datosExcesos = data;
         
-        var html = '';
-        
-        var evaluacionClass = data.puntos_que_excedieron === 0 ? 'metric-safe' : 'metric-danger';
-        html += `
-          <div class="metric-item ${evaluacionClass}">
-            <div class="d-flex align-items-center">
-              <i class="bi bi-shield-check me-2 fs-5"></i>
-              <div>
-                <strong>Evaluación de Seguridad</strong><br>
-                <span class="fs-6">${data.evaluacion_seguridad}</span>
-              </div>
-            </div>
-          </div>
-        `;
-        
-        html += `
-          <div class="metric-item">
-            <strong><i class="bi bi-bullseye me-1"></i>Límite de referencia:</strong> ${data.limite_referencia} dB
-          </div>
-          <div class="metric-item">
-            <strong><i class="bi bi-graph-up me-1"></i>Total de puntos medidos:</strong> ${data.total_puntos_medidos.toLocaleString()}
-          </div>
-        `;
-        
-        var excesoClass = data.puntos_que_excedieron > 0 ? 'metric-warning' : 'metric-safe';
-        html += `
-          <div class="metric-item ${excesoClass}">
-            <strong><i class="bi bi-exclamation-triangle me-1"></i>Puntos que excedieron:</strong><br>
-            ${data.puntos_que_excedieron.toLocaleString()} (${data.porcentaje_exceso}%)
-          </div>
-        `;
-        
-        if (data.puntos_que_excedieron > 0) {
-          html += `
-            <div class="metric-item metric-warning">
-              <strong><i class="bi bi-clock me-1"></i>Tiempo total de exceso:</strong><br>
-              ${data.duracion_total_exceso_minutos} minutos
-            </div>
-            <div class="metric-item metric-danger">
-              <strong><i class="bi bi-volume-up-fill me-1"></i>Nivel máximo registrado:</strong><br>
-              ${data.nivel_maximo_registrado} dB
-            </div>
-          `;
-        }
-        
-        html += `
-          <div class="metric-item">
-            <strong><i class="bi bi-file-earmark-music me-1"></i>Total de audios:</strong> ${data.cantidad_audios}
-          </div>
+        var html = `
+          <table class="report-table">
+            <thead>
+              <tr><th>Evaluación</th><th>Límite (dB)</th><th>Puntos Medidos</th><th>Excesos</th><th>% Exceso</th>${data.puntos_que_excedieron > 0 ? '<th>Tiempo Exceso</th><th>Nivel Máximo (dB)</th>' : ''}<th>Total Audios</th></tr>
+            </thead>
+            <tbody>
+              <tr class="${data.puntos_que_excedieron > 0 ? 'row-danger' : ''}">
+                <td>${data.evaluacion_seguridad}</td>
+                <td>${data.limite_referencia}</td>
+                <td>${data.total_puntos_medidos.toLocaleString()}</td>
+                <td>${data.puntos_que_excedieron.toLocaleString()}</td>
+                <td>${data.porcentaje_exceso}%</td>
+                ${data.puntos_que_excedieron > 0 ? `<td>${data.duracion_total_exceso_minutos} min</td><td>${data.nivel_maximo_registrado}</td>` : ''}
+                <td>${data.cantidad_audios}</td>
+              </tr>
+            </tbody>
+          </table>
         `;
         
         if (data.excesos_por_audio && data.excesos_por_audio.length > 0) {
-          html += '<hr><h6><i class="bi bi-list-ul me-2"></i>Detalle por Audio:</h6>';
+          html += `
+            <h6 style="margin-top:1rem; margin-bottom:0.5rem;"><i class="bi bi-list-ul me-2"></i>Detalle de Excesos por Audio</h6>
+            <table class="report-table">
+              <thead>
+                <tr><th>Audio ID</th><th>Puntos Excedidos</th><th>Duración Exceso (s)</th><th>Nivel Máximo (dB)</th></tr>
+              </thead>
+              <tbody>
+          `;
           data.excesos_por_audio.forEach(function(audio) {
-            var audioClass = audio.puntos_excedidos > 0 ? 'metric-warning' : 'metric-safe';
-            var excesoText = audio.puntos_excedidos > 0 ? 
-              `${audio.puntos_excedidos} excesos (${audio.duracion_exceso_segundos}s)` : 
-              'Sin excesos';
-            
             html += `
-              <div class="metric-item ${audioClass}" style="font-size: 0.85rem;">
-                <strong>Audio ${audio.audio_id}:</strong><br>
-                ${excesoText}<br>
-                <small class="text-muted">Máximo: ${audio.nivel_maximo} dB</small>
-              </div>
+              <tr class="${audio.puntos_excedidos > 0 ? 'row-danger' : ''}">
+                <td>${audio.audio_id}</td>
+                <td>${audio.puntos_excedidos}</td>
+                <td>${audio.duracion_exceso_segundos}</td>
+                <td>${audio.nivel_maximo}</td>
+              </tr>
             `;
           });
+          html += '</tbody></table>';
         }
         
         $('#analisis-excesos-info').html(html);
