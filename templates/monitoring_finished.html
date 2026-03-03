@@ -937,6 +937,149 @@
       margin-top: 1rem;
     }
     .modal-section-label:first-child { margin-top: 0; }
+
+    /* ═══════════════════════════════════════════
+       PHOTO GALLERY
+    ═══════════════════════════════════════════ */
+    .fotos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.75rem;
+    }
+    .foto-card {
+      position: relative;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #f8fafc;
+      aspect-ratio: 4/3;
+    }
+    .foto-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      cursor: zoom-in;
+      transition: transform 0.2s;
+    }
+    .foto-card img:hover { transform: scale(1.02); }
+    .foto-card .foto-del {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: rgba(0,0,0,0.55);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      width: 24px; height: 24px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .foto-card .foto-del:hover { background: #dc2626; }
+
+    /* Lightbox */
+    .foto-lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    .foto-lightbox.active { display: flex; }
+    .foto-lightbox img {
+      max-width: 92vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 6px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+    .foto-lightbox-close {
+      position: absolute;
+      top: 16px; right: 20px;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      line-height: 1;
+      opacity: 0.75;
+    }
+    .foto-lightbox-close:hover { opacity: 1; }
+    .foto-lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .foto-lightbox-nav:hover { background: rgba(255,255,255,0.28); }
+    #lb-prev { left: 16px; }
+    #lb-next { right: 16px; }
+    .foto-lightbox-caption {
+      position: absolute;
+      bottom: 16px;
+      left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.7);
+      font-size: 0.8rem;
+    }
+
+    /* Print: photos in 2-column grid */
+    @media print {
+      .fotos-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6pt !important;
+        page-break-inside: avoid;
+      }
+      .foto-card {
+        border: 1px solid #ccc !important;
+        border-radius: 0 !important;
+        aspect-ratio: 4/3 !important;
+        page-break-inside: avoid;
+      }
+      .foto-card img { object-fit: cover !important; width: 100% !important; height: 100% !important; }
+      .foto-card .foto-del { display: none !important; }
+      .foto-lightbox { display: none !important; }
+      #fotos-empty-msg { display: none !important; }
+      #foto-upload-input { display: none !important; }
+    }
+
+    /* ═══════════════════════════════════════════
+       PRINT CONFIG MODAL
+    ═══════════════════════════════════════════ */
+    .print-config-check {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 0.4rem;
+      transition: background 0.12s;
+    }
+    .print-config-check:hover { background: #f8fafc; }
+    .print-config-check input[type="checkbox"] { cursor: pointer; }
+    .print-config-check label { cursor: pointer; font-size: 0.88rem; margin: 0; }
+
+    .scenario-pick-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 0.4rem;
+    }
+    .scenario-pick-item:hover { background: #f8fafc; }
+    .scenario-pick-item label { cursor: pointer; font-size: 0.85rem; margin: 0; flex: 1; }
+    .scenario-pick-item .sp-meta { font-size: 0.72rem; color: #94a3b8; display: block; }
   </style>
   <script>
     Highcharts.setOptions({
@@ -960,8 +1103,8 @@
         <span style="font-size:0.9rem; font-weight:600;">Análisis Acústico Ocupacional</span>
       </a>
       <div class="d-flex ms-auto gap-2">
-        <button class="btn btn-sm btn-outline-light" onclick="window.print()">
-          <i class="bi bi-printer me-1"></i>Imprimir
+        <button class="btn btn-sm btn-outline-light" onclick="abrirConfiguracionImpresion()">
+          <i class="bi bi-printer me-1"></i>Imprimir / Exportar
         </button>
         <a class="btn btn-sm btn-outline-light" href="/">
           <i class="bi bi-arrow-left me-1"></i>Volver
@@ -1009,15 +1152,16 @@
       <div class="sidebar-toc-label">Contenido</div>
       <nav class="sidebar-toc" id="toc-nav">
         <a href="#sec-escenario"><span class="toc-num">I.</span> Información del Escenario</a>
-        <a href="#sec-indicadores"><span class="toc-num">II.</span> Indicadores Acústicos</a>
-        <a href="#sec-grafico"><span class="toc-num">III.</span> Gráfico Temporal</a>
-        <a href="#sec-excesos"><span class="toc-num">IV.</span> Análisis de Excesos</a>
-        <a href="#sec-conclusiones"><span class="toc-num">V.</span> Conclusiones</a>
-        <a href="#sec-datos"><span class="toc-num">VI.</span> Datos Técnicos</a>
+        <a href="#sec-fotos"><span class="toc-num">II.</span> Fotografías del Lugar</a>
+        <a href="#sec-indicadores"><span class="toc-num">III.</span> Indicadores Acústicos</a>
+        <a href="#sec-grafico"><span class="toc-num">IV.</span> Gráfico Temporal</a>
+        <a href="#sec-excesos"><span class="toc-num">V.</span> Análisis de Excesos</a>
+        <a href="#sec-conclusiones"><span class="toc-num">VI.</span> Conclusiones</a>
+        <a href="#sec-datos"><span class="toc-num">VII.</span> Datos Técnicos</a>
         <div class="sidebar-divider"></div>
-        <a href="#sec-metodologia"><span class="toc-num">VII.</span> Metodología</a>
-        <a href="#sec-glosario"><span class="toc-num">VIII.</span> Glosario</a>
-        <a href="#sec-referencias"><span class="toc-num">IX.</span> Referencias</a>
+        <a href="#sec-metodologia"><span class="toc-num">VIII.</span> Metodología</a>
+        <a href="#sec-glosario"><span class="toc-num">IX.</span> Glosario</a>
+        <a href="#sec-referencias"><span class="toc-num">X.</span> Referencias</a>
       </nav>
       <div class="sidebar-divider"></div>
       <div class="sidebar-status-box">
@@ -1060,10 +1204,34 @@
         </div>
       </section>
 
-      <!-- II. Indicadores Acústicos Globales -->
+      <!-- II. Fotografías del Lugar -->
+      <section id="sec-fotos" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">II.</span><span class="section-icon"><i class="bi bi-images"></i></span>Fotografías del Lugar de Medición</div>
+          <div class="section-hdr-actions">
+            <label class="btn-hdr no-print" style="cursor:pointer;">
+              <i class="bi bi-cloud-upload me-1"></i>Subir fotos
+              <input type="file" id="foto-upload-input" multiple accept="image/*" style="display:none;" onchange="subirFotos(this)">
+            </label>
+          </div>
+        </div>
+        <div class="section-body padded">
+          <div id="fotos-container">
+            <div class="d-flex justify-content-center p-4 text-muted no-print" id="fotos-empty-msg">
+              <div style="text-align:center;">
+                <i class="bi bi-image" style="font-size:2rem; opacity:0.3;"></i>
+                <div style="font-size:0.85rem; margin-top:0.5rem;">No hay fotografías. Use el botón <strong>Subir fotos</strong> para añadir imágenes del lugar.</div>
+              </div>
+            </div>
+            <div id="fotos-grid" class="fotos-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- III. Indicadores Acústicos Globales -->
       <section id="sec-indicadores" class="report-section">
         <div class="section-hdr">
-          <div><span class="section-num">II.</span><span class="section-icon"><i class="bi bi-activity"></i></span>Indicadores Acústicos Globales</div>
+          <div><span class="section-num">III.</span><span class="section-icon"><i class="bi bi-activity"></i></span>Indicadores Acústicos Globales</div>
         </div>
         <div id="resumen-global" class="section-body">
           <div class="d-flex justify-content-center p-4">
@@ -1072,10 +1240,10 @@
         </div>
       </section>
 
-      <!-- III. Gráfico Temporal -->
+      <!-- IV. Gráfico Temporal -->
       <section id="sec-grafico" class="report-section">
         <div class="section-hdr">
-          <div><span class="section-num">III.</span><span class="section-icon"><i class="bi bi-graph-up"></i></span>Evolución Temporal de Niveles Sonoros</div>
+          <div><span class="section-num">IV.</span><span class="section-icon"><i class="bi bi-graph-up"></i></span>Evolución Temporal de Niveles Sonoros</div>
         </div>
         <div class="section-body" style="padding:0.75rem 0.5rem 0.5rem;">
           <div id="stockchart"></div>
@@ -1091,10 +1259,10 @@
         </div>
       </section>
 
-      <!-- IV. Análisis de Excesos -->
+      <!-- V. Análisis de Excesos -->
       <section id="sec-excesos" class="report-section">
         <div class="section-hdr">
-          <div><span class="section-num">IV.</span><span class="section-icon"><i class="bi bi-exclamation-triangle"></i></span>Análisis de Excesos del Límite de Referencia</div>
+          <div><span class="section-num">V.</span><span class="section-icon"><i class="bi bi-exclamation-triangle"></i></span>Análisis de Excesos del Límite de Referencia</div>
         </div>
         <div class="section-body padded">
           <div id="analisis-excesos-info">
@@ -1105,10 +1273,10 @@
         </div>
       </section>
 
-      <!-- V. Conclusiones y Recomendaciones -->
+      <!-- VI. Conclusiones y Recomendaciones -->
       <section id="sec-conclusiones" class="report-section">
         <div class="section-hdr">
-          <div><span class="section-num">V.</span><span class="section-icon"><i class="bi bi-clipboard-check"></i></span>Conclusiones y Recomendaciones</div>
+          <div><span class="section-num">VI.</span><span class="section-icon"><i class="bi bi-clipboard-check"></i></span>Conclusiones y Recomendaciones</div>
         </div>
         <div class="section-body padded" id="conclusiones-container">
           <div class="d-flex justify-content-center p-3">
@@ -1117,10 +1285,10 @@
         </div>
       </section>
 
-      <!-- VI. Datos Técnicos por Audio -->
+      <!-- VII. Datos Técnicos por Audio -->
       <section id="sec-datos" class="report-section">
         <div class="section-hdr">
-          <div><span class="section-num">VI.</span><span class="section-icon"><i class="bi bi-table"></i></span>Datos Técnicos por Audio</div>
+          <div><span class="section-num">VII.</span><span class="section-icon"><i class="bi bi-table"></i></span>Datos Técnicos por Audio</div>
         </div>
         <div class="section-body padded">
           <div id="technical-data">
@@ -1131,9 +1299,9 @@
         </div>
       </section>
 
-      <!-- VII. Metodología y Proceso Técnico -->
+      <!-- VIII. Metodología y Proceso Técnico -->
       <section id="sec-metodologia" class="methodology-section">
-        <h2><i class="bi bi-gear me-2"></i>VII. Metodología y Proceso Técnico</h2>
+        <h2><i class="bi bi-gear me-2"></i>VIII. Metodología y Proceso Técnico</h2>
       
       <h3>1. Fundamentos Teóricos y Normativos</h3>
       <!-- Added comprehensive information about NTP ISO 9612:2010 -->
@@ -1394,7 +1562,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
 
       <!-- VIII. Glosario de Términos Técnicos -->
       <section id="sec-glosario" class="methodology-section">
-        <h2><i class="bi bi-book me-2"></i>VIII. Glosario de Términos Técnicos</h2>
+        <h2><i class="bi bi-book me-2"></i>IX. Glosario de Términos Técnicos</h2>
       
       <div class="terms-grid">
         <div class="term-item">
@@ -1466,7 +1634,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
 
       <!-- IX. Referencias Bibliográficas (APA 7) -->
       <section id="sec-referencias" class="methodology-section">
-        <h2><i class="bi bi-journal-text me-2"></i>IX. Referencias Bibliográficas</h2>
+        <h2><i class="bi bi-journal-text me-2"></i>X. Referencias Bibliográficas</h2>
       
       <div style="text-indent: -2rem; margin-left: 2rem; line-height: 1.8; font-size:0.9rem;">
         <p>International Organization for Standardization. (2007). <em>ISO/TR 25417:2007 - Acoustics — Definitions of basic quantities and terms</em>. ISO.</p>
@@ -1567,6 +1735,101 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" class="btn btn-sm btn-primary" onclick="guardarEscenario()">
             <i class="bi bi-check-lg me-1"></i>Guardar cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo Lightbox -->
+  <div class="foto-lightbox no-print" id="foto-lightbox" onclick="cerrarLightbox(event)">
+    <span class="foto-lightbox-close" onclick="cerrarLightbox()">&times;</span>
+    <button class="foto-lightbox-nav" id="lb-prev" onclick="lbNavegar(-1); event.stopPropagation();">&#8249;</button>
+    <img id="lb-img" src="" alt="Foto del escenario">
+    <button class="foto-lightbox-nav" id="lb-next" onclick="lbNavegar(1); event.stopPropagation();">&#8250;</button>
+    <div class="foto-lightbox-caption" id="lb-caption"></div>
+  </div>
+
+  <!-- Print Configuration Modal -->
+  <div class="modal fade" id="printConfigModal" tabindex="-1" aria-labelledby="printConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#1e293b; color:white;">
+          <h5 class="modal-title" id="printConfigModalLabel" style="font-size:0.95rem; font-weight:600;">
+            <i class="bi bi-printer-fill me-2"></i>Configurar Impresión / Exportación PDF
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <!-- Sections to include -->
+          <div class="modal-section-label">Secciones a incluir</div>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-fotos" checked>
+                <label for="pc-fotos"><i class="bi bi-images me-1 text-primary"></i>Fotografías del lugar</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-grafico" checked>
+                <label for="pc-grafico"><i class="bi bi-graph-up me-1 text-primary"></i>Gráfico temporal</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-datos" checked>
+                <label for="pc-datos"><i class="bi bi-table me-1 text-primary"></i>Tabla de datos técnicos</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-metodologia" checked>
+                <label for="pc-metodologia"><i class="bi bi-gear me-1 text-primary"></i>Metodología y fórmulas</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-glosario" checked>
+                <label for="pc-glosario"><i class="bi bi-book me-1 text-primary"></i>Glosario de términos</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="checkbox" id="pc-referencias" checked>
+                <label for="pc-referencias"><i class="bi bi-journal-text me-1 text-primary"></i>Referencias bibliográficas</label>
+              </div>
+            </div>
+          </div>
+
+          <hr>
+
+          <!-- Multi-scenario batch print -->
+          <div class="modal-section-label">Impresión de múltiples escenarios en un solo PDF</div>
+          <div class="alert alert-info py-2 px-3" style="font-size:0.82rem;">
+            <i class="bi bi-info-circle me-1"></i>
+            Selecciona los escenarios que quieres incluir en el informe combinado. Se abrirá una ventana de impresión unificada con todos los escenarios seleccionados.
+          </div>
+          <div class="d-flex gap-2 mb-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="seleccionarTodosEscenarios(true)">Seleccionar todo</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="seleccionarTodosEscenarios(false)">Deseleccionar todo</button>
+            <button class="btn btn-sm btn-outline-primary ms-auto" onclick="recargarEscenariosDisponibles()"><i class="bi bi-arrow-clockwise me-1"></i>Actualizar lista</button>
+          </div>
+          <div id="scenarios-picker" style="max-height:280px; overflow-y:auto;">
+            <div class="text-center text-muted p-3" id="scenarios-picker-loading">
+              <div class="spinner-border spinner-border-sm me-2"></div>Cargando escenarios...
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="ejecutarImpresionActual()">
+            <i class="bi bi-printer me-1"></i>Imprimir este informe
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="ejecutarImpresionMultiple()">
+            <i class="bi bi-files me-1"></i>Imprimir seleccionados como PDF único
           </button>
         </div>
       </div>
@@ -2198,7 +2461,21 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       cargarAnalisisGeneral();
       cargarTodosLosAudios();
       cargarAnalisisExcesos();
+      cargarFotos();
       initTocObserver();
+
+      // Handle batch print mode: hide sections specified in ?ocultar=...
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('printcfg') === '1') {
+        var ocultar = urlParams.getAll('ocultar');
+        ocultar.forEach(function(sec) {
+          var el = document.getElementById('sec-' + sec);
+          if (el) el.style.display = 'none';
+        });
+        // Hide sidebar and navbar in batch print iframe
+        document.querySelector('.report-sidebar') && (document.querySelector('.report-sidebar').style.display = 'none');
+        document.querySelector('.navbar-custom') && (document.querySelector('.navbar-custom').style.display = 'none');
+      }
     });
 
     function verAnalisisAudio(id) {
@@ -2291,6 +2568,252 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             .text('✗ ' + msg).show();
         }
       });
+    }
+
+    // ─── Photos ─────────────────────────────────────────────────────────────
+    var fotosActuales = [];   // list of filenames from server
+    var lbIndex = 0;
+
+    function cargarFotos() {
+      $.getJSON('/escenarios/' + escenarioId + '/detalle', function(data) {
+        fotosActuales = data.fotos || [];
+        renderizarFotos();
+      });
+    }
+
+    function renderizarFotos() {
+      var grid = $('#fotos-grid');
+      grid.empty();
+      if (!fotosActuales.length) {
+        $('#fotos-empty-msg').show();
+        return;
+      }
+      $('#fotos-empty-msg').hide();
+      fotosActuales.forEach(function(nombre, idx) {
+        var url = '/fotos/' + encodeURIComponent(nombre);
+        var card = $('<div class="foto-card"></div>');
+        var img = $('<img>').attr('src', url).attr('alt', 'Foto del escenario ' + (idx + 1))
+          .on('click', function() { abrirLightbox(idx); });
+        var delBtn = $('<button class="foto-del no-print" title="Eliminar foto"><i class="bi bi-x"></i></button>')
+          .on('click', function(e) { e.stopPropagation(); eliminarFoto(nombre); });
+        card.append(img).append(delBtn);
+        grid.append(card);
+      });
+    }
+
+    function subirFotos(input) {
+      if (!input.files || !input.files.length) return;
+      var formData = new FormData();
+      Array.from(input.files).forEach(function(f) { formData.append('fotos', f); });
+      $.ajax({
+        url: '/escenarios/' + escenarioId + '/fotos',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(resp) {
+          fotosActuales = resp.fotos || [];
+          renderizarFotos();
+          input.value = ''; // reset input
+        },
+        error: function() { alert('Error al subir las fotos.'); }
+      });
+    }
+
+    function eliminarFoto(nombre) {
+      if (!confirm('¿Eliminar esta foto?')) return;
+      $.ajax({
+        url: '/escenarios/' + escenarioId + '/fotos/' + encodeURIComponent(nombre),
+        method: 'DELETE',
+        success: function() {
+          fotosActuales = fotosActuales.filter(function(f) { return f !== nombre; });
+          renderizarFotos();
+        },
+        error: function() { alert('Error al eliminar la foto.'); }
+      });
+    }
+
+    // ─── Lightbox ───────────────────────────────────────────────────────────
+    function abrirLightbox(idx) {
+      lbIndex = idx;
+      actualizarLightbox();
+      document.getElementById('foto-lightbox').classList.add('active');
+    }
+
+    function actualizarLightbox() {
+      var nombre = fotosActuales[lbIndex];
+      document.getElementById('lb-img').src = '/fotos/' + encodeURIComponent(nombre);
+      document.getElementById('lb-caption').textContent = (lbIndex + 1) + ' / ' + fotosActuales.length;
+      document.getElementById('lb-prev').style.display = fotosActuales.length > 1 ? '' : 'none';
+      document.getElementById('lb-next').style.display = fotosActuales.length > 1 ? '' : 'none';
+    }
+
+    function lbNavegar(dir) {
+      lbIndex = (lbIndex + dir + fotosActuales.length) % fotosActuales.length;
+      actualizarLightbox();
+    }
+
+    function cerrarLightbox(e) {
+      if (!e || e.target === document.getElementById('foto-lightbox') || e.currentTarget.classList.contains('foto-lightbox-close')) {
+        document.getElementById('foto-lightbox').classList.remove('active');
+      }
+    }
+
+    document.addEventListener('keydown', function(e) {
+      var lb = document.getElementById('foto-lightbox');
+      if (!lb.classList.contains('active')) return;
+      if (e.key === 'Escape') cerrarLightbox();
+      if (e.key === 'ArrowLeft') lbNavegar(-1);
+      if (e.key === 'ArrowRight') lbNavegar(1);
+    });
+
+    // ─── Print Configuration ────────────────────────────────────────────────
+    var escenariosDisponibles = [];
+
+    function abrirConfiguracionImpresion() {
+      var modal = new bootstrap.Modal(document.getElementById('printConfigModal'));
+      modal.show();
+      recargarEscenariosDisponibles();
+    }
+
+    function recargarEscenariosDisponibles() {
+      $('#scenarios-picker').html('<div class="text-center text-muted p-3" id="scenarios-picker-loading"><div class="spinner-border spinner-border-sm me-2"></div>Cargando escenarios...</div>');
+      $.getJSON('/escenarios/culminados', function(data) {
+        escenariosDisponibles = data;
+        var html = '';
+        if (!data.length) {
+          html = '<div class="text-muted text-center p-3" style="font-size:0.85rem;">No hay escenarios culminados disponibles.</div>';
+        } else {
+          data.forEach(function(esc) {
+            var checked = (String(esc.id) === String(escenarioId)) ? 'checked' : '';
+            var micsText = esc.microfonos && esc.microfonos.length
+              ? esc.microfonos.map(function(m) { return escapeHtml(m.identificador); }).join(', ')
+              : 'Sin micrófonos';
+            html += '<div class="scenario-pick-item">' +
+              '<input type="checkbox" id="sp-' + esc.id + '" value="' + esc.id + '" ' + checked + ' style="cursor:pointer;">' +
+              '<label for="sp-' + esc.id + '">' +
+              '<strong>' + escapeHtml(esc.nombre) + '</strong>' +
+              '<span class="sp-meta">' + escapeHtml(esc.ubicacion || '') + ' · ' + esc.end_time.substring(0, 10) + ' · ' + micsText + '</span>' +
+              '</label></div>';
+          });
+          // Store mic data in JS map (safe, no injection)
+          escenariosDisponibles = data;
+        }
+        $('#scenarios-picker').html(html);
+      }).fail(function() {
+        $('#scenarios-picker').html('<div class="alert alert-danger p-2" style="font-size:0.82rem;">Error al cargar escenarios.</div>');
+      });
+    }
+
+    function seleccionarTodosEscenarios(sel) {
+      $('#scenarios-picker input[type="checkbox"]').prop('checked', sel);
+    }
+
+    function _getSectionVisibility() {
+      return {
+        fotos: $('#pc-fotos').is(':checked'),
+        grafico: $('#pc-grafico').is(':checked'),
+        datos: $('#pc-datos').is(':checked'),
+        metodologia: $('#pc-metodologia').is(':checked'),
+        glosario: $('#pc-glosario').is(':checked'),
+        referencias: $('#pc-referencias').is(':checked')
+      };
+    }
+
+    function _aplicarVisibilidadParaImpresion(vis) {
+      // Toggle sections based on config
+      document.getElementById('sec-fotos').style.display = vis.fotos ? '' : 'none';
+      document.getElementById('sec-grafico').style.display = vis.grafico ? '' : 'none';
+      document.getElementById('sec-datos').style.display = vis.datos ? '' : 'none';
+      document.getElementById('sec-metodologia').style.display = vis.metodologia ? '' : 'none';
+      document.getElementById('sec-glosario').style.display = vis.glosario ? '' : 'none';
+      document.getElementById('sec-referencias').style.display = vis.referencias ? '' : 'none';
+    }
+
+    function _restaurarVisibilidad() {
+      ['sec-fotos','sec-grafico','sec-datos','sec-metodologia','sec-glosario','sec-referencias'].forEach(function(id) {
+        document.getElementById(id).style.display = '';
+      });
+    }
+
+    function ejecutarImpresionActual() {
+      var vis = _getSectionVisibility();
+      bootstrap.Modal.getInstance(document.getElementById('printConfigModal')).hide();
+      setTimeout(function() {
+        _aplicarVisibilidadParaImpresion(vis);
+        window.print();
+        setTimeout(_restaurarVisibilidad, 1500);
+      }, 400);
+    }
+
+    function ejecutarImpresionMultiple() {
+      // Collect selected scenarios + mic pairs using escenariosDisponibles map
+      var seleccionados = [];
+      $('#scenarios-picker input[type="checkbox"]:checked').each(function() {
+        var escId = parseInt($(this).val(), 10);
+        var esc = escenariosDisponibles.find(function(e) { return e.id === escId; });
+        var mics = esc ? (esc.microfonos || []) : [];
+        if (mics.length) {
+          mics.forEach(function(m) { seleccionados.push({ escId: escId, micId: m.id }); });
+        } else {
+          seleccionados.push({ escId: escId, micId: null });
+        }
+      });
+
+      if (!seleccionados.length) {
+        alert('Selecciona al menos un escenario.');
+        return;
+      }
+
+      var vis = _getSectionVisibility();
+      bootstrap.Modal.getInstance(document.getElementById('printConfigModal')).hide();
+
+      // Build query params to pass print config
+      var params = new URLSearchParams();
+      Object.keys(vis).forEach(function(k) { if (!vis[k]) params.append('ocultar', k); });
+
+      // Open each monitoring page in a new window, collect iframes, then print all
+      var urls = seleccionados.map(function(s) {
+        if (!s.micId) return null;
+        return '/monitoring/' + s.escId + '/microfono/' + s.micId + '?printcfg=1&' + params.toString();
+      }).filter(Boolean);
+
+      if (!urls.length) {
+        alert('Los escenarios seleccionados no tienen micrófonos asignados.');
+        return;
+      }
+
+      # Open batch print page
+      var batchWin = window.open('', '_blank', 'width=900,height=700');
+      if (!batchWin) { alert('El navegador bloqueó la ventana emergente. Permite ventanas emergentes para este sitio.'); return; }
+      var batchDoc = batchWin.document;
+      batchDoc.open();
+      batchDoc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe Combinado</title>' +
+        '<style>body{margin:0;padding:0;} iframe{width:100%;border:none;display:block;} @media print{iframe{page-break-after:always;}}</style>' +
+        '</head><body>' +
+        '<div id="batchHeader" style="font-family:sans-serif;padding:10px;text-align:center;background:#1e293b;color:white;font-size:13px;">' +
+        '<strong>Informe Acústico Combinado &mdash; ' + urls.length + ' escenario(s)</strong>' +
+        ' <button onclick="window.print()" style="background:#2563eb;color:white;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;margin-left:12px;">&#128424; Imprimir PDF</button>' +
+        '</div></body></html>');
+      batchDoc.close();
+      urls.forEach(function(u) {
+        var iframe = batchDoc.createElement('iframe');
+        // u is built from numeric IDs and URLSearchParams, no user content
+        iframe.src = u;
+        iframe.style.height = '100vh';
+        iframe.style.width = '100%';
+        iframe.style.border = 'none';
+        iframe.style.display = 'block';
+        iframe.addEventListener('load', function() {
+          try { iframe.style.height = iframe.contentDocument.body.scrollHeight + 'px'; } catch(e) {}
+        });
+        batchDoc.body.appendChild(iframe);
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
   </script>
 </body>

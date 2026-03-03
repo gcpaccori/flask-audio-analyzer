@@ -11,6 +11,7 @@ from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import pytz
 from flask import send_file
+from werkzeug.utils import secure_filename
 
 
 # Configurar logger
@@ -23,13 +24,16 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+app.config['PHOTOS_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'fotos')
+app.config['ALLOWED_IMAGE_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['API_KEY'] = 'acoustics'
 db = SQLAlchemy(app)
 
-# Crear carpeta de subidas si no existe
+# Crear carpetas de subidas si no existen
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
     logger.debug(f"Carpeta de subidas creada en: {app.config['UPLOAD_FOLDER']}")
+os.makedirs(app.config['PHOTOS_FOLDER'], exist_ok=True)
 
 # Parámetros acústicos (constantes)
 p0 = 20e-6   # 20 µPa, umbral de audición humana
@@ -77,6 +81,7 @@ class Escenario(db.Model):
     tipo_analisis = db.Column(db.String(100), nullable=True)
     microfonos = db.relationship('Microfono', backref='escenario', lazy=True)
     microfonos_historial = db.Column(db.Text, nullable=True)
+    fotos = db.Column(db.Text, nullable=True)  # JSON list of photo filenames
 
 class Microfono(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -658,9 +663,105 @@ def detalle_escenario(escenario_id):
         'num_personas': escenario.num_personas,
         'proteccion_auditiva': escenario.proteccion_auditiva,
         'tipo_analisis': escenario.tipo_analisis,
-        'microfonos': microfonos_data
+        'microfonos': microfonos_data,
+        'fotos': json.loads(escenario.fotos) if escenario.fotos else []
     }
     return jsonify(data)
+
+
+def _allowed_image(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_IMAGE_EXTENSIONS']
+
+
+MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB per photo
+
+
+@app.route('/escenarios/<int:escenario_id>/fotos', methods=['POST'])
+def subir_foto_escenario(escenario_id):
+    """Upload one or more photos for a scenario."""
+    escenario = Escenario.query.get_or_404(escenario_id)
+    if 'fotos' not in request.files:
+        return jsonify({'error': 'No se enviaron archivos'}), 400
+    files = request.files.getlist('fotos')
+    fotos_actuales = json.loads(escenario.fotos) if escenario.fotos else []
+    urls = []
+    for foto in files:
+        if not foto or not foto.filename:
+            continue
+        if not _allowed_image(foto.filename):
+            continue
+        base_filename = secure_filename(foto.filename)
+        # secure_filename may return empty string for non-ASCII names
+        if not base_filename or base_filename in ('.', '..'):
+            # Fallback: use a timestamp-based name with original extension
+            ext = foto.filename.rsplit('.', 1)[-1].lower() if '.' in foto.filename else 'jpg'
+            if ext not in app.config['ALLOWED_IMAGE_EXTENSIONS']:
+                continue
+            import time
+            base_filename = f"foto_{int(time.time())}.{ext}"
+        filename = f"esc{escenario_id}_{base_filename}"
+        filepath = os.path.join(app.config['PHOTOS_FOLDER'], filename)
+        # Read file data and check size before saving
+        foto_data = foto.read()
+        if len(foto_data) > MAX_PHOTO_SIZE_BYTES:
+            return jsonify({'error': f'El archivo {base_filename} supera el límite de 10 MB'}), 413
+        with open(filepath, 'wb') as f:
+            f.write(foto_data)
+        fotos_actuales.append(filename)
+        urls.append(f'/fotos/{filename}')
+    escenario.fotos = json.dumps(fotos_actuales)
+    db.session.commit()
+    return jsonify({'fotos': fotos_actuales, 'urls': urls})
+
+
+@app.route('/escenarios/<int:escenario_id>/fotos/<filename>', methods=['DELETE'])
+def eliminar_foto_escenario(escenario_id, filename):
+    """Remove a photo from a scenario."""
+    escenario = Escenario.query.get_or_404(escenario_id)
+    fotos_actuales = json.loads(escenario.fotos) if escenario.fotos else []
+    safe_name = secure_filename(filename)
+    if safe_name not in fotos_actuales:
+        return jsonify({'error': 'Foto no encontrada'}), 404
+    fotos_actuales.remove(safe_name)
+    escenario.fotos = json.dumps(fotos_actuales)
+    db.session.commit()
+    # Delete file from disk
+    filepath = os.path.join(app.config['PHOTOS_FOLDER'], safe_name)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    return jsonify({'mensaje': 'Foto eliminada'})
+
+
+@app.route('/fotos/<filename>')
+def servir_foto(filename):
+    """Serve scenario photos."""
+    return send_from_directory(app.config['PHOTOS_FOLDER'], filename)
+
+
+@app.route('/escenarios/culminados', methods=['GET'])
+def listar_escenarios_culminados():
+    """Return all completed scenarios with their microphones for multi-print selection."""
+    escenarios = Escenario.query.filter_by(estado='culminado').order_by(Escenario.end_time.desc()).all()
+    resultado = []
+    for e in escenarios:
+        try:
+            mic_ids = json.loads(e.microfonos_historial) if e.microfonos_historial else []
+        except Exception:
+            mic_ids = []
+        mics = []
+        for mid in mic_ids:
+            m = Microfono.query.get(mid)
+            if m:
+                mics.append({'id': m.id, 'identificador': m.identificador})
+        resultado.append({
+            'id': e.id,
+            'nombre': e.nombre,
+            'ubicacion': e.ubicacion or '',
+            'start_time': e.start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            'end_time': e.end_time.strftime("%Y-%m-%d %H:%M:%S"),
+            'microfonos': mics
+        })
+    return jsonify(resultado)
 
 @app.route('/micros/<int:microfono_id>/resultado', methods=['GET'])
 def detalle_microfono(microfono_id):
