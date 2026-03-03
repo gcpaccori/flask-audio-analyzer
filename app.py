@@ -1,17 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from apscheduler.schedulers.background import BackgroundScheduler
 from scipy.io import wavfile
+from flask_socketio import SocketIO, emit
+from flask_cors import CORS
+from werkzeug.utils import secure_filename
+import soundfile as sf
 import os
 import logging
 import numpy as np
 import datetime
 import json
-from flask_socketio import SocketIO, emit
-from flask_cors import CORS
 import pytz
-from flask import send_file
-from werkzeug.utils import secure_filename
+import traceback
+import sys
 
 
 # Configurar logger
@@ -118,8 +120,6 @@ def finalizar_escenario_job(escenario_id):
                 microfono.escenario_id = None
             db.session.commit()
             logger.debug(f'Escenario {escenario_id} finalizado automáticamente.')
-
-import soundfile as sf  # Añade esta importación al inicio del archivo
 
 def analizar_audio_file(filepath, audio_id=None):
     """
@@ -292,9 +292,6 @@ def analyze_audio(audio_id):
     except Exception as e:
         logger.error(f"Error al analizar el archivo: {e}")
         return render_template('error.html', message="Error al analizar el archivo de audio.")
-
-import traceback
-import sys
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
