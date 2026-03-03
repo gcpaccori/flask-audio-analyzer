@@ -204,6 +204,218 @@
       .modern-card .card-header {
         background: #e5e7eb !important;
       }
+      /* Print-only elements */
+      .print-only { display: block !important; }
+      .portada-informe {
+        page-break-after: always;
+        text-align: center;
+        padding: 40mm 20mm;
+        border: 3px solid #000;
+        margin-bottom: 20px;
+      }
+      .portada-informe .portada-title {
+        font-size: 20pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .portada-informe .portada-subtitle {
+        font-size: 14pt;
+        margin-bottom: 30px;
+      }
+      .portada-informe .portada-scenario {
+        font-size: 13pt;
+        font-weight: 600;
+        border-top: 2px solid #000;
+        border-bottom: 2px solid #000;
+        padding: 10px 0;
+        margin: 20px 0;
+      }
+      .portada-informe .portada-norm {
+        font-size: 10pt;
+        line-height: 1.8;
+        margin: 20px 0;
+      }
+      .portada-informe .portada-meta {
+        font-size: 9pt;
+        color: #444;
+        margin-top: 30px;
+      }
+      .print-footer {
+        border-top: 1px solid #000;
+        padding-top: 5px;
+        margin-top: 20px;
+        display: flex !important;
+        justify-content: space-between;
+        font-size: 8pt;
+        color: #444;
+      }
+      /* Resumen global indicators */
+      #resumen-global { border: 1px solid #000 !important; }
+      .indicator-highlight { border-right: 1px solid #999 !important; padding: 8px !important; }
+      .indicator-value { font-size: 14pt !important; font-weight: 700 !important; }
+      .indicator-label { font-size: 8pt !important; }
+      /* Clasificacion banner */
+      .clasificacion-banner { border: 2px solid #000 !important; background: #f5f5f5 !important; color: #000 !important; }
+      .clasificacion-banner * { color: #000 !important; }
+      /* Badges */
+      .badge-safe, .badge-danger, .badge-warning {
+        border: 1px solid #000 !important;
+        background: none !important;
+        color: #000 !important;
+        padding: 1px 5px !important;
+      }
+      /* Report doc header hidden in print (portada replaces it) */
+      .report-doc-header { display: none !important; }
+    }
+    
+    /* Estilos de pantalla para elementos print-only */
+    .print-only { display: none; }
+    
+    /* Cabecera de documento profesional (solo pantalla) */
+    .report-doc-header {
+      background: #1e293b;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .report-doc-header .rh-brand .rh-type {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .report-doc-header .rh-brand .rh-norm {
+      font-size: 0.78rem;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+    .report-doc-header .rh-meta {
+      text-align: right;
+    }
+    .report-doc-header .rh-generated {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+    .doc-status-loading {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+    .doc-status-safe {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      background: #16a34a;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: white;
+    }
+    .doc-status-danger {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      background: #dc2626;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: white;
+    }
+    .doc-status-warning {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      background: #d97706;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: white;
+    }
+    
+    /* Resumen de indicadores acústicos */
+    .indicator-highlight {
+      text-align: center;
+      padding: 1rem;
+      background: #f8fafc;
+      border-right: 1px solid #cbd5e1;
+    }
+    .indicator-highlight:last-child { border-right: none; }
+    .indicator-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.2;
+    }
+    .indicator-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .indicator-status-safe { color: #16a34a; }
+    .indicator-status-danger { color: #dc2626; }
+    .indicator-status-warning { color: #d97706; }
+    
+    /* Badges de evaluación */
+    .badge-safe {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .badge-danger {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .badge-warning {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    
+    /* Tabla: fila advertencia */
+    .report-table tr.row-warning { background: #fffbeb; }
+    
+    /* Clasificación/banner de conclusiones */
+    .clasificacion-banner {
+      padding: 0.9rem 1.25rem;
+      border-left: 4px solid;
+      border-radius: 0 4px 4px 0;
+      margin-top: 1rem;
+    }
+    .clasificacion-banner.status-safe {
+      background: #f0fdf4;
+      border-color: #16a34a;
+      color: #15803d;
+    }
+    .clasificacion-banner.status-warning {
+      background: #fffbeb;
+      border-color: #d97706;
+      color: #92400e;
+    }
+    .clasificacion-banner.status-danger {
+      background: #fef2f2;
+      border-color: #dc2626;
+      color: #b91c1c;
     }
     
     /* Header moderno con gradiente */
@@ -597,21 +809,47 @@
 
   <!-- Contenido Principal -->
   <div class="main-container">
-    <!-- Banner de estado moderno -->
-    <div class="status-banner">
-      <h1><i class="bi bi-check-circle-fill me-3"></i>ANÁLISIS ACÚSTICO COMPLETADO</h1>
-      <!-- Added reference to NTP ISO 9612:2010 -->
-      <p>Evaluación conforme a ISO/TR 25417:2007 y NTP ISO 9612:2010 - Comparación con límite de referencia de 85 dB y LAeq general del escenario</p>
+
+    <!-- Portada para impresión (invisible en pantalla) -->
+    <div class="portada-informe print-only">
+      <div class="portada-title">Informe Técnico de Monitoreo Acústico Ocupacional</div>
+      <div class="portada-subtitle">Evaluación de la Exposición al Ruido en el Trabajo</div>
+      <div id="portada-scenario" class="portada-scenario">Escenario #{{ escenario_id }}</div>
+      <div id="portada-fechas" class="portada-norm" style="font-size:11pt; margin:10px 0;"></div>
+      <div class="portada-norm">
+        Elaborado conforme a:<br>
+        ISO/TR 25417:2007 — Definiciones de cantidades acústicas básicas<br>
+        NTP ISO 9612:2010 — Determinación de la exposición al ruido en el trabajo (Método de ingeniería)<br>
+        D.S. N° 005-2012-TR — Reglamento de Seguridad y Salud en el Trabajo del Perú
+      </div>
+      <div id="portada-status" class="portada-norm" style="font-weight:700; font-size:12pt; margin-top:20px; border:2px solid #000; padding:8px;">
+        Calculando evaluación...
+      </div>
+      <div class="portada-meta">
+        Límite de referencia aplicado: <strong>{{ limite_referencia }} dB</strong> &nbsp;·&nbsp;
+        Micrófono ID: <strong>{{ microfono_id }}</strong><br>
+        Generado: <span id="portada-generated-date"></span>
+      </div>
     </div>
 
-    <!-- Información del escenario moderna -->
-    <div class="modern-card mb-4">
-      <div class="card-header">
-        <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información del Escenario</h4>
+    <!-- Cabecera de documento profesional (solo pantalla) -->
+    <div class="report-doc-header no-print">
+      <div class="rh-brand">
+        <div class="rh-type"><i class="bi bi-soundwave me-2"></i>Informe Técnico — Monitoreo Acústico Ocupacional</div>
+        <div class="rh-norm">ISO/TR 25417:2007 · NTP ISO 9612:2010 · Límite: {{ limite_referencia }} dB · Escenario #{{ escenario_id }}</div>
       </div>
-      <div class="card-body">
+      <div class="rh-meta">
+        <div id="doc-status-badge" class="doc-status-loading"><i class="bi bi-hourglass-split me-1"></i>Calculando...</div>
+        <div id="doc-generated" class="rh-generated"></div>
+      </div>
+    </div>
+
+    <!-- Información del escenario -->
+    <div class="report-section">
+      <h6 class="section-title"><i class="bi bi-info-circle me-2"></i>Información del Escenario</h6>
+      <div style="border: 1px solid #cbd5e1; border-top: none; background: #fff;">
         <div id="scenario-details">
-          <div class="d-flex justify-content-center">
+          <div class="d-flex justify-content-center p-3">
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Cargando...</span>
             </div>
@@ -620,13 +858,15 @@
       </div>
     </div>
 
-    <!-- Sección LAeq general destacada -->
-    <div class="laeq-summary">
-      <h3><i class="bi bi-graph-up me-2"></i>LAeq General del Escenario</h3>
-      <div class="laeq-value" id="laeq-general-value">-- dB</div>
-      <p>Nivel de sonido continuo equivalente promediado en el tiempo</p>
-      <div class="laeq-details" id="laeq-details">
-        <small>Cargando datos generales...</small>
+    <!-- Resumen de indicadores acústicos globales -->
+    <div class="report-section mt-3">
+      <h6 class="section-title"><i class="bi bi-activity me-2"></i>Indicadores Acústicos Globales</h6>
+      <div id="resumen-global" style="border: 1px solid #cbd5e1; border-top: none; background: #fff;">
+        <div class="d-flex justify-content-center p-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -659,6 +899,18 @@
                 <span class="visually-hidden">Cargando...</span>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conclusiones y Recomendaciones -->
+    <div class="report-section mt-4">
+      <h6 class="section-title"><i class="bi bi-clipboard-check me-2"></i>Conclusiones y Recomendaciones</h6>
+      <div id="conclusiones-container" style="border: 1px solid #cbd5e1; border-top: none; padding: 1.25rem; background: #fff;">
+        <div class="d-flex justify-content-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
           </div>
         </div>
       </div>
@@ -1032,6 +1284,12 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         <p>Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D., ... & van Mulbregt, P. (2020). SciPy 1.0: fundamental algorithms for scientific computing in Python. <em>Nature Methods</em>, 17(3), 261-272.</p>
       </div>
     </div>
+
+    <!-- Pie de página para impresión -->
+    <div class="print-footer print-only">
+      <div>Informe Técnico de Monitoreo Acústico Ocupacional — Escenario #{{ escenario_id }} · Micrófono #{{ microfono_id }}</div>
+      <div>Generado: <span id="footer-generated-date"></span> · ISO/TR 25417:2007 · NTP ISO 9612:2010</div>
+    </div>
   </div>
 
   <!-- Scripts -->
@@ -1046,8 +1304,10 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     var limiteReferencia = {{ limite_referencia }};
     
     var laeqGeneral = null;
+    var datosGeneral = {};
     var chart;
     var datosExcesos = {};
+    var conclusionesGeneradas = false;
 
     function cargarInformacionEscenario() {
       $.getJSON(`/escenarios/${escenarioId}/detalle`, function(data) {
@@ -1055,13 +1315,39 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         var endDate = new Date(data.end_time);
         var duration = (endDate - startDate) / (1000 * 60 * 60); // horas
         
+        // Update portada
+        $('#portada-scenario').text((data.nombre || 'Escenario #' + escenarioId) + ' — ' + (data.ubicacion || ''));
+        $('#portada-fechas').html('Período de medición: ' + startDate.toLocaleString('es-PE') + ' — ' + endDate.toLocaleString('es-PE') + '<br>Duración: ' + duration.toFixed(2) + ' horas');
+
+        var micInfo = data.microfonos && data.microfonos.length > 0 ?
+          data.microfonos.map(function(m) { return m.identificador || 'ID ' + m.id; }).join(', ') :
+          'Micrófono ID: ' + microfonoId;
+        
         var html = `
           <table class="report-table">
-            <tr><th style="width:25%">Nombre</th><td>${data.nombre || 'N/A'}</td><th style="width:25%">Ubicación</th><td>${data.ubicacion || 'N/A'}</td></tr>
+            <tr><th style="width:20%">Nombre del Escenario</th><td colspan="3"><strong>${data.nombre || 'N/A'}</strong></td></tr>
+            <tr><th>Ubicación</th><td colspan="3">${data.ubicacion || 'N/A'}</td></tr>
             <tr><th>Descripción</th><td colspan="3">${data.descripcion || 'N/A'}</td></tr>
-            <tr><th>Inicio</th><td>${startDate.toLocaleString('es-PE')}</td><th>Fin</th><td>${endDate.toLocaleString('es-PE')}</td></tr>
-            <tr><th>Duración</th><td>${duration.toFixed(2)} horas</td><th>Estado</th><td>${data.estado || 'N/A'}</td></tr>
-            <tr><th>Micrófonos</th><td colspan="3">${data.microfonos ? data.microfonos.length : 0} dispositivo(s)</td></tr>
+            <tr>
+              <th>Inicio de Medición</th><td>${startDate.toLocaleString('es-PE')}</td>
+              <th>Fin de Medición</th><td>${endDate.toLocaleString('es-PE')}</td>
+            </tr>
+            <tr>
+              <th>Duración Total</th><td>${duration.toFixed(2)} horas</td>
+              <th>Estado</th><td><span class="badge-safe">${data.estado || 'N/A'}</span></td>
+            </tr>
+            <tr>
+              <th>Tipo de Ruido</th><td>${data.tipo_ruido || 'N/A'}</td>
+              <th>Tipo de Análisis</th><td>${data.tipo_analisis || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th>Número de Fuentes</th><td>${data.num_fuentes != null ? data.num_fuentes : 'N/A'}</td>
+              <th>Personas Expuestas</th><td>${data.num_personas != null ? data.num_personas : 'N/A'}</td>
+            </tr>
+            <tr>
+              <th>Protección Auditiva</th><td>${data.proteccion_auditiva || 'N/A'}</td>
+              <th>Micrófonos Asignados</th><td>${micInfo}</td>
+            </tr>
           </table>
         `;
         $('#scenario-details').html(html);
@@ -1072,27 +1358,50 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
 
     function cargarAnalisisGeneral() {
       $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/analisis_general`, function(data) {
+        datosGeneral = data;
         laeqGeneral = data.Lp_eqT;
-        $('#laeq-general-value').text(data.Lp_eqT.toFixed(2) + ' dB');
         
-        var detalles = `
-          <table class="report-table" style="margin-top:1rem">
-            <tr><th>Duración Total</th><th>Energía Total (ET)</th><th>Nivel de Exposición (LE)</th></tr>
-            <tr>
-              <td>${data.duration ? data.duration.toFixed(2) : 'N/A'} s</td>
-              <td>${data.ET ? data.ET.toExponential(2) : 'N/A'} Pa²·s</td>
-              <td>${data.LE ? data.LE.toFixed(2) : 'N/A'} dB</td>
-            </tr>
-          </table>
+        var lexh8 = data.L_EX_8h;
+        var laeqStatus = laeqGeneral >= limiteReferencia ? 'danger' : (laeqGeneral >= 80 ? 'warning' : 'safe');
+        var lexStatus = (lexh8 !== null && lexh8 !== undefined) ? (lexh8 >= limiteReferencia ? 'danger' : (lexh8 >= 80 ? 'warning' : 'safe')) : 'safe';
+        var durHoras = data.duration ? (data.duration / 3600).toFixed(2) : 'N/A';
+        
+        var resumenHtml = `
+          <div style="display:flex; flex-wrap:wrap; border-bottom:1px solid #cbd5e1;">
+            <div class="indicator-highlight" style="flex:1; min-width:150px;">
+              <div class="indicator-value indicator-status-${laeqStatus}" id="laeq-general-value">${laeqGeneral.toFixed(2)} <span style="font-size:1rem;">dB</span></div>
+              <div class="indicator-label">L<sub>Aeq</sub> — Nivel Continuo Equivalente</div>
+              <div style="margin-top:6px;">${laeqStatus === 'danger' ? '<span class="badge-danger">⚠ Excede límite</span>' : (laeqStatus === 'warning' ? '<span class="badge-warning">▲ Nivel de acción</span>' : '<span class="badge-safe">✓ Dentro del límite</span>')}</div>
+            </div>
+            ${lexh8 !== null && lexh8 !== undefined ? `
+            <div class="indicator-highlight" style="flex:1; min-width:150px;">
+              <div class="indicator-value indicator-status-${lexStatus}">${lexh8.toFixed(2)} <span style="font-size:1rem;">dB</span></div>
+              <div class="indicator-label">L<sub>EX,8h</sub> — Exposición normalizada 8h (NTP ISO 9612)</div>
+              <div style="margin-top:6px;">${lexStatus === 'danger' ? '<span class="badge-danger">⚠ Excede límite</span>' : (lexStatus === 'warning' ? '<span class="badge-warning">▲ Nivel de acción</span>' : '<span class="badge-safe">✓ Dentro del límite</span>')}</div>
+            </div>` : ''}
+            <div class="indicator-highlight" style="flex:1; min-width:120px;">
+              <div class="indicator-value" style="font-size:1.6rem;">${data.duration ? data.duration.toFixed(0) : 'N/A'} <span style="font-size:0.9rem;">s</span></div>
+              <div class="indicator-label">Duración Total de Medición</div>
+              <div style="margin-top:6px; font-size:0.78rem; color:#64748b;">${durHoras} horas · ${data.cantidad_audios || 'N/A'} audio(s)</div>
+            </div>
+            <div class="indicator-highlight" style="flex:1; min-width:120px;">
+              <div class="indicator-value" style="font-size:1.4rem;">${data.ET ? data.ET.toExponential(2) : 'N/A'}</div>
+              <div class="indicator-label">E<sub>T</sub> — Exposición Sonora (Pa²·s)</div>
+            </div>
+            <div class="indicator-highlight" style="flex:1; min-width:120px;">
+              <div class="indicator-value" style="font-size:1.6rem;">${data.LE ? data.LE.toFixed(2) : 'N/A'} <span style="font-size:0.9rem;">dB</span></div>
+              <div class="indicator-label">L<sub>E</sub> — Nivel de Exposición Sonora</div>
+            </div>
+          </div>
         `;
-        $('#laeq-details').html(detalles);
+        $('#resumen-global').html(resumenHtml);
         
         if (chart && laeqGeneral) {
           actualizarGraficoConLAeq();
         }
+        intentarGenerarConclusiones();
       }).fail(function() {
-        $('#laeq-general-value').text('Error');
-        $('#laeq-details').html('<div class="alert alert-danger">Error al cargar datos generales.</div>');
+        $('#resumen-global').html('<div class="alert alert-danger p-3">Error al cargar datos generales.</div>');
       });
     }
 
@@ -1399,19 +1708,32 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/analisis_excesos`, function(data) {
         datosExcesos = data;
         
+        var evalClass = data.puntos_que_excedieron > 0 ? 'badge-danger' : 'badge-safe';
+        var evalIcon = data.puntos_que_excedieron > 0 ? '⚠' : '✓';
+        
         var html = `
           <table class="report-table">
             <thead>
-              <tr><th>Evaluación</th><th>Límite (dB)</th><th>Puntos Medidos</th><th>Excesos</th><th>% Exceso</th>${data.puntos_que_excedieron > 0 ? '<th>Tiempo Exceso</th><th>Nivel Máximo (dB)</th>' : ''}<th>Total Audios</th></tr>
+              <tr>
+                <th>Evaluación de Seguridad</th>
+                <th>Límite (dB)</th>
+                <th>Puntos Medidos</th>
+                <th>Puntos que Excedieron</th>
+                <th>% del Tiempo</th>
+                <th>Tiempo de Exceso</th>
+                <th>Nivel Máximo Reg. (dB)</th>
+                <th>Total Audios</th>
+              </tr>
             </thead>
             <tbody>
               <tr class="${data.puntos_que_excedieron > 0 ? 'row-danger' : ''}">
-                <td>${data.evaluacion_seguridad}</td>
+                <td><span class="${evalClass}">${evalIcon} ${data.evaluacion_seguridad}</span></td>
                 <td>${data.limite_referencia}</td>
                 <td>${data.total_puntos_medidos.toLocaleString()}</td>
                 <td>${data.puntos_que_excedieron.toLocaleString()}</td>
                 <td>${data.porcentaje_exceso}%</td>
-                ${data.puntos_que_excedieron > 0 ? `<td>${data.duracion_total_exceso_minutos} min</td><td>${data.nivel_maximo_registrado}</td>` : ''}
+                <td>${data.puntos_que_excedieron > 0 ? data.duracion_total_exceso_minutos + ' min' : '—'}</td>
+                <td>${data.puntos_que_excedieron > 0 ? data.nivel_maximo_registrado : '—'}</td>
                 <td>${data.cantidad_audios}</td>
               </tr>
             </tbody>
@@ -1423,7 +1745,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             <h6 style="margin-top:1rem; margin-bottom:0.5rem;"><i class="bi bi-list-ul me-2"></i>Detalle de Excesos por Audio</h6>
             <table class="report-table">
               <thead>
-                <tr><th>Audio ID</th><th>Puntos Excedidos</th><th>Duración Exceso (s)</th><th>Nivel Máximo (dB)</th></tr>
+                <tr><th>Audio ID</th><th>Puntos Excedidos</th><th>Duración Exceso (s)</th><th>Nivel Máximo (dB)</th><th>Estado</th></tr>
               </thead>
               <tbody>
           `;
@@ -1434,6 +1756,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
                 <td>${audio.puntos_excedidos}</td>
                 <td>${audio.duracion_exceso_segundos}</td>
                 <td>${audio.nivel_maximo}</td>
+                <td>${audio.puntos_excedidos > 0 ? '<span class="badge-danger">⚠ Excede</span>' : '<span class="badge-safe">✓ OK</span>'}</td>
               </tr>
             `;
           });
@@ -1441,13 +1764,152 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         }
         
         $('#analisis-excesos-info').html(html);
+        intentarGenerarConclusiones();
       }).fail(function() {
         $('#analisis-excesos-info').html('<div class="alert alert-danger">Error al cargar análisis de excesos.</div>');
       });
     }
 
+    // Genera conclusiones cuando tanto general como excesos están cargados
+    function intentarGenerarConclusiones() {
+      if (conclusionesGeneradas) return;
+      if (datosGeneral.Lp_eqT == null || datosExcesos.total_puntos_medidos == null) return;
+      conclusionesGeneradas = true;
+      generarConclusiones();
+    }
+
+    function generarConclusiones() {
+      var laeq = datosGeneral.Lp_eqT;
+      var lexh8 = datosGeneral.L_EX_8h;
+      var pctExceso = datosExcesos.porcentaje_exceso || 0;
+      var maxNivel = datosExcesos.nivel_maximo_registrado || 0;
+      var durMin = datosExcesos.duracion_total_exceso_minutos || 0;
+      var limitRef = limiteReferencia;
+
+      // Clasificación del ambiente
+      var clasificacion, riesgo, colorClass;
+      if (laeq < 70) {
+        clasificacion = 'AMBIENTE CONTROLADO — SIN RIESGO ACÚSTICO';
+        riesgo = 'Los niveles de ruido medidos están muy por debajo del límite de referencia. No se requieren medidas correctivas.';
+        colorClass = 'status-safe';
+      } else if (laeq < 80) {
+        clasificacion = 'NIVEL BAJO — PRECAUCIÓN';
+        riesgo = 'Los niveles están por debajo del límite pero se recomienda monitoreo periódico como medida preventiva.';
+        colorClass = 'status-safe';
+      } else if (laeq < limitRef) {
+        clasificacion = 'NIVEL DE ACCIÓN — INTERVENCIÓN RECOMENDADA';
+        riesgo = 'Los niveles se acercan al límite máximo permisible (' + limitRef + ' dB). Se recomiendan medidas preventivas.';
+        colorClass = 'status-warning';
+      } else {
+        clasificacion = 'LÍMITE EXCEDIDO — ACCIÓN OBLIGATORIA';
+        riesgo = 'La exposición al ruido supera el límite máximo permisible de ' + limitRef + ' dB establecido por la NTP ISO 9612:2010. Se requieren medidas correctivas inmediatas.';
+        colorClass = 'status-danger';
+      }
+
+      // Tabla de evaluación de cumplimiento
+      var tablaEval = `
+        <table class="report-table" style="margin-bottom:1rem;">
+          <thead>
+            <tr><th>Indicador</th><th>Valor Medido</th><th>Límite de Referencia</th><th>Margen</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            <tr class="${laeq >= limitRef ? 'row-danger' : (laeq >= 80 ? 'row-warning' : '')}">
+              <td><strong>L<sub>Aeq</sub> Global</strong><br><small>Nivel continuo equivalente ponderado A</small></td>
+              <td><strong>${laeq.toFixed(2)} dB</strong></td>
+              <td>${limitRef} dB</td>
+              <td>${(laeq - limitRef).toFixed(2)} dB</td>
+              <td>${laeq >= limitRef ? '<span class="badge-danger">⚠ EXCEDE</span>' : (laeq >= 80 ? '<span class="badge-warning">▲ PRECAUCIÓN</span>' : '<span class="badge-safe">✓ CUMPLE</span>')}</td>
+            </tr>
+            ${lexh8 !== null && lexh8 !== undefined ? `
+            <tr class="${lexh8 >= limitRef ? 'row-danger' : (lexh8 >= 80 ? 'row-warning' : '')}">
+              <td><strong>L<sub>EX,8h</sub></strong><br><small>Exposición normalizada a 8h (NTP ISO 9612:2010)</small></td>
+              <td><strong>${lexh8.toFixed(2)} dB</strong></td>
+              <td>${limitRef} dB</td>
+              <td>${(lexh8 - limitRef).toFixed(2)} dB</td>
+              <td>${lexh8 >= limitRef ? '<span class="badge-danger">⚠ EXCEDE</span>' : (lexh8 >= 80 ? '<span class="badge-warning">▲ PRECAUCIÓN</span>' : '<span class="badge-safe">✓ CUMPLE</span>')}</td>
+            </tr>` : ''}
+            <tr class="${pctExceso > 25 ? 'row-danger' : (pctExceso > 5 ? 'row-warning' : '')}">
+              <td><strong>Tiempo con Lp,max &gt; ${limitRef} dB</strong><br><small>Porcentaje del tiempo de medición con exceso de nivel máximo</small></td>
+              <td><strong>${pctExceso}%</strong> (${durMin} min)</td>
+              <td>0%</td>
+              <td>+${pctExceso}%</td>
+              <td>${pctExceso > 25 ? '<span class="badge-danger">⚠ ALTO</span>' : (pctExceso > 5 ? '<span class="badge-warning">▲ MODERADO</span>' : '<span class="badge-safe">✓ BAJO</span>')}</td>
+            </tr>
+            <tr class="${maxNivel > 135 ? 'row-danger' : (maxNivel > 115 ? 'row-warning' : '')}">
+              <td><strong>Nivel Máximo (Lp,max)</strong><br><small>Pico máximo de presión sonora registrado</small></td>
+              <td><strong>${maxNivel} dB</strong></td>
+              <td>135 dB (Trauma Acústico Agudo)</td>
+              <td>${(maxNivel - 135).toFixed(1)} dB</td>
+              <td>${maxNivel > 135 ? '<span class="badge-danger">⚠ PELIGROSO</span>' : (maxNivel > 115 ? '<span class="badge-warning">▲ ALTO</span>' : '<span class="badge-safe">✓ OK</span>')}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+
+      // Recomendaciones basadas en los resultados
+      if (laeq >= limitRef || (lexh8 !== null && lexh8 !== undefined && lexh8 >= limitRef)) {
+        recomendaciones.push('<strong>Protección auditiva individual obligatoria:</strong> Implementar tapones auditivos o protectores tipo copa con atenuación (NRR) suficiente para reducir la exposición efectiva por debajo de ' + limitRef + ' dB.');
+        recomendaciones.push('<strong>Controles de ingeniería:</strong> Evaluar instalación de barreras acústicas, aislamiento de fuentes de ruido o encerramientos acústicos para reducir la emisión en el origen.');
+        recomendaciones.push('<strong>Programa de conservación auditiva:</strong> Implementar audiometrías periódicas (mínimo anual) para todos los trabajadores expuestos según D.S. N° 005-2012-TR Art. 36.');
+        recomendaciones.push('<strong>Re-evaluación urgente:</strong> Realizar nueva medición de ruido en un plazo no mayor a 30 días después de implementar los controles para verificar su efectividad.');
+        recomendaciones.push('<strong>Señalización:</strong> Instalar señales de advertencia de ruido y zonas de uso obligatorio de protección auditiva conforme a NTP 399.010-1:2004.');
+      } else if (laeq >= 80) {
+        recomendaciones.push('<strong>Protección auditiva preventiva:</strong> Se recomienda el uso voluntario de protección auditiva como medida de precaución dado que el LAeq supera el nivel de acción de 80 dB.');
+        recomendaciones.push('<strong>Monitoreo semestral:</strong> Programar evaluaciones acústicas cada 6 meses para detectar posibles incrementos en los niveles de ruido.');
+        recomendaciones.push('<strong>Revisión de equipos:</strong> Evaluar si el mantenimiento preventivo de equipos y maquinaria podría reducir los niveles de emisión sonora.');
+      } else {
+        recomendaciones.push('<strong>Mantener condiciones actuales:</strong> El ambiente acústico se encuentra dentro de los límites normativos. Continuar con las prácticas de control de ruido vigentes.');
+        recomendaciones.push('<strong>Monitoreo anual:</strong> Programar evaluaciones acústicas anuales para verificar que los niveles se mantengan dentro de los límites.');
+      }
+
+      if (pctExceso > 25) {
+        recomendaciones.push('<strong>Picos frecuentes:</strong> El ' + pctExceso + '% del tiempo de medición registró niveles máximos por encima de ' + limitRef + ' dB. Identificar y controlar las fuentes de picos de ruido de alta intensidad.');
+      }
+      if (maxNivel > 115) {
+        recomendaciones.push('<strong>Protección contra picos:</strong> Se registraron niveles máximos de ' + maxNivel + ' dB. Evaluar el uso de protectores auditivos con atenuación impulsiva para eventos de alta presión sonora instantánea.');
+      }
+
+      // Actualizar estado en doc-header y portada
+      var statusHtml, portadaStatus;
+      if (laeq >= limitRef) {
+        statusHtml = '<span class="doc-status-danger">⚠ ATENCIÓN REQUERIDA</span>';
+        portadaStatus = 'RESULTADO: ATENCIÓN REQUERIDA — Excede ' + limitRef + ' dB';
+      } else if (laeq >= 80) {
+        statusHtml = '<span class="doc-status-warning">▲ NIVEL DE ACCIÓN</span>';
+        portadaStatus = 'RESULTADO: NIVEL DE ACCIÓN — Monitoreo recomendado';
+      } else {
+        statusHtml = '<span class="doc-status-safe">✓ AMBIENTE SEGURO</span>';
+        portadaStatus = 'RESULTADO: AMBIENTE SEGURO — Dentro del límite normativo';
+      }
+      $('#doc-status-badge').html(statusHtml);
+      $('#portada-status').text(portadaStatus);
+
+      var html = tablaEval + `
+        <div class="clasificacion-banner ${colorClass}">
+          <strong>${clasificacion}</strong><br>
+          <span style="font-size:0.95rem;">${riesgo}</span>
+        </div>
+        <h6 style="margin-top:1.25rem; margin-bottom:0.5rem; font-weight:600; color:#1e293b;">
+          <i class="bi bi-check2-square me-2"></i>Recomendaciones Técnicas
+        </h6>
+        <ol style="padding-left:1.5rem; line-height:2;">
+          ${recomendaciones.map(function(r) { return '<li style="margin-bottom:0.25rem;">' + r + '</li>'; }).join('')}
+        </ol>
+        <p style="font-size:0.78rem; color:#64748b; margin-top:1rem; border-top:1px solid #e2e8f0; padding-top:0.75rem;">
+          <i class="bi bi-info-circle me-1"></i>
+          Las conclusiones y recomendaciones se derivan de los datos analizados y los criterios de la <strong>NTP ISO 9612:2010</strong>, el <strong>D.S. N° 005-2012-TR</strong> (Reglamento de SST del Perú) y la <strong>OIT — Directrices sobre sistemas de gestión de la seguridad y la salud en el trabajo</strong>. Los resultados deben ser validados por un profesional de salud ocupacional habilitado antes de su uso como sustento legal o médico.
+        </p>
+      `;
+      $('#conclusiones-container').html(html);
+    }
+
     // Al iniciar la página, cargar todos los datos
     $(document).ready(function() {
+      var now = new Date();
+      var fechaGeneracion = now.toLocaleString('es-PE');
+      $('#doc-generated').text('Generado: ' + fechaGeneracion);
+      $('#portada-generated-date').text(fechaGeneracion);
+      $('#footer-generated-date').text(fechaGeneracion);
       cargarInformacionEscenario();
       cargarAnalisisGeneral();
       cargarTodosLosAudios();

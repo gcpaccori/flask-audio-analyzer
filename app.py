@@ -641,6 +641,13 @@ def detalle_escenario(escenario_id):
         'start_time': escenario.start_time.strftime("%Y-%m-%d %H:%M:%S"),
         'end_time': escenario.end_time.strftime("%Y-%m-%d %H:%M:%S"),
         'estado': escenario.estado,
+        'horas_medicion': escenario.horas_medicion,
+        'dias_medicion': escenario.dias_medicion,
+        'tipo_ruido': escenario.tipo_ruido,
+        'num_fuentes': escenario.num_fuentes,
+        'num_personas': escenario.num_personas,
+        'proteccion_auditiva': escenario.proteccion_auditiva,
+        'tipo_analisis': escenario.tipo_analisis,
         'microfonos': microfonos_data
     }
     return jsonify(data)
@@ -820,13 +827,18 @@ def analisis_general(escenario_id, mic_id):
     Lp_eqT_global = 10 * np.log10(mean_pressure_sq / (2.0e-5)**2) if mean_pressure_sq > 0 else 0
     # Calcular el nivel de exposición acústica global
     LE_global = 10 * np.log10(total_ET / 4.0e-10) if total_ET > 0 else 0
+    # Calcular L_EX,8h según NTP ISO 9612:2010 (exposición normalizada a 8 horas)
+    duracion_horas = total_duration / 3600.0
+    # Require at least 1 minute of measurement for a meaningful L_EX,8h
+    L_EX_8h = round(Lp_eqT_global + 10 * np.log10(duracion_horas / 8.0), 2) if duracion_horas >= (1.0 / 60.0) else None
 
     analysis = {
          "duration": total_duration,
          "ET": total_ET,
          "Lp_eqT": round(Lp_eqT_global, 2),
-         "LE": round(LE_global, 2)
-         # Puedes agregar más métricas siguiendo la misma lógica.
+         "LE": round(LE_global, 2),
+         "L_EX_8h": L_EX_8h,
+         "cantidad_audios": len(resultados)
     }
     return jsonify(analysis)
 
