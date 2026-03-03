@@ -417,363 +417,526 @@
       border-color: #dc2626;
       color: #b91c1c;
     }
-    
-    /* Header moderno con gradiente */
-    .navbar-custom {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      box-shadow: var(--shadow-md);
-    }
-    
-    .navbar-custom .navbar-brand,
-    .navbar-custom .nav-link,
-    .navbar-custom .btn {
-      color: white;
-      font-weight: 500;
-      transition: all 0.3s ease;
-    }
-    
-    .navbar-custom .btn:hover {
-      background-color: rgba(255,255,255,0.2);
-      transform: translateY(-1px);
-    }
-    
-    /* Contenedor principal moderno */
-    .main-container {
-      margin-top: 70px;
-      padding: 2rem;
-      max-width: 1400px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    
-    /* Banner de estado moderno */
-    .status-banner {
-      background: linear-gradient(135deg, var(--success-color), var(--info-color));
-      color: white;
-      padding: 2rem;
-      text-align: center;
-      border-radius: 16px;
-      box-shadow: var(--shadow-lg);
-      margin-bottom: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .status-banner h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      position: relative;
-      z-index: 1;
-    }
-    
-    .status-banner p {
-      font-size: 1.1rem;
-      opacity: 0.9;
-      position: relative;
-      z-index: 1;
-    }
-    
-    /* Cards modernos */
-    .modern-card {
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      box-shadow: var(--shadow-sm);
-      transition: all 0.3s ease;
-      overflow: hidden;
-    }
-    
-    .modern-card:hover {
-      box-shadow: var(--shadow-md);
-    }
-    
-    .modern-card .card-header {
-      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-      border-bottom: 1px solid var(--border-color);
-      padding: 1.5rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-    
-    .modern-card .card-body {
-      padding: 1.5rem;
-    }
-    
-    /* Sección LAeq general destacada */
-    .laeq-summary {
-      background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
-      color: white;
-      padding: 2rem;
-      border-radius: 16px;
-      text-align: center;
-      box-shadow: var(--shadow-lg);
-      margin-bottom: 2rem;
-    }
-    
-    .laeq-value {
-      font-size: 3.5rem;
-      font-weight: 800;
-      margin: 1rem 0;
-    }
-    
-    .laeq-details {
-    }
-    
-    /* Fixed contrast issues in LAeq details by removing problematic white backgrounds */
-    .laeq-details .detail-box {
-      background: rgba(255,255,255,0.15) !important;
-      border: 1px solid rgba(255,255,255,0.3);
-      color: white !important;
-      border-radius: 8px;
-      padding: 1rem;
-    }
-    
-    .laeq-details .detail-box strong,
-    .laeq-details .detail-box .fs-5,
-    .laeq-details .detail-box small {
-      color: white !important;
-    }
-    
-    /* Lista de audios — barra horizontal scrolleable (solo pantalla) */
-    #audios-list {
+
+    /* ═══════════════════════════════════════════
+       PAGE LAYOUT — sidebar + main content
+    ═══════════════════════════════════════════ */
+    body { scroll-behavior: smooth; }
+
+    .page-layout {
       display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding: 10px 0;
-      margin: 1rem 0;
+      align-items: flex-start;
+      max-width: 1700px;
+      margin: 0 auto;
     }
-    
-    .audio-item {
-      flex: 0 0 180px;
-      width: 180px;
-      padding: 0.75rem;
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      cursor: pointer;
-      border-left: 4px solid var(--success-color);
+
+    /* Sticky sidebar */
+    .report-sidebar {
+      position: sticky;
+      top: 64px;
+      width: 226px;
+      min-width: 226px;
+      max-height: calc(100vh - 64px);
+      overflow-y: auto;
+      padding: 1.25rem 0.75rem 1.25rem 1rem;
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      margin-top: 64px;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
     }
-    
-    .audio-item.has-excesos {
-      border-left: 4px solid var(--danger-color);
+    .report-sidebar::-webkit-scrollbar { width: 4px; }
+    .report-sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
     }
-    
-    .audio-item:hover {
-      background: #f1f5f9;
-      box-shadow: var(--shadow-sm);
+    .sidebar-logo .logo-icon {
+      width: 28px; height: 28px;
+      background: #1e293b;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 14px;
     }
-    
-    .audio-item.active {
-      background: #dbeafe;
-      border-color: var(--primary-color);
-      box-shadow: var(--shadow-sm);
+    .sidebar-logo .logo-text { font-size: 0.72rem; color: #64748b; line-height: 1.3; }
+    .sidebar-logo .logo-text strong { display: block; color: #1e293b; font-size: 0.75rem; }
+
+    .sidebar-toc-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
     }
-    
-    /* Tabla de audios para impresión (oculta en pantalla) */
-    .audio-print-table {
-      display: none;
+
+    .sidebar-toc a {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.8rem;
+      color: #64748b;
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      border-radius: 0 4px 4px 0;
+      transition: all 0.15s ease;
+      line-height: 1.35;
+      margin-bottom: 1px;
     }
-    
-    /* Contenedor de gráfico profesional */
-    #chart-container {
-      background: #fff;
-      border: 1px solid #cbd5e1;
-      padding: 1rem;
-      margin: 1.5rem 0;
+    .sidebar-toc a:hover {
+      color: #1e293b;
+      background: #f8fafc;
+      border-left-color: #94a3b8;
     }
-    
-    #stockchart {
-      height: 550px;
-      width: 100%;
+    .sidebar-toc a.active {
+      color: #2563eb;
+      background: #eff6ff;
+      border-left-color: #2563eb;
+      font-weight: 600;
     }
-    
-    /* Título de sección tipo informe */
-    .section-title {
+    .toc-num {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #94a3b8;
+      min-width: 18px;
+    }
+    .sidebar-toc a.active .toc-num { color: #93c5fd; }
+
+    .sidebar-divider { height: 1px; background: #e2e8f0; margin: 0.75rem 0; }
+
+    .sidebar-status-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.65rem 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .sidebar-laeq-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
+    .sidebar-laeq-value { font-size: 1.3rem; font-weight: 700; color: #1e293b; line-height: 1.2; }
+    .sidebar-laeq-unit { font-size: 0.75rem; color: #64748b; }
+
+    /* Main content area */
+    .report-main {
+      flex: 1;
+      min-width: 0;
+      padding: 1.5rem 2rem 3rem;
+      margin-top: 64px;
+    }
+
+    /* ═══════════════════════════════════════════
+       SECTION STYLING — magazine quality
+    ═══════════════════════════════════════════ */
+    .report-section {
+      margin-bottom: 2.25rem;
+      scroll-margin-top: 80px;
+    }
+
+    .section-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       background: #1e293b;
       color: white;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
+      padding: 0.65rem 1rem;
+      border-radius: 6px 6px 0 0;
+      font-size: 0.88rem;
       font-weight: 600;
-      margin: 2rem 0 0 0;
-      border-radius: 4px 4px 0 0;
+      letter-spacing: 0.02em;
     }
-    
-    /* Tablas de datos tipo informe */
+    .section-hdr .section-num {
+      font-size: 0.6rem;
+      font-weight: 700;
+      opacity: 0.5;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-right: 0.5rem;
+    }
+    .section-hdr .section-icon { margin-right: 0.5rem; opacity: 0.75; }
+    .section-hdr-actions { display: flex; gap: 6px; }
+    .section-hdr .btn-hdr {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .section-hdr .btn-hdr:hover { background: rgba(255,255,255,0.22); }
+
+    .section-body {
+      border: 1px solid #cbd5e1;
+      border-top: none;
+      background: #fff;
+    }
+    .section-body.padded { padding: 1.25rem; }
+
+    /* Table improvements */
     .report-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 0;
-    }
-    .report-table th, .report-table td {
-      border: 1px solid #cbd5e1;
-      padding: 8px 12px;
-      text-align: left;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
     .report-table th {
       background: #f1f5f9;
+      color: #374151;
       font-weight: 600;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      white-space: nowrap;
+    }
+    .report-table td {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e2e8f0;
       color: #1e293b;
+      vertical-align: middle;
     }
-    .report-table tr.row-danger {
-      background: #fef2f2;
+    .report-table tbody tr:nth-child(even) { background: #f9fafb; }
+    .report-table tbody tr:hover { background: #f0f9ff; }
+    .report-table tr.row-danger { background: #fef2f2 !important; }
+    .report-table tr.row-danger:hover { background: #fee2e2 !important; }
+    .report-table tr.row-warning { background: #fffbeb !important; }
+
+    /* ═══════════════════════════════════════════
+       CHART AREA
+    ═══════════════════════════════════════════ */
+    #chart-container {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 0 0 6px 6px;
+      padding: 1rem 0.5rem 0.5rem;
     }
+    #stockchart { height: 380px; }
     
-    /* Análisis de excesos */
-    #excesos-analysis {
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 0 0 8px 8px;
-      padding: 1.5rem;
+    /* Audio list */
+    #audios-list {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding: 0.75rem 0;
+      scrollbar-width: thin;
     }
-    
-    .metric-item {
+    .audio-item {
+      flex: 0 0 auto;
+      min-width: 140px;
+      max-width: 160px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.6rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 0.8rem;
+    }
+    .audio-item:hover { border-color: #93c5fd; background: #f0f9ff; }
+    .audio-item.active { border-color: #2563eb; background: #eff6ff; }
+    .audio-item.has-excesos { border-left: 3px solid #ef4444; }
+
+    /* ═══════════════════════════════════════════
+       INDICATORS
+    ═══════════════════════════════════════════ */
+    .indicator-highlight {
+      text-align: center;
       padding: 1rem;
-      margin-bottom: 0.75rem;
-      border-radius: 8px;
-      border-left: 4px solid var(--info-color);
       background: #f8fafc;
-      transition: all 0.3s ease;
+      border-right: 1px solid #cbd5e1;
+      flex: 1;
+      min-width: 130px;
     }
-    
-    .metric-item:hover {
-      transform: translateX(2px);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .metric-safe {
-      background: #f0fdf4;
-      border-left-color: var(--success-color);
-    }
-    
-    .metric-warning {
-      background: #fffbeb;
-      border-left-color: var(--warning-color);
-    }
-    
-    .metric-danger {
-      background: #fef2f2;
-      border-left-color: var(--danger-color);
-    }
-    
-    /* Badges modernos */
-    .exceso-badge, .safe-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .exceso-badge {
-      background: var(--danger-color);
-      color: white;
-    }
-    
-    .safe-badge {
-      background: var(--success-color);
-      color: white;
-    }
-    
-    /* Secciones de metodología y documentación técnica */
+    .indicator-highlight:last-child { border-right: none; }
+    .indicator-value { font-size: 1.9rem; font-weight: 700; color: #1e293b; line-height: 1.2; }
+    .indicator-label { font-size: 0.72rem; color: #64748b; margin-top: 4px; }
+    .indicator-status-safe { color: #16a34a; }
+    .indicator-status-danger { color: #dc2626; }
+    .indicator-status-warning { color: #d97706; }
+
+    /* ═══════════════════════════════════════════
+       METHODOLOGY SECTION — magazine quality
+    ═══════════════════════════════════════════ */
     .methodology-section {
-      background: var(--white);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 2rem;
-      margin: 2rem 0;
-      box-shadow: var(--shadow-sm);
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 2rem 2.5rem;
+      margin-bottom: 2rem;
+      scroll-margin-top: 80px;
     }
-    
-    .methodology-section h2 {
-      color: var(--primary-color);
-      border-bottom: 3px solid var(--primary-color);
+    .methodology-section > h2 {
+      color: #1e293b;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-bottom: 3px solid #2563eb;
       padding-bottom: 0.5rem;
       margin-bottom: 1.5rem;
-      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
-    
     .methodology-section h3 {
-      color: var(--text-primary);
-      margin-top: 2rem;
-      margin-bottom: 1rem;
+      color: #1e293b;
+      font-size: 0.95rem;
       font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      border-left: 3px solid #2563eb;
+      padding-left: 0.75rem;
     }
-    
     .formula-box {
       background: #f8fafc;
-      border: 1px solid var(--border-color);
-      border-left: 4px solid var(--primary-color);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin: 1rem 0;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #2563eb;
+      border-radius: 4px;
+      padding: 1rem 1.25rem;
+      margin: 0.75rem 0;
       font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
     }
-    
+    .formula-box pre { margin: 0; white-space: pre-wrap; font-size: 0.82rem; }
     .process-step {
-      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 1.5rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1.25rem;
       margin: 1rem 0;
       position: relative;
     }
-    
     .process-step::before {
       content: attr(data-step);
       position: absolute;
       top: -10px;
-      left: 20px;
-      background: var(--primary-color);
+      left: 16px;
+      background: #1e293b;
       color: white;
-      padding: 0.25rem 0.75rem;
+      padding: 0.15rem 0.65rem;
       border-radius: 20px;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 600;
+      letter-spacing: 0.05em;
     }
-    
+    .process-step h4 { font-size: 0.9rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem; }
     .terms-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 0.75rem;
       margin: 1rem 0;
     }
-    
     .term-item {
       background: #f8fafc;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
     }
-    
-    .term-item strong {
-      color: var(--primary-color);
-      font-weight: 600;
+    .term-item strong { color: #2563eb; font-weight: 600; }
+
+    /* ═══════════════════════════════════════════
+       CONCLUSIONS — magazine quality
+    ═══════════════════════════════════════════ */
+    .clasificacion-banner {
+      padding: 0.85rem 1.1rem;
+      border-left: 4px solid;
+      border-radius: 0 4px 4px 0;
+      margin-top: 1rem;
     }
-    
-    /* Responsive design mejorado */
-    @media (max-width: 768px) {
-      .main-container {
-        padding: 1rem;
-        margin-top: 60px;
+    .clasificacion-banner.status-safe { background:#f0fdf4; border-color:#16a34a; color:#15803d; }
+    .clasificacion-banner.status-warning { background:#fffbeb; border-color:#d97706; color:#92400e; }
+    .clasificacion-banner.status-danger { background:#fef2f2; border-color:#dc2626; color:#b91c1c; }
+
+    /* ═══════════════════════════════════════════
+       NAVBAR & BUTTONS
+    ═══════════════════════════════════════════ */
+    .navbar-custom {
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .navbar-custom .navbar-brand, .navbar-custom .btn {
+      color: white;
+      font-weight: 500;
+    }
+    .navbar-custom .btn-outline-light:hover {
+      background: rgba(255,255,255,0.12);
+    }
+
+    /* ═══════════════════════════════════════════
+       PRINT STYLES — impeccable
+    ═══════════════════════════════════════════ */
+    @media print {
+      @page {
+        size: A4;
+        margin: 15mm 15mm 20mm 15mm;
       }
-      
-      .status-banner h1 {
-        font-size: 1.8rem;
+      @page :first { margin-top: 0; }
+
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+      body { background: white !important; font-family: 'Times New Roman', serif; font-size: 10pt; line-height: 1.5; color: #000 !important; }
+
+      .no-print, .report-sidebar, .navbar-custom { display: none !important; }
+
+      .page-layout { display: block !important; }
+      .report-main { margin: 0 !important; padding: 0 !important; }
+
+      .print-only { display: block !important; }
+
+      .report-section {
+        page-break-inside: avoid;
+        margin-bottom: 12pt;
+        scroll-margin-top: 0;
       }
-      
-      .laeq-value {
-        font-size: 2.5rem;
+      .section-hdr {
+        background: #1e293b !important;
+        color: white !important;
+        padding: 5pt 8pt !important;
+        border-radius: 0 !important;
+        font-size: 10pt !important;
+        page-break-after: avoid;
       }
-      
+      .section-body { border: 1px solid #ccc !important; }
+      .section-body.padded { padding: 8pt !important; }
+
       .methodology-section {
-        padding: 1rem;
+        border: 1px solid #ccc !important;
+        border-radius: 0 !important;
+        padding: 8pt 10pt !important;
+        page-break-before: always;
+        margin-bottom: 0 !important;
       }
+      .methodology-section > h2 {
+        font-size: 12pt !important;
+        border-bottom: 2px solid #000 !important;
+        border-left: none !important;
+        padding-bottom: 4pt !important;
+        margin-bottom: 8pt !important;
+      }
+      .methodology-section h3 {
+        font-size: 10pt !important;
+        border-left: 3px solid #333 !important;
+        page-break-after: avoid;
+      }
+
+      .formula-box {
+        border: 1px solid #999 !important;
+        border-left: 3px solid #333 !important;
+        background: #f9f9f9 !important;
+        padding: 5pt 8pt !important;
+        font-size: 7pt !important;
+        page-break-inside: avoid;
+      }
+      .formula-box pre { font-size: 7pt !important; white-space: pre-wrap !important; }
+
+      .process-step {
+        border: 1px solid #ccc !important;
+        background: #fafafa !important;
+        padding: 6pt !important;
+        margin: 5pt 0 !important;
+        page-break-inside: avoid;
+      }
+      .process-step::before {
+        position: static !important;
+        display: inline-block !important;
+        margin-bottom: 3pt !important;
+        background: #333 !important;
+        font-size: 7pt !important;
+      }
+      .process-step h4 { font-size: 9pt !important; }
+
+      .terms-grid { display: block !important; columns: 2; column-gap: 10pt; }
+      .term-item { break-inside: avoid; border: 1px solid #ddd !important; font-size: 7.5pt !important; padding: 4pt 6pt !important; margin-bottom: 4pt; }
+
+      table { width: 100% !important; border-collapse: collapse !important; font-size: 8pt !important; }
+      th, td { border: 1px solid #999 !important; padding: 3pt 6pt !important; }
+      th { background: #e5e7eb !important; font-weight: 700 !important; }
+      tr.row-danger { background: #fef2f2 !important; }
+
+      #chart-container { border: 1px solid #999 !important; border-radius: 0 !important; page-break-inside: avoid; }
+      #stockchart { height: 320px !important; width: 100% !important; }
+      #audios-list { display: none !important; }
+      .audio-print-table { display: block !important; }
+
+      .badge-safe, .badge-danger, .badge-warning {
+        border: 1px solid #000 !important; background: none !important; color: #000 !important;
+      }
+      .clasificacion-banner { border: 1px solid #999 !important; background: #f5f5f5 !important; color: #000 !important; }
+      .indicator-highlight { border: 1px solid #ccc !important; background: #f9f9f9 !important; padding: 5pt !important; }
+      .indicator-value { font-size: 14pt !important; }
+      .indicator-status-safe, .indicator-status-danger, .indicator-status-warning { color: #000 !important; }
+      .print-footer { display: flex !important; border-top: 1pt solid #000; margin-top: 10pt; font-size: 7.5pt; color: #555; justify-content: space-between; }
+      .portada-informe { page-break-after: always; padding: 30mm 20mm; border: 2pt solid #000; }
+      .portada-informe .portada-title { font-size: 18pt; font-weight: 700; }
+      .portada-informe .portada-subtitle { font-size: 13pt; }
+      .portada-informe .portada-scenario { font-size: 12pt; font-weight: 600; border-top: 1pt solid #000; border-bottom: 1pt solid #000; padding: 8pt 0; margin: 15pt 0; }
+      .portada-informe .portada-norm { font-size: 9pt; line-height: 1.8; }
+      .portada-informe .portada-meta { font-size: 8pt; color: #444; }
+      .report-doc-header { display: none !important; }
+
+      /* Page counter via CSS @counter-style */
+      .report-main::after { content: ''; }
     }
+
+    /* ═══════════════════════════════════════════
+       DOC HEADER (screen only)
+    ═══════════════════════════════════════════ */
+    .report-doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .rh-brand .rh-type { font-size: 0.9rem; font-weight: 700; color: #1e293b; }
+    .rh-brand .rh-norm { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+    .rh-meta { text-align: right; }
+    .rh-generated { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
+    .doc-status-loading { display: inline-block; padding: 0.25rem 0.75rem; background: #f1f5f9; border-radius: 20px; font-size: 0.8rem; color: #64748b; border: 1px solid #e2e8f0; }
+    .doc-status-safe { display: inline-block; padding: 0.25rem 0.75rem; background: #dcfce7; border-radius: 20px; font-size: 0.8rem; color: #15803d; border: 1px solid #86efac; font-weight: 600; }
+    .doc-status-danger { display: inline-block; padding: 0.25rem 0.75rem; background: #fee2e2; border-radius: 20px; font-size: 0.8rem; color: #b91c1c; border: 1px solid #fca5a5; font-weight: 600; }
+    .doc-status-warning { display: inline-block; padding: 0.25rem 0.75rem; background: #fef3c7; border-radius: 20px; font-size: 0.8rem; color: #92400e; border: 1px solid #fde68a; font-weight: 600; }
+
+    /* ═══════════════════════════════════════════
+       BADGES
+    ═══════════════════════════════════════════ */
+    .badge-safe { display: inline-block; padding: 0.15rem 0.5rem; background: #dcfce7; color: #15803d; border: 1px solid #86efac; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .badge-danger { display: inline-block; padding: 0.15rem 0.5rem; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .badge-warning { display: inline-block; padding: 0.15rem 0.5rem; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .exceso-badge { display: inline-block; padding: 0.15rem 0.5rem; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 4px; font-size: 0.75rem; }
+    .safe-badge { display: inline-block; padding: 0.15rem 0.5rem; background: #dcfce7; color: #15803d; border: 1px solid #86efac; border-radius: 4px; font-size: 0.75rem; }
+
+    /* ═══════════════════════════════════════════
+       SECTION-TITLE (legacy alias)
+    ═══════════════════════════════════════════ */
+    .section-title { display: none; } /* replaced by .section-hdr */
+
+    /* ═══════════════════════════════════════════
+       PRINT-ONLY items
+    ═══════════════════════════════════════════ */
+    .print-only { display: none; }
+    .print-footer { display: none; }
+    .portada-informe { display: none; }
+
+    /* Edit scenario modal */
+    .modal-section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+      margin-top: 1rem;
+    }
+    .modal-section-label:first-child { margin-top: 0; }
   </style>
   <script>
     Highcharts.setOptions({
@@ -789,150 +952,188 @@
   </script>
 </head>
 <body>
-  <!-- Header moderno -->
+  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-custom fixed-top no-print">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        <strong>Informe de Análisis Acústico</strong>
+    <div class="container-fluid px-3">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+        <i class="bi bi-soundwave"></i>
+        <span style="font-size:0.9rem; font-weight:600;">Análisis Acústico Ocupacional</span>
       </a>
-      <div class="d-flex ms-auto">
-        <button class="btn btn-outline-light me-2" onclick="window.print()">
-          <i class="bi bi-printer me-1"></i>Imprimir Informe
+      <div class="d-flex ms-auto gap-2">
+        <button class="btn btn-sm btn-outline-light" onclick="window.print()">
+          <i class="bi bi-printer me-1"></i>Imprimir
         </button>
-        <a class="btn btn-outline-light" href="/">
+        <a class="btn btn-sm btn-outline-light" href="/">
           <i class="bi bi-arrow-left me-1"></i>Volver
         </a>
       </div>
     </div>
   </nav>
 
-  <!-- Contenido Principal -->
-  <div class="main-container">
-
-    <!-- Portada para impresión (invisible en pantalla) -->
-    <div class="portada-informe print-only">
-      <div class="portada-title">Informe Técnico de Monitoreo Acústico Ocupacional</div>
-      <div class="portada-subtitle">Evaluación de la Exposición al Ruido en el Trabajo</div>
-      <div id="portada-scenario" class="portada-scenario">Escenario #{{ escenario_id }}</div>
-      <div id="portada-fechas" class="portada-norm" style="font-size:11pt; margin:10px 0;"></div>
-      <div class="portada-norm">
-        Elaborado conforme a:<br>
-        ISO/TR 25417:2007 — Definiciones de cantidades acústicas básicas<br>
-        NTP ISO 9612:2010 — Determinación de la exposición al ruido en el trabajo (Método de ingeniería)<br>
-        D.S. N° 005-2012-TR — Reglamento de Seguridad y Salud en el Trabajo del Perú
-      </div>
-      <div id="portada-status" class="portada-norm" style="font-weight:700; font-size:12pt; margin-top:20px; border:2px solid #000; padding:8px;">
-        Calculando evaluación...
-      </div>
-      <div class="portada-meta">
-        Límite de referencia aplicado: <strong>{{ limite_referencia }} dB</strong> &nbsp;·&nbsp;
-        Micrófono ID: <strong>{{ microfono_id }}</strong><br>
-        Generado: <span id="portada-generated-date"></span>
-      </div>
+  <!-- Print cover (portada) — hidden on screen -->
+  <div class="portada-informe print-only">
+    <div style="margin-bottom:30mm; text-align:center;">
+      <div style="font-size:8pt; letter-spacing:0.2em; text-transform:uppercase; color:#555; margin-bottom:8mm;">Informe Técnico</div>
+      <div class="portada-title">Análisis de Exposición al Ruido Ocupacional</div>
+      <div class="portada-subtitle">Monitoreo Acústico de Ambiente Laboral</div>
     </div>
-
-    <!-- Cabecera de documento profesional (solo pantalla) -->
-    <div class="report-doc-header no-print">
-      <div class="rh-brand">
-        <div class="rh-type"><i class="bi bi-soundwave me-2"></i>Informe Técnico — Monitoreo Acústico Ocupacional</div>
-        <div class="rh-norm">ISO/TR 25417:2007 · NTP ISO 9612:2010 · Límite: {{ limite_referencia }} dB · Escenario #{{ escenario_id }}</div>
-      </div>
-      <div class="rh-meta">
-        <div id="doc-status-badge" class="doc-status-loading"><i class="bi bi-hourglass-split me-1"></i>Calculando...</div>
-        <div id="doc-generated" class="rh-generated"></div>
-      </div>
+    <div id="portada-scenario" class="portada-scenario">Escenario #{{ escenario_id }}</div>
+    <div id="portada-fechas" class="portada-norm" style="font-size:10pt; margin:8mm 0;"></div>
+    <div class="portada-norm">
+      <strong>Normas aplicadas:</strong><br>
+      ISO/TR 25417:2007 — Definiciones de cantidades acústicas básicas<br>
+      NTP ISO 9612:2010 — Determinación de la exposición al ruido en el trabajo<br>
+      D.S. N° 005-2012-TR — Reglamento SST, Perú
     </div>
+    <div id="portada-status" class="portada-norm" style="font-weight:700; font-size:11pt; margin-top:15mm; border:2pt solid #000; padding:6pt; text-align:center;">
+      Calculando evaluación...
+    </div>
+    <div class="portada-meta" style="margin-top:15mm;">
+      Límite de referencia: <strong>{{ limite_referencia }} dB</strong> · Micrófono: <strong>#{{ microfono_id }}</strong><br>
+      Generado: <span id="portada-generated-date"></span>
+    </div>
+  </div>
 
-    <!-- Información del escenario -->
-    <div class="report-section">
-      <h6 class="section-title"><i class="bi bi-info-circle me-2"></i>Información del Escenario</h6>
-      <div style="border: 1px solid #cbd5e1; border-top: none; background: #fff;">
-        <div id="scenario-details">
-          <div class="d-flex justify-content-center p-3">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Cargando...</span>
+  <!-- Page layout: sidebar + main -->
+  <div class="page-layout">
+
+    <!-- Sidebar Table of Contents (screen only) -->
+    <aside class="report-sidebar no-print">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><i class="bi bi-soundwave"></i></div>
+        <div class="logo-text">
+          <strong>Informe Acústico</strong>
+          Escenario #{{ escenario_id }}
+        </div>
+      </div>
+      <div class="sidebar-toc-label">Contenido</div>
+      <nav class="sidebar-toc" id="toc-nav">
+        <a href="#sec-escenario"><span class="toc-num">I.</span> Información del Escenario</a>
+        <a href="#sec-indicadores"><span class="toc-num">II.</span> Indicadores Acústicos</a>
+        <a href="#sec-grafico"><span class="toc-num">III.</span> Gráfico Temporal</a>
+        <a href="#sec-excesos"><span class="toc-num">IV.</span> Análisis de Excesos</a>
+        <a href="#sec-conclusiones"><span class="toc-num">V.</span> Conclusiones</a>
+        <a href="#sec-datos"><span class="toc-num">VI.</span> Datos Técnicos</a>
+        <div class="sidebar-divider"></div>
+        <a href="#sec-metodologia"><span class="toc-num">VII.</span> Metodología</a>
+        <a href="#sec-glosario"><span class="toc-num">VIII.</span> Glosario</a>
+        <a href="#sec-referencias"><span class="toc-num">IX.</span> Referencias</a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-status-box">
+        <div class="sidebar-laeq-label">L<sub>Aeq</sub> Global</div>
+        <div class="sidebar-laeq-value" id="sidebar-laeq-val">—</div>
+        <div class="sidebar-laeq-unit">dB · Micrófono #{{ microfono_id }}</div>
+        <div style="margin-top:6px;" id="sidebar-status-badge"></div>
+      </div>
+    </aside>
+
+    <!-- Main report content -->
+    <main class="report-main">
+
+      <!-- Document header (screen only) -->
+      <div class="report-doc-header no-print">
+        <div class="rh-brand">
+          <div class="rh-type"><i class="bi bi-file-earmark-text me-1"></i>Informe Técnico — Monitoreo Acústico Ocupacional</div>
+          <div class="rh-norm">ISO/TR 25417:2007 · NTP ISO 9612:2010 · Límite: {{ limite_referencia }} dB · Escenario #{{ escenario_id }}</div>
+        </div>
+        <div class="rh-meta">
+          <div id="doc-status-badge" class="doc-status-loading"><i class="bi bi-hourglass-split me-1"></i>Calculando...</div>
+          <div id="doc-generated" class="rh-generated"></div>
+        </div>
+      </div>
+
+      <!-- I. Información del Escenario -->
+      <section id="sec-escenario" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">I.</span><span class="section-icon"><i class="bi bi-building"></i></span>Información del Escenario</div>
+          <div class="section-hdr-actions">
+            <button class="btn-hdr no-print" onclick="abrirEditarEscenario()"><i class="bi bi-pencil me-1"></i>Editar datos</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <div id="scenario-details">
+            <div class="d-flex justify-content-center p-4">
+              <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Resumen de indicadores acústicos globales -->
-    <div class="report-section mt-3">
-      <h6 class="section-title"><i class="bi bi-activity me-2"></i>Indicadores Acústicos Globales</h6>
-      <div id="resumen-global" style="border: 1px solid #cbd5e1; border-top: none; background: #fff;">
-        <div class="d-flex justify-content-center p-3">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Cargando...</span>
+      <!-- II. Indicadores Acústicos Globales -->
+      <section id="sec-indicadores" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">II.</span><span class="section-icon"><i class="bi bi-activity"></i></span>Indicadores Acústicos Globales</div>
+        </div>
+        <div id="resumen-global" class="section-body">
+          <div class="d-flex justify-content-center p-4">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <div class="row g-4">
-      <!-- Gráfico a ancho completo -->
-      <div class="col-12">
-        <div id="chart-container">
+      <!-- III. Gráfico Temporal -->
+      <section id="sec-grafico" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">III.</span><span class="section-icon"><i class="bi bi-graph-up"></i></span>Evolución Temporal de Niveles Sonoros</div>
+        </div>
+        <div class="section-body" style="padding:0.75rem 0.5rem 0.5rem;">
           <div id="stockchart"></div>
         </div>
-        
-        <!-- Lista de audios: barra horizontal (solo pantalla) -->
-        <h6 class="section-title no-print"><i class="bi bi-file-earmark-music me-2"></i>Audios del Escenario</h6>
-        <div id="audios-list" class="no-print">
-          <!-- audio items rendered inline by JS -->
+        <!-- Audio navigation list (screen only) -->
+        <div class="no-print" style="padding: 0 0.5rem 0.5rem;">
+          <div style="font-size:0.72rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:#94a3b8; margin:0.5rem 0 0.25rem;">Audios del escenario</div>
+          <div id="audios-list"></div>
         </div>
-        
-        <!-- Tabla de audios para impresión -->
-        <div class="audio-print-table">
+        <!-- Audio table for print -->
+        <div class="audio-print-table" style="display:none;">
           <div id="audio-print-table-content"></div>
         </div>
-      </div>
-      
-      <!-- Análisis de excesos — ancho completo -->
-      <div class="col-12">
-        <h6 class="section-title"><i class="bi bi-exclamation-triangle me-2"></i>Análisis de Excesos</h6>
-        <div id="excesos-analysis">
+      </section>
+
+      <!-- IV. Análisis de Excesos -->
+      <section id="sec-excesos" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">IV.</span><span class="section-icon"><i class="bi bi-exclamation-triangle"></i></span>Análisis de Excesos del Límite de Referencia</div>
+        </div>
+        <div class="section-body padded">
           <div id="analisis-excesos-info">
-            <div class="d-flex justify-content-center">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
-              </div>
+            <div class="d-flex justify-content-center p-3">
+              <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Conclusiones y Recomendaciones -->
-    <div class="report-section mt-4">
-      <h6 class="section-title"><i class="bi bi-clipboard-check me-2"></i>Conclusiones y Recomendaciones</h6>
-      <div id="conclusiones-container" style="border: 1px solid #cbd5e1; border-top: none; padding: 1.25rem; background: #fff;">
-        <div class="d-flex justify-content-center">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Cargando...</span>
+      <!-- V. Conclusiones y Recomendaciones -->
+      <section id="sec-conclusiones" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">V.</span><span class="section-icon"><i class="bi bi-clipboard-check"></i></span>Conclusiones y Recomendaciones</div>
+        </div>
+        <div class="section-body padded" id="conclusiones-container">
+          <div class="d-flex justify-content-center p-3">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Datos técnicos completos -->
-    <div class="report-section mt-4">
-      <h6 class="section-title"><i class="bi bi-clipboard-data me-2"></i>Datos Técnicos por Audio</h6>
-      <div style="border: 1px solid #cbd5e1; border-top: none; padding: 1rem; background: #fff;">
-        <div id="technical-data">
-          <div class="d-flex justify-content-center">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Cargando...</span>
+      <!-- VI. Datos Técnicos por Audio -->
+      <section id="sec-datos" class="report-section">
+        <div class="section-hdr">
+          <div><span class="section-num">VI.</span><span class="section-icon"><i class="bi bi-table"></i></span>Datos Técnicos por Audio</div>
+        </div>
+        <div class="section-body padded">
+          <div id="technical-data">
+            <div class="d-flex justify-content-center p-3">
+              <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Nueva sección: Metodología y Proceso Técnico -->
-    <div class="print-break methodology-section">
-      <h2><i class="bi bi-gear me-2"></i>Metodología y Proceso Técnico</h2>
+      <!-- VII. Metodología y Proceso Técnico -->
+      <section id="sec-metodologia" class="methodology-section">
+        <h2><i class="bi bi-gear me-2"></i>VII. Metodología y Proceso Técnico</h2>
       
       <h3>1. Fundamentos Teóricos y Normativos</h3>
       <!-- Added comprehensive information about NTP ISO 9612:2010 -->
@@ -1189,11 +1390,11 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         <li><strong>Reproducibilidad:</strong> Algoritmos determinísticos con resultados consistentes</li>
         <li><strong>Aplicabilidad ocupacional:</strong> Cálculos de exposición normalizados para evaluación de riesgo laboral</li>
       </ul>
-    </div>
+      </section>
 
-    <!-- Nueva sección: Diccionario de Términos -->
-    <div class="methodology-section">
-      <h2><i class="bi bi-book me-2"></i>Diccionario de Términos Técnicos</h2>
+      <!-- VIII. Glosario de Términos Técnicos -->
+      <section id="sec-glosario" class="methodology-section">
+        <h2><i class="bi bi-book me-2"></i>VIII. Glosario de Términos Técnicos</h2>
       
       <div class="terms-grid">
         <div class="term-item">
@@ -1261,16 +1462,15 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           Unidad de frecuencia que indica el número de ciclos por segundo. Utilizada para caracterizar señales de audio.
         </div>
       </div>
-    </div>
+      </section>
 
-    <!-- Nueva sección: Referencias Bibliográficas (APA 7) -->
-    <div class="methodology-section">
-      <h2><i class="bi bi-journal-text me-2"></i>Referencias Bibliográficas</h2>
+      <!-- IX. Referencias Bibliográficas (APA 7) -->
+      <section id="sec-referencias" class="methodology-section">
+        <h2><i class="bi bi-journal-text me-2"></i>IX. Referencias Bibliográficas</h2>
       
-      <div style="text-indent: -2rem; margin-left: 2rem; line-height: 1.8;">
+      <div style="text-indent: -2rem; margin-left: 2rem; line-height: 1.8; font-size:0.9rem;">
         <p>International Organization for Standardization. (2007). <em>ISO/TR 25417:2007 - Acoustics — Definitions of basic quantities and terms</em>. ISO.</p>
         
-        <!-- Added NTP ISO 9612:2010 reference in APA 7 format -->
         <p>Instituto Nacional de Calidad. (2010). <em>NTP ISO 9612:2010 - Acústica. Determinación de la exposición al ruido en el trabajo. Método de ingeniería</em>. INACAL.</p>
         
         <p>International Organization for Standardization. (2009). <em>ISO 9612:2009 - Acoustics — Determination of occupational noise exposure — Engineering method</em>. ISO.</p>
@@ -1283,12 +1483,93 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         
         <p>Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D., ... & van Mulbregt, P. (2020). SciPy 1.0: fundamental algorithms for scientific computing in Python. <em>Nature Methods</em>, 17(3), 261-272.</p>
       </div>
-    </div>
+      </section>
 
-    <!-- Pie de página para impresión -->
-    <div class="print-footer print-only">
-      <div>Informe Técnico de Monitoreo Acústico Ocupacional — Escenario #{{ escenario_id }} · Micrófono #{{ microfono_id }}</div>
-      <div>Generado: <span id="footer-generated-date"></span> · ISO/TR 25417:2007 · NTP ISO 9612:2010</div>
+      <!-- Print footer -->
+      <div class="print-footer print-only">
+        <div>Informe Técnico de Monitoreo Acústico Ocupacional — Escenario #{{ escenario_id }} · Micrófono #{{ microfono_id }}</div>
+        <div>Generado: <span id="footer-generated-date"></span> · ISO/TR 25417:2007 · NTP ISO 9612:2010</div>
+      </div>
+
+    </main>
+  </div><!-- end .page-layout -->
+
+  <!-- Edit Scenario Modal -->
+  <div class="modal fade" id="editScenarioModal" tabindex="-1" aria-labelledby="editScenarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#1e293b; color:white;">
+          <h5 class="modal-title" id="editScenarioModalLabel" style="font-size:0.95rem; font-weight:600;">
+            <i class="bi bi-pencil-square me-2"></i>Editar Datos del Escenario
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="edit-scenario-alert" style="display:none;" class="alert mb-3"></div>
+          <div class="modal-section-label">Identificación</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Nombre del Escenario</label>
+              <input type="text" class="form-control form-control-sm" id="edit-nombre">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Ubicación</label>
+              <input type="text" class="form-control form-control-sm" id="edit-ubicacion">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Descripción</label>
+              <textarea class="form-control form-control-sm" id="edit-descripcion" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-section-label">Características del Entorno</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Tipo de Ruido</label>
+              <select class="form-select form-select-sm" id="edit-tipo-ruido">
+                <option value="">-- Seleccionar --</option>
+                <option value="continuo">Continuo</option>
+                <option value="intermitente">Intermitente</option>
+                <option value="impulsivo">Impulsivo</option>
+                <option value="variable">Variable</option>
+                <option value="mixto">Mixto</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Tipo de Análisis</label>
+              <select class="form-select form-select-sm" id="edit-tipo-analisis">
+                <option value="">-- Seleccionar --</option>
+                <option value="exposicion_laboral">Exposición Laboral</option>
+                <option value="ambiente_general">Ambiente General</option>
+                <option value="impacto_ambiental">Impacto Ambiental</option>
+                <option value="control_calidad">Control de Calidad</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">N° de Fuentes Sonoras</label>
+              <input type="number" class="form-control form-control-sm" id="edit-num-fuentes" min="0">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">N° de Personas Expuestas</label>
+              <input type="number" class="form-control form-control-sm" id="edit-num-personas" min="0">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Protección Auditiva</label>
+              <select class="form-select form-select-sm" id="edit-proteccion-auditiva">
+                <option value="">-- Seleccionar --</option>
+                <option value="si">Sí — Uso confirmado</option>
+                <option value="no">No — Sin protección</option>
+                <option value="parcial">Parcial — Uso intermitente</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="guardarEscenario()">
+            <i class="bi bi-check-lg me-1"></i>Guardar cambios
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1396,6 +1677,9 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         `;
         $('#resumen-global').html(resumenHtml);
         
+        // Update sidebar
+        actualizarSidebarLaeq(laeqGeneral, laeqStatus);
+
         if (chart && laeqGeneral) {
           actualizarGraficoConLAeq();
         }
@@ -1914,10 +2198,99 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       cargarAnalisisGeneral();
       cargarTodosLosAudios();
       cargarAnalisisExcesos();
+      initTocObserver();
     });
 
     function verAnalisisAudio(id) {
       window.open('/analyze/' + id, '_blank');
+    }
+
+    // ─── Sidebar TOC: highlight active section on scroll ───────────────────
+    function initTocObserver() {
+      var sections = document.querySelectorAll('section[id], .methodology-section[id]');
+      if (!sections.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var id = entry.target.getAttribute('id');
+            document.querySelectorAll('#toc-nav a').forEach(function(a) {
+              a.classList.remove('active');
+              if (a.getAttribute('href') === '#' + id) {
+                a.classList.add('active');
+              }
+            });
+          }
+        });
+      }, { rootMargin: '-64px 0px -60% 0px', threshold: 0 });
+      sections.forEach(function(sec) { observer.observe(sec); });
+    }
+
+    // ─── Update sidebar LAeq indicator ─────────────────────────────────────
+    function actualizarSidebarLaeq(laeq, status) {
+      $('#sidebar-laeq-val').text(laeq.toFixed(2));
+      var badge = '';
+      if (status === 'danger') badge = '<span class="badge-danger" style="font-size:0.7rem;">⚠ Excede límite</span>';
+      else if (status === 'warning') badge = '<span class="badge-warning" style="font-size:0.7rem;">▲ Precaución</span>';
+      else badge = '<span class="badge-safe" style="font-size:0.7rem;">✓ Seguro</span>';
+      $('#sidebar-status-badge').html(badge);
+    }
+
+    // ─── Edit Scenario Modal ────────────────────────────────────────────────
+    var escenarioDataCache = {};
+
+    function abrirEditarEscenario() {
+      $.getJSON('/escenarios/' + escenarioId + '/detalle', function(data) {
+        escenarioDataCache = data;
+        $('#edit-nombre').val(data.nombre || '');
+        $('#edit-ubicacion').val(data.ubicacion || '');
+        $('#edit-descripcion').val(data.descripcion || '');
+        $('#edit-tipo-ruido').val(data.tipo_ruido || '');
+        $('#edit-tipo-analisis').val(data.tipo_analisis || '');
+        $('#edit-num-fuentes').val(data.num_fuentes != null ? data.num_fuentes : '');
+        $('#edit-num-personas').val(data.num_personas != null ? data.num_personas : '');
+        $('#edit-proteccion-auditiva').val(data.proteccion_auditiva || '');
+        $('#edit-scenario-alert').hide();
+        var modal = new bootstrap.Modal(document.getElementById('editScenarioModal'));
+        modal.show();
+      }).fail(function() {
+        alert('Error al cargar datos del escenario.');
+      });
+    }
+
+    function guardarEscenario() {
+      var num_fuentes_val = parseInt($('#edit-num-fuentes').val(), 10);
+      var num_personas_val = parseInt($('#edit-num-personas').val(), 10);
+      var payload = {
+        nombre: $('#edit-nombre').val().trim(),
+        ubicacion: $('#edit-ubicacion').val().trim(),
+        descripcion: $('#edit-descripcion').val().trim(),
+        tipo_ruido: $('#edit-tipo-ruido').val(),
+        tipo_analisis: $('#edit-tipo-analisis').val(),
+        num_fuentes: !isNaN(num_fuentes_val) ? num_fuentes_val : null,
+        num_personas: !isNaN(num_personas_val) ? num_personas_val : null,
+        proteccion_auditiva: $('#edit-proteccion-auditiva').val()
+      };
+      $.ajax({
+        url: '/escenarios/' + escenarioId,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function(resp) {
+          $('#edit-scenario-alert')
+            .removeClass('alert-danger').addClass('alert alert-success')
+            .text('✓ Datos guardados correctamente').show();
+          setTimeout(function() {
+            bootstrap.Modal.getInstance(document.getElementById('editScenarioModal')).hide();
+            cargarInformacionEscenario(); // Refresh scenario section
+          }, 800);
+        },
+        error: function(xhr) {
+          var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Error al guardar.';
+          $('#edit-scenario-alert')
+            .removeClass('alert-success').addClass('alert alert-danger')
+            .text('✗ ' + msg).show();
+        }
+      });
     }
   </script>
 </body>

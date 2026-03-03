@@ -513,16 +513,31 @@ def listar_microfonos():
         'escenario_nombre': m.escenario.nombre if m.escenario else "Libre"
     } for m in microfonos])
 
+def _actualizar_campos_descriptivos(escenario, data):
+    """Update descriptive metadata fields shared between culminado and programado scenarios."""
+    escenario.nombre = data.get('nombre', escenario.nombre)
+    escenario.descripcion = data.get('descripcion', escenario.descripcion)
+    escenario.ubicacion = data.get('ubicacion', escenario.ubicacion)
+    escenario.tipo_ruido = data.get('tipo_ruido', escenario.tipo_ruido)
+    escenario.num_fuentes = data.get('num_fuentes', escenario.num_fuentes)
+    escenario.num_personas = data.get('num_personas', escenario.num_personas)
+    escenario.proteccion_auditiva = data.get('proteccion_auditiva', escenario.proteccion_auditiva)
+    escenario.tipo_analisis = data.get('tipo_analisis', escenario.tipo_analisis)
+
+
 @app.route('/escenarios/<int:id>', methods=['PUT'])
 def actualizar_escenario(id):
     data = request.json
     escenario = Escenario.query.get_or_404(id)
-    if escenario.estado != 'programado':
-        return jsonify({'error': 'Solo se pueden modificar escenarios programados'}), 400
     try:
-        escenario.nombre = data.get('nombre', escenario.nombre)
-        escenario.descripcion = data.get('descripcion', escenario.descripcion)
-        escenario.ubicacion = data.get('ubicacion', escenario.ubicacion)
+        # For completed scenarios, allow editing descriptive metadata only (no date changes)
+        if escenario.estado == 'culminado':
+            _actualizar_campos_descriptivos(escenario, data)
+            db.session.commit()
+            return jsonify({'mensaje': 'Datos del escenario actualizados'})
+        if escenario.estado != 'programado':
+            return jsonify({'error': 'Solo se pueden modificar escenarios programados'}), 400
+        _actualizar_campos_descriptivos(escenario, data)
         if 'start_time' in data:
             escenario.start_time = datetime.datetime.strptime(data['start_time'], "%Y-%m-%d %H:%M:%S")
         if 'end_time' in data:
@@ -530,11 +545,6 @@ def actualizar_escenario(id):
         duracion_segundos = (escenario.end_time - escenario.start_time).total_seconds()
         escenario.horas_medicion = round(duracion_segundos / 3600.0, 2)
         escenario.dias_medicion = round(duracion_segundos / (3600.0 * 24), 2)
-        escenario.tipo_ruido = data.get('tipo_ruido', escenario.tipo_ruido)
-        escenario.num_fuentes = data.get('num_fuentes', escenario.num_fuentes)
-        escenario.num_personas = data.get('num_personas', escenario.num_personas)
-        escenario.proteccion_auditiva = data.get('proteccion_auditiva', escenario.proteccion_auditiva)
-        escenario.tipo_analisis = data.get('tipo_analisis', escenario.tipo_analisis)
         db.session.commit()
         return jsonify({'mensaje': 'Escenario actualizado'})
     except Exception as e:
