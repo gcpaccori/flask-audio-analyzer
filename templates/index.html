@@ -3,243 +3,267 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard de Estudio de Ruido</title>
+  <title>Dashboard — Análisis Acústico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="/static/css/global.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
   <script src="https://cdn.datatables.net/plug-ins/1.13.4/sorting/datetime-moment.js"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Google Fonts: Poppins -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <!-- DataTables Bootstrap CSS -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
   <style>
+    /* ── Sidebar ──────────────────────────────────── */
     :root {
-      --header-bg: rgba(255, 255, 255, 0.9);
-      --sidebar-bg: #343a40;
-      --sidebar-hover: #495057;
-      --active-link: #007bff;
-      --transition-speed: 0.3s;
+      --sidebar-w: 240px;
+      --sidebar-bg: #1e293b;
+      --sidebar-hover: rgba(255,255,255,.08);
+      --active-link: #2563eb;
+      --topbar-h: 52px;
+      --transition-speed: 0.25s;
     }
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-      padding: 0;
-    }
+    body { background: var(--clr-bg, #f1f5f9); }
 
-    /* Header */
-    .navbar {
-      background: var(--header-bg);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .navbar-brand {
-      font-weight: 600;
-      color: #333;
-    }
-
-    /* Hamburger (visible en móviles) */
-    .hamburger {
-      font-size: 1.5rem;
-      border: none;
-      background: transparent;
-      color: #333;
-    }
-
-    /* Sidebar fijo en escritorio */
-    #sidebar {
+    /* Top bar */
+    .topbar {
       position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 250px;
-      background: var(--sidebar-bg);
-      padding: 1rem;
-      transition: transform var(--transition-speed) ease;
-      z-index: 1100;
-      overflow-y: auto;
-    }
-
-    /* Estilos de menú */
-    #sidebar h4 {
-      color: #fff;
-      margin-bottom: 1rem;
-      font-weight: 700;
-    }
-
-    #sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    #sidebar ul li {
-      margin-bottom: 0.5rem;
-    }
-
-    #sidebar .nav-link {
-      color: #ddd;
-      text-decoration: none;
+      top: 0; left: var(--sidebar-w); right: 0;
+      height: var(--topbar-h);
+      background: #fff;
+      border-bottom: 1px solid var(--clr-border, #e2e8f0);
       display: flex;
       align-items: center;
-      padding: 8px 12px;
-      border-radius: 4px;
-      transition: background var(--transition-speed);
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      z-index: 900;
+      gap: 0.75rem;
+      transition: left var(--transition-speed) ease;
+    }
+    .topbar-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .topbar-sub {
+      font-size: 0.72rem;
+      color: #64748b;
+      margin-top: 1px;
     }
 
-    #sidebar .nav-link:hover {
-      background: var(--sidebar-hover);
-      color: #fff;
+    /* Sidebar */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--sidebar-w);
+      height: 100%;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      z-index: 1100;
+      overflow-y: auto;
+      transition: transform var(--transition-speed) ease;
     }
-
-    #sidebar .nav-link.active {
+    .sidebar-logo {
+      padding: 1.1rem 1.25rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-logo-icon {
+      width: 34px; height: 34px;
+      border-radius: 8px;
       background: var(--active-link);
-      color: #fff;
-      font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      font-size: 1.1rem;
+      flex-shrink: 0;
     }
+    .sidebar-logo-text { font-size: 0.85rem; font-weight: 700; color: #f1f5f9; line-height: 1.2; }
+    .sidebar-logo-sub  { font-size: 0.65rem; color: rgba(255,255,255,.4); }
 
-    #sidebar .nav-link i {
-      margin-right: 8px;
+    .sidebar-section-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,.35);
+      padding: 1rem 1.25rem 0.3rem;
     }
+    #sidebar ul { list-style: none; padding: 0 0.75rem; margin: 0; }
+    #sidebar ul li { margin-bottom: 2px; }
+    #sidebar .nav-link {
+      color: rgba(255,255,255,.65);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: background var(--transition-speed), color var(--transition-speed);
+    }
+    #sidebar .nav-link:hover  { background: var(--sidebar-hover); color: #fff; }
+    #sidebar .nav-link.active { background: var(--active-link);   color: #fff; font-weight: 600; }
+    #sidebar .nav-link i { font-size: 1rem; width: 18px; text-align: center; flex-shrink: 0; }
 
-    /* Contenido principal */
+    /* Main content */
     .content {
-      margin-left: 250px;
-      padding: 20px;
+      margin-left: var(--sidebar-w);
+      padding: calc(var(--topbar-h) + 1.25rem) 1.25rem 1.25rem;
       transition: margin-left var(--transition-speed) ease;
+      min-height: 100vh;
     }
 
+    /* Mobile */
     @media (max-width: 768px) {
-
-      /* En móviles el sidebar se oculta y se mostrará en overlay */
-      #sidebar {
-        transform: translateX(-100%);
-      }
-
-      #sidebar.open {
-        transform: translateX(0);
-      }
-
-      .content {
-        margin-left: 0;
-      }
-
-      /* Overlay para el menú móvil */
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
+      .topbar { left: 0; }
+      .content { margin-left: 0; }
       .overlay {
         display: block;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,.5);
         z-index: 1050;
         opacity: 0;
-        transition: opacity var(--transition-speed) ease;
         pointer-events: none;
+        transition: opacity var(--transition-speed);
       }
-
-      .overlay.visible {
-        opacity: 1;
-        pointer-events: auto;
-      }
+      .overlay.visible { opacity: 1; pointer-events: auto; }
+    }
+    @media (min-width: 769px) {
+      .overlay { display: none !important; }
+      #hamburgerBtn { display: none !important; }
     }
 
-    .navbar-title {
+    /* ── Tab pane headers ─────────────────────────── */
+    .pane-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .pane-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+    .pane-sub {
+      font-size: 0.78rem;
+      color: #64748b;
+      margin: 2px 0 0;
+    }
+
+    /* ── Processing notifications ────────────────── */
+    #processingSection {
+      position: fixed;
+      top: 70px; right: 12px;
+      z-index: 1050;
+      width: 300px;
+    }
+    .processing-alert {
+      transition: opacity 1.5s ease-out;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+    }
+
+    /* ── Footer ──────────────────────────────────── */
+    .dash-footer {
+      margin-top: 2rem;
+      padding: 1rem 0;
+      border-top: 1px solid var(--clr-border, #e2e8f0);
+      font-size: 0.72rem;
+      color: #94a3b8;
       text-align: center;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      top: 5px;
-      z-index: 10;
     }
 
-    .evaluacion-title {
-      font-family: "Orbitron", sans-serif;
-      /* Fuente futurista */
-      font-size: 20px;
-      font-weight: bold;
-      color: rgba(0, 0, 0, 0.353);
-      margin: 0;
-    }
-
-    .ingeniero-name {
-      font-size: 14px;
-      color: rgba(128, 128, 128, 0.7);
-      /* Plomo translúcido */
-      margin: 0;
-    }
+    /* ── Noise level bar ─────────────────────────── */
+    .noise-bar-wrap { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+    .noise-bar { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+    .noise-safe   { background: #22c55e; }
+    .noise-warn   { background: #f59e0b; }
+    .noise-danger { background: #ef4444; }
   </style>
 </head>
 
 <body>
-  <!-- Header -->
-  <nav class="navbar navbar-expand-lg">
-    <div class="container-fluid">
-      <!-- Botón hamburger visible solo en móviles -->
-      <button class="hamburger d-md-none" id="hamburgerBtn">
-        <i class="bi bi-list"></i>
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-2">
+      <button class="ga-hamburger" id="hamburgerBtn" aria-label="Menu">
+        <i class="bi bi-list" style="font-size:1.2rem;"></i>
       </button>
-
-      <!-- Contenedor del título -->
-      <div class="navbar-title">
-        <h1 class="evaluacion-title">Evaluación Acústica</h1>
-        <p class="ingeniero-name">Ing. Eusebio Robles García</p>
-      </div>
-
-      <div class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="#"><i class="bi bi-person-circle"></i> Perfil</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#"><i class="bi bi-gear"></i> Configuración</a>
-          </li>
-        </ul>
+      <div>
+        <div class="topbar-title" id="topbar-section-name">Dashboard</div>
+        <div class="topbar-sub">Análisis Acústico Ocupacional</div>
       </div>
     </div>
-  </nav>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-success d-flex align-items-center gap-1" id="topbar-live-badge" style="display:none!important;">
+        <span class="status-dot live pulse-live"></span> <span id="topbar-live-count">0</span> activos
+      </span>
+      <span style="font-size:0.75rem; color:#64748b;">Ing. Eusebio Robles García</span>
+    </div>
+  </div>
 
-
-  <!-- Sidebar (se conserva el id para tus JS) -->
+  <!-- Sidebar -->
   <nav id="sidebar">
-    <h4>Exposición al Ruido</h4>
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><i class="bi bi-soundwave"></i></div>
+      <div>
+        <div class="sidebar-logo-text">AcústicaLab</div>
+        <div class="sidebar-logo-sub">INICTEL-UNI · IoT</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">Principal</div>
     <ul class="nav nav-pills flex-column">
       <li class="nav-item">
-        <a href="#dashboard" class="nav-link active" data-bs-toggle="tab">
+        <a href="#dashboard" class="nav-link active" data-bs-toggle="tab" data-label="Dashboard">
           <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
         </a>
       </li>
+    </ul>
+
+    <div class="sidebar-section-label">Escenarios</div>
+    <ul class="nav nav-pills flex-column">
       <li class="nav-item">
-        <a href="#escenarios" class="nav-link" data-bs-toggle="tab">
-          <i class="bi bi-calendar2-check"></i> <span>Escenarios Programados</span>
+        <a href="#escenarios" class="nav-link" data-bs-toggle="tab" data-label="Escenarios Programados">
+          <i class="bi bi-calendar2-check"></i> <span>Programados</span>
         </a>
       </li>
       <li class="nav-item">
-        <a href="#vivos" class="nav-link" data-bs-toggle="tab">
-          <i class="bi bi-broadcast"></i> <span>Escenarios en Vivo</span>
-          <span id="badgeVivos" class="badge bg-light text-dark ms-1">0</span>
+        <a href="#vivos" class="nav-link" data-bs-toggle="tab" data-label="Escenarios en Vivo">
+          <i class="bi bi-broadcast"></i> <span>En Vivo</span>
+          <span id="badgeVivos" class="badge bg-danger ms-auto" style="display:none;">0</span>
         </a>
       </li>
       <li class="nav-item">
-        <a href="#micros" class="nav-link" data-bs-toggle="tab">
+        <a href="#culminados" class="nav-link" data-bs-toggle="tab" data-label="Escenarios Culminados">
+          <i class="bi bi-check2-circle"></i> <span>Culminados</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-section-label">Dispositivos</div>
+    <ul class="nav nav-pills flex-column">
+      <li class="nav-item">
+        <a href="#micros" class="nav-link" data-bs-toggle="tab" data-label="Micrófonos">
           <i class="bi bi-mic"></i> <span>Micrófonos</span>
         </a>
       </li>
       <li class="nav-item">
-        <a href="#culminados" class="nav-link" data-bs-toggle="tab">
-          <i class="bi bi-check2-circle"></i> <span>Escenarios Culminados</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#audios" class="nav-link" data-bs-toggle="tab">
+        <a href="#audios" class="nav-link" data-bs-toggle="tab" data-label="Audio sin Escenario">
           <i class="bi bi-music-note-beamed"></i> <span>Audio sin escenario</span>
         </a>
       </li>
@@ -253,396 +277,333 @@
   <div class="content">
     <div class="tab-content" id="mainTabsContent">
       <!-- Dashboard -->
-      <!-- Dashboard -->
       <div class="tab-pane fade show active" id="dashboard">
-        <h1 class="mb-4">Bienvenido al Dashboard</h1>
-        <p class="mb-4">Aquí se muestran las estadísticas y resúmenes generales del Estudio de Ruido.</p>
 
-        <!-- Sección de Indicadores (KPIs) -->
-        <div class="row mb-4" id="kpi-cards">
-          <!-- Total Audios -->
-          <div class="col-md-4">
-            <div class="card text-white bg-primary">
-              <div class="card-header">Total Audios</div>
-              <div class="card-body">
-                <h5 class="card-title" id="totalAudios">0</h5>
+        <div class="pane-header">
+          <div>
+            <h1 class="pane-title">Dashboard</h1>
+            <p class="pane-sub">Resumen en tiempo real del sistema de análisis acústico</p>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-success d-flex align-items-center gap-1" id="dash-live-pill" style="padding:5px 10px;font-size:0.75rem;">
+              <span class="status-dot live pulse-live"></span>
+              <span id="dash-live-label">Actualizando...</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- KPI Row 1 -->
+        <div class="row g-3 mb-3">
+          <div class="col-6 col-lg-2">
+            <div class="kpi-card">
+              <div class="kpi-icon blue"><i class="bi bi-music-note-list"></i></div>
+              <div class="kpi-body">
+                <div class="kpi-label">Audios</div>
+                <div class="kpi-value" id="totalAudios">—</div>
+                <div class="kpi-sub">Total registrados</div>
               </div>
             </div>
           </div>
-          <!-- Total Micrófonos -->
-          <div class="col-md-4">
-            <div class="card text-white bg-secondary">
-              <div class="card-header">Total Micrófonos</div>
-              <div class="card-body">
-                <h5 class="card-title" id="totalMicrophones">0</h5>
+          <div class="col-6 col-lg-2">
+            <div class="kpi-card">
+              <div class="kpi-icon teal"><i class="bi bi-mic-fill"></i></div>
+              <div class="kpi-body">
+                <div class="kpi-label">Micrófonos</div>
+                <div class="kpi-value" id="totalMicrophones">—</div>
+                <div class="kpi-sub">Registrados</div>
               </div>
             </div>
           </div>
-          <!-- Micrófonos Activos -->
-          <div class="col-md-4">
-            <div class="card text-white bg-success">
-              <div class="card-header">Micrófonos Activos</div>
-              <div class="card-body">
-                <h5 class="card-title" id="activeMicrophones">0</h5>
+          <div class="col-6 col-lg-2">
+            <div class="kpi-card">
+              <div class="kpi-icon green"><i class="bi bi-broadcast"></i></div>
+              <div class="kpi-body">
+                <div class="kpi-label">Mics Activos</div>
+                <div class="kpi-value" id="activeMicrophones">—</div>
+                <div class="kpi-sub">En escenario</div>
+              </div>
+              <span class="kpi-badge live" id="kpi-live-badge" style="display:none;">En vivo</span>
+            </div>
+          </div>
+          <div class="col-6 col-lg-2">
+            <div class="kpi-card">
+              <div class="kpi-icon orange"><i class="bi bi-broadcast-pin"></i></div>
+              <div class="kpi-body">
+                <div class="kpi-label">Escenarios Activos</div>
+                <div class="kpi-value" id="kpiEscenariosActivos">—</div>
+                <div class="kpi-sub">En medición</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-2">
+            <div class="kpi-card">
+              <div class="kpi-icon purple"><i class="bi bi-calendar2-check"></i></div>
+              <div class="kpi-body">
+                <div class="kpi-label">Programados</div>
+                <div class="kpi-value" id="kpiEscenariosProgramados">—</div>
+                <div class="kpi-sub">Pendientes</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-2">
+            <div class="kpi-card">
+              <div class="kpi-icon blue"><i class="bi bi-check2-circle"></i></div>
+              <div class="kpi-body">
+                <div class="kpi-label">Culminados</div>
+                <div class="kpi-value" id="kpiEscenariosCulminados">—</div>
+                <div class="kpi-sub">Con informe</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Gráfico de Frecuencia de Llegada de Audios por Micrófono Activo -->
+        <!-- Charts + Activity Row -->
+        <div class="row g-3 mb-3">
 
-
-        <div class="row mb-4">
-          <!-- Tabla de Audios Recientes (6 columnas) -->
-          <div class="col-md-6">
-            <h3 class="mb-3">Audios Recientes</h3>
-            <div class="table-responsive">
-              <table class="table table-striped" id="recentAudiosTable">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Hace Cuánto</th>
-                    <th>Micrófono</th>
-                    <th>Escenario</th>
-                    <th>Alertas</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
+          <!-- Noise level chart -->
+          <div class="col-lg-5">
+            <div class="dash-card h-100">
+              <div class="dash-card-hdr">
+                <span class="dash-card-title"><i class="bi bi-graph-up me-1"></i>Evolución del Nivel de Ruido</span>
+                <span style="font-size:0.7rem;color:#94a3b8;">Último audio analizado</span>
+              </div>
+              <div class="dash-card-body">
+                <canvas id="noiseChart" style="width:100%;max-height:200px;"></canvas>
+              </div>
             </div>
           </div>
 
-          <!-- Gráfico de Frecuencia (3 columnas) -->
-          <div class="col-md-3">
-            <h3 class="mb-3">Frecuencia de Llegada de Audios por Micrófono Activo</h3>
-            <canvas id="frequencyChart" width="300" height="150"></canvas>
+          <!-- Frequency chart -->
+          <div class="col-lg-4">
+            <div class="dash-card h-100">
+              <div class="dash-card-hdr">
+                <span class="dash-card-title"><i class="bi bi-bar-chart me-1"></i>Audios / hora por Micrófono</span>
+              </div>
+              <div class="dash-card-body">
+                <canvas id="frequencyChart" style="width:100%;max-height:200px;"></canvas>
+                <div id="freqEmpty" class="ga-empty" style="display:none;">
+                  <i class="bi bi-mic-mute"></i>
+                  <p>Sin micrófonos activos</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Gráfico de Evolución del Nivel de Ruido (3 columnas) -->
-          <div class="col-md-3">
-            <h3 class="mb-3">Evolución del Nivel de Ruido</h3>
-            <canvas id="noiseChart" width="300" height="150"></canvas>
+          <!-- Alerts panel -->
+          <div class="col-lg-3">
+            <div class="dash-card h-100">
+              <div class="dash-card-hdr">
+                <span class="dash-card-title"><i class="bi bi-bell me-1"></i>Alertas recientes</span>
+                <span class="badge bg-danger rounded-pill" id="alertCount" style="display:none;">0</span>
+              </div>
+              <div class="dash-card-body" id="alertsContainer" style="max-height:210px;overflow-y:auto;">
+                <div class="ga-empty" id="alertsEmpty">
+                  <i class="bi bi-check-circle"></i>
+                  <p>Sin alertas activas</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Recent audios -->
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="dash-card">
+              <div class="dash-card-hdr">
+                <span class="dash-card-title"><i class="bi bi-clock-history me-1"></i>Actividad Reciente</span>
+                <span style="font-size:0.7rem;color:#94a3b8;">Últimos 10 audios procesados · actualiza cada 5s</span>
+              </div>
+              <div class="dash-card-body p-0">
+                <div class="ga-table-wrap">
+                  <table class="table table-sm mb-0" id="recentAudiosTable" style="font-size:0.82rem;">
+                    <thead style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                      <tr>
+                        <th class="px-3 py-2" style="font-weight:700;color:#475569;font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;">ID</th>
+                        <th class="py-2" style="font-weight:700;color:#475569;font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;">Hace</th>
+                        <th class="py-2" style="font-weight:700;color:#475569;font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;">Micrófono</th>
+                        <th class="py-2" style="font-weight:700;color:#475569;font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;">Escenario</th>
+                        <th class="py-2" style="font-weight:700;color:#475569;font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;">Alerta</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recentAudiosBody"></tbody>
+                  </table>
+                  <div class="ga-empty" id="recentEmpty" style="display:none;">
+                    <i class="bi bi-inbox"></i>
+                    <p>Aún no hay audios procesados</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-      </div>
+      </div><!-- /#dashboard -->
 
-      <!-- Contenedor de notificaciones de procesamiento (lado derecho) -->
+      <!-- Processing notifications -->
       <div id="processingSection"></div>
 
-      <!-- Estilos para las notificaciones emergentes -->
-      <style>
-        #processingSection {
-          position: fixed;
-          top: 100px;
-          right: 10px;
-          z-index: 1050;
-          width: 300px;
-        }
-
-        .processing-alert {
-          transition: opacity 1.5s ease-out;
-          margin-bottom: 10px;
-        }
-      </style>
-
-      <!-- Incluir Chart.js desde CDN (si no lo tienes cargado) -->
+      <!-- Chart.js + SocketIO -->
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
-
-
       <script>
-        // Conectar al servidor Flask-SocketIO
-        // Conectar al servidor Flask-SocketIO
-        const socket = io("http://18.222.28.235:5000/");
+        // SocketIO: use same host/port as the current page (avoids hardcoded IP)
+        const socket = io();
+        socket.on("new_audio", (data) => { mostrarNotificacion(data.audio_id); });
+        socket.on("audio_procesado", (data) => { detenerContadorYDesvanecer(data.audio_id); });
 
-        // Escuchar el evento 'new_audio' del backend
-        socket.on("new_audio", (data) => {
-          console.log("Nuevo audio recibido:", data);
-          mostrarNotificacion(data.audio_id);
-        });
-
-        // Escuchar el evento 'audio_procesado' para ocultar la notificación
-        socket.on("audio_procesado", (data) => {
-          console.log("Audio procesado:", data);
-          detenerContadorYDesvanecer(data.audio_id);
-        });
-
-        // Función para mostrar la notificación azul con contador
         function mostrarNotificacion(audioId) {
-          const processingSection = document.getElementById('processingSection');
-
-          let alertDiv = document.createElement('div');
-          alertDiv.classList.add('processing-alert', 'alert', 'alert-info');
-          alertDiv.setAttribute("id", `notificacion-${audioId}`);
-          alertDiv.innerHTML = `
-        <strong>Procesando Audio</strong><br>
-        ID: ${audioId}<br>
-        Tiempo: <span id="contador-${audioId}">0.000</span> s
-    `;
-
-          processingSection.appendChild(alertDiv);
-
-          // Iniciar contador de tiempo
-          let startTime = performance.now();
-          let contadorSpan = document.getElementById(`contador-${audioId}`);
-
-          let interval = setInterval(() => {
-            let elapsedTime = (performance.now() - startTime) / 1000; // Convertir a segundos
-            contadorSpan.innerText = elapsedTime.toFixed(3); // Mostrar con 3 decimales
-          }, 10); // Actualizar cada 10 ms
-
-          // Guardar el intervalo en el div para detenerlo después
-          alertDiv.dataset.intervalId = interval;
+          const sec = document.getElementById('processingSection');
+          let d = document.createElement('div');
+          d.className = 'processing-alert alert alert-info';
+          d.id = `notificacion-${audioId}`;
+          d.innerHTML = `<strong>Procesando Audio</strong><br>ID: ${audioId}<br>Tiempo: <span id="contador-${audioId}">0.000</span> s`;
+          sec.appendChild(d);
+          let t0 = performance.now();
+          let iv = setInterval(function() {
+            let el = document.getElementById('contador-' + audioId);
+            if (el) el.innerText = ((performance.now() - t0) / 1000).toFixed(3);
+          }, 100); // 100ms is sufficient for display; 10ms is too frequent
+          d.dataset.intervalId = iv;
         }
-
-        // Función para detener el contador y desvanecer el mensaje con retraso
         function detenerContadorYDesvanecer(audioId) {
-          let alertDiv = document.getElementById(`notificacion-${audioId}`);
-          if (alertDiv) {
-            clearInterval(alertDiv.dataset.intervalId); // Detener contador
-
-            // Esperar 2 segundos antes de empezar a desvanecer
-            setTimeout(() => {
-              alertDiv.style.transition = "opacity 1.5s ease-out";
-              alertDiv.style.opacity = "0";
-
-              // Remover después de la animación
-              setTimeout(() => {
-                alertDiv.remove();
-              }, 1500);
-            }, 2000); // Esperar 2 segundos antes de empezar a desaparecer
-          }
+          let d = document.getElementById(`notificacion-${audioId}`);
+          if (!d) return;
+          clearInterval(d.dataset.intervalId);
+          setTimeout(() => { d.style.transition='opacity 1.5s'; d.style.opacity='0'; setTimeout(()=>d.remove(),1500); }, 2000);
         }
 
-
-
-
-
-        // Objeto para rastrear notificaciones actuales
         const processingAlerts = {};
+        let finishedAlerts = new Set(JSON.parse(localStorage.getItem('finishedAlerts')||'[]'));
+        function updateFinishedAlertsStorage() { localStorage.setItem('finishedAlerts', JSON.stringify(Array.from(finishedAlerts))); }
 
-        // Set de audio_ids finalizados, se carga desde localStorage
-        let finishedAlerts = new Set(JSON.parse(localStorage.getItem('finishedAlerts')) || []);
-
-        // Función para actualizar finishedAlerts en localStorage
-        function updateFinishedAlertsStorage() {
-          localStorage.setItem('finishedAlerts', JSON.stringify(Array.from(finishedAlerts)));
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-          console.log("Dashboard loaded: iniciando gráficos y actualizaciones.");
-
-          // Inicializar gráfico de niveles de ruido
+        document.addEventListener('DOMContentLoaded', function() {
+          // Charts
           const noiseCtx = document.getElementById('noiseChart').getContext('2d');
           const noiseChart = new Chart(noiseCtx, {
             type: 'line',
-            data: {
-              labels: [],
-              datasets: [{
-                label: 'Nivel de Ruido (dB)',
-                data: [],
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                fill: true,
-                tension: 0.3
-              }]
-            },
-            options: {
-              responsive: true,
-              scales: {
-                x: { title: { display: true, text: 'Tiempo (seg)' } },
-                y: { title: { display: true, text: 'Nivel (dB)' }, min: 0, max: 120 }
-              }
-            }
+            data: { labels: [], datasets: [{ label: 'Nivel (dB)', data: [], borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.1)', fill:true, tension:0.3, pointRadius:2 }] },
+            options: { responsive:true, plugins:{legend:{display:false}}, scales:{ x:{display:false}, y:{min:0,max:120,ticks:{font:{size:10}}} } }
           });
-
-          // Inicializar gráfico de frecuencia por micrófono activo
           const freqCtx = document.getElementById('frequencyChart').getContext('2d');
           const frequencyChart = new Chart(freqCtx, {
             type: 'bar',
-            data: {
-              labels: [],
-              datasets: [{
-                label: 'Audios por Hora', // Cambio aquí
-                data: [],
-                backgroundColor: 'rgba(153, 102, 255, 0.6)',
-                borderColor: 'rgba(153, 102, 255, 1)',
-                borderWidth: 1
-              }]
-            },
-            options: {
-              responsive: true,
-              scales: {
-                x: { title: { display: true, text: 'Micrófono' } },
-                y: { title: { display: true, text: 'Frecuencia (audios/hora)' }, beginAtZero: true } // Cambio aquí
-              }
-            }
+            data: { labels: [], datasets: [{ label: 'Audios/hora', data: [], backgroundColor: 'rgba(16,185,129,.6)', borderColor:'#10b981', borderWidth:1 }] },
+            options: { responsive:true, plugins:{legend:{display:false}}, scales:{ x:{ticks:{font:{size:10}}}, y:{beginAtZero:true,ticks:{font:{size:10}}} } }
           });
 
-
-          // Función para actualizar la sección de notificaciones de procesamiento
           function updateProcessingSection(processingData) {
-            const processingSection = document.getElementById('processingSection');
-            // Crear un Set con los audio_ids actuales (que aún no estén en finishedAlerts)
-            const newAudioIds = new Set();
-            processingData.forEach(proc => {
-              if (proc.finished && finishedAlerts.has(proc.audio_id)) {
-                // Si ya se ha registrado como finalizado, lo ignoramos.
-                return;
-              }
-              newAudioIds.add(proc.audio_id);
-            });
-
-            processingData.forEach(proc => {
-              const audioId = proc.audio_id;
-              // Si ya está finalizado y registrado, no se muestra
-              if (proc.finished && finishedAlerts.has(audioId)) {
-                return;
-              }
-              let alertDiv = processingAlerts[audioId];
-              if (!alertDiv) {
-                alertDiv = document.createElement('div');
-                alertDiv.classList.add('processing-alert');
-                alertDiv.id = 'processing-audio-' + audioId;
-                processingSection.appendChild(alertDiv);
-                processingAlerts[audioId] = alertDiv;
-                console.log("Creada notificación para audio", audioId);
-              }
-
-              if (!proc.finished) {
-                // Mientras se procesa: fondo azul (alert-info)
-                alertDiv.className = 'processing-alert alert alert-info';
-                alertDiv.innerHTML = `
-            <strong>Procesando Audio ${audioId}</strong><br>
-            Inicio: ${new Date(proc.start_time).toLocaleTimeString()}<br>
-            Progreso: ${proc.progress}%
-            <div class="progress mt-2">
-              <div class="progress-bar" role="progressbar" style="width: ${proc.progress}%; transition: width 1.5s ease;" aria-valuenow="${proc.progress}" aria-valuemin="0" aria-valuemax="100">
-                ${proc.progress}%
-              </div>
-            </div>
-          `;
-              } else {
-                // Cuando finaliza, mostramos en verde, pero solo si no se ha mostrado ya
-                if (!alertDiv.dataset.removing) {
-                  alertDiv.className = 'processing-alert alert alert-success';
-                  alertDiv.innerHTML = `
-              <strong>Audio ${audioId} Procesado</strong><br>
-              Duración del audio: ${proc.duration} seg.
-              <div class="progress mt-2">
-                <div class="progress-bar bg-success" role="progressbar" style="width: 100%; transition: width 1.5s ease;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
-                  100%
-                </div>
-              </div>
-            `;
-                  alertDiv.dataset.removing = "true";
-                  finishedAlerts.add(audioId);
-                  updateFinishedAlertsStorage();
-                  console.log("Audio", audioId, "finalizado; programando desaparición.");
-                  setTimeout(() => {
-                    alertDiv.style.opacity = '0';
-                    setTimeout(() => {
-                      if (alertDiv.parentNode) {
-                        alertDiv.parentNode.removeChild(alertDiv);
-                      }
-                      delete processingAlerts[audioId];
-                      console.log("Notificación para audio", audioId, "removida.");
-                    }, 1500);
-                  }, 4000);
-                }
+            const sec = document.getElementById('processingSection');
+            const newIds = new Set();
+            processingData.forEach(p => { if(!(p.finished && finishedAlerts.has(p.audio_id))) newIds.add(p.audio_id); });
+            processingData.forEach(p => {
+              const id = p.audio_id;
+              if(p.finished && finishedAlerts.has(id)) return;
+              let d = processingAlerts[id];
+              if(!d) { d=document.createElement('div'); d.className='processing-alert'; d.id='processing-audio-'+id; sec.appendChild(d); processingAlerts[id]=d; }
+              if(!p.finished) {
+                d.className='processing-alert alert alert-info';
+                d.innerHTML=`<strong>Procesando Audio ${id}</strong><br>Progreso: ${p.progress}%<div class="progress mt-1" style="height:6px;"><div class="progress-bar" style="width:${p.progress}%;transition:width 1.5s ease;"></div></div>`;
+              } else if(!d.dataset.removing) {
+                d.className='processing-alert alert alert-success';
+                d.innerHTML=`<strong>Audio ${id} listo</strong><br>Duración: ${p.duration} s`;
+                d.dataset.removing='true'; finishedAlerts.add(id); updateFinishedAlertsStorage();
+                setTimeout(()=>{ d.style.opacity='0'; setTimeout(()=>{ if(d.parentNode)d.parentNode.removeChild(d); delete processingAlerts[id]; },1500); },4000);
               }
             });
-
-            // Eliminar notificaciones que ya no estén en la nueva data y no sean de audio en proceso
-            for (const id in processingAlerts) {
-              if (!newAudioIds.has(parseInt(id)) && !finishedAlerts.has(parseInt(id))) {
-                const alertDiv = processingAlerts[id];
-                if (alertDiv.parentNode) {
-                  alertDiv.parentNode.removeChild(alertDiv);
-                }
-                delete processingAlerts[id];
-                console.log("Eliminada notificación para audio", id, "por ausencia en la nueva data.");
-              }
+            for(const id in processingAlerts) {
+              if(!newIds.has(parseInt(id))&&!finishedAlerts.has(parseInt(id))) { const d=processingAlerts[id]; if(d.parentNode)d.parentNode.removeChild(d); delete processingAlerts[id]; }
             }
           }
 
-          // Función para actualizar el dashboard cada 5 segundos
           async function updateDashboard() {
             try {
-              console.log("Actualizando dashboard...");
               const res = await fetch('/dashboard_data');
-              if (!res.ok) {
-                console.error("Error en la respuesta del endpoint:", res.statusText);
-                return;
-              }
+              if(!res.ok) return;
               const data = await res.json();
-              console.log("Datos recibidos del backend:", data);
 
-              // Actualizar KPIs
-              document.getElementById('totalAudios').innerText = data.total_audios;
-              document.getElementById('totalMicrophones').innerText = data.total_microphones;
-              document.getElementById('activeMicrophones').innerText = data.active_microphones;
-              console.log("KPIs actualizados.");
+              // KPIs
+              document.getElementById('totalAudios').textContent = data.total_audios;
+              document.getElementById('totalMicrophones').textContent = data.total_microphones;
+              document.getElementById('activeMicrophones').textContent = data.active_microphones;
+              document.getElementById('kpiEscenariosActivos').textContent = data.escenarios_activos || '—';
+              document.getElementById('kpiEscenariosProgramados').textContent = data.escenarios_programados || '—';
+              document.getElementById('kpiEscenariosCulminados').textContent = data.escenarios_culminados || '—';
 
-              // Actualizar tabla de audios recientes
-              const recentTbody = document.querySelector('#recentAudiosTable tbody');
-              recentTbody.innerHTML = '';
-              data.recent_audios.forEach(audio => {
-                const tr = document.createElement('tr');
-                const minutes = Math.floor(audio.time_since / 60);
-                const seconds = Math.floor(audio.time_since % 60);
-                tr.innerHTML = `
-            <td>${audio.audio_id}</td>
-            <td>${minutes} min ${seconds} seg</td>
-            <td>${audio.mic}</td>
-            <td>${audio.escenario}</td>
-            <td>${audio.global_result.alert ? audio.global_result.alert : ''}</td>
-          `;
-                recentTbody.appendChild(tr);
-              });
-              console.log("Tabla de audios recientes actualizada.");
+              // Live badge
+              const activos = data.escenarios_activos || 0;
+              const kpiBadge = document.getElementById('kpi-live-badge');
+              if(kpiBadge) kpiBadge.style.display = activos > 0 ? '' : 'none';
+              const livePill = document.getElementById('dash-live-pill');
+              if(livePill) {
+                document.getElementById('dash-live-label').textContent = `${activos} escenario(s) activo(s)`;
+                livePill.style.background = activos>0 ? '' : '#64748b';
+              }
+              // Update sidebar live badge
+              const badgeVivos = document.getElementById('badgeVivos');
+              if(badgeVivos) { badgeVivos.textContent=activos; badgeVivos.style.display=activos>0?'inline-block':'none'; }
+              const tlbBadge = document.getElementById('topbar-live-badge');
+              if(tlbBadge) { document.getElementById('topbar-live-count').textContent=activos; tlbBadge.style.display=activos>0?'flex':'none'; }
 
-              // Actualizar gráfico de niveles de ruido
-              if (data.noise_data && data.noise_data.labels && data.noise_data.levels) {
-                noiseChart.data.labels = data.noise_data.labels;
-                noiseChart.data.datasets[0].data = data.noise_data.levels;
-                noiseChart.update();
-                console.log("Gráfico de niveles de ruido actualizado.");
+              // Alerts panel
+              const alertsContainer = document.getElementById('alertsContainer');
+              const alertsEmpty = document.getElementById('alertsEmpty');
+              const alertCount = document.getElementById('alertCount');
+              const alerts = data.alerts || [];
+              alertCount.textContent = alerts.length;
+              alertCount.style.display = alerts.length ? '' : 'none';
+              if(!alerts.length) {
+                alertsEmpty.style.display = '';
+                alertsContainer.querySelectorAll('.activity-item').forEach(e=>e.remove());
               } else {
-                noiseChart.data.labels = [];
-                noiseChart.data.datasets[0].data = [];
-                noiseChart.update();
-                console.log("Gráfico de niveles de ruido sin datos.");
+                alertsEmpty.style.display = 'none';
+                alertsContainer.querySelectorAll('.activity-item').forEach(e=>e.remove());
+                alerts.slice(0,6).forEach(a => {
+                  const div = document.createElement('div');
+                  div.className = 'activity-item';
+                  div.innerHTML = `<div class="activity-icon" style="background:#fee2e2;color:#dc2626;"><i class="bi bi-exclamation-triangle-fill"></i></div><div class="activity-body"><p class="activity-title">${a.alert||'Alerta'}</p><p class="activity-sub">${a.mic||'—'} · ${a.escenario||'—'}</p></div>`;
+                  alertsContainer.appendChild(div);
+                });
               }
 
-              // Actualizar gráfico de frecuencia
-              if (data.frequency_data && Array.isArray(data.frequency_data)) {
-                const freqLabels = data.frequency_data.map(item => item.identificador);
-                const freqValues = data.frequency_data.map(item => item.frequency);
-                frequencyChart.data.labels = freqLabels;
-                frequencyChart.data.datasets[0].data = freqValues;
-                frequencyChart.update();
-                console.log("Gráfico de frecuencia actualizado.");
+              // Recent audios
+              const tbody = document.getElementById('recentAudiosBody');
+              const recentEmpty = document.getElementById('recentEmpty');
+              tbody.innerHTML = '';
+              if(!data.recent_audios||!data.recent_audios.length) {
+                recentEmpty.style.display = '';
               } else {
-                frequencyChart.data.labels = [];
-                frequencyChart.data.datasets[0].data = [];
-                frequencyChart.update();
-                console.log("Gráfico de frecuencia sin datos.");
+                recentEmpty.style.display = 'none';
+                data.recent_audios.forEach(audio => {
+                  const m = Math.floor(audio.time_since/60), s = Math.floor(audio.time_since%60);
+                  const alertText = audio.global_result&&audio.global_result.alert ? `<span class="badge bg-danger" style="font-size:.65rem;">${audio.global_result.alert}</span>` : '<span class="text-muted">—</span>';
+                  const tr = document.createElement('tr');
+                  tr.innerHTML = `<td class="px-3">#${audio.audio_id}</td><td>${m}m ${s}s</td><td>${audio.mic}</td><td>${audio.escenario}</td><td>${alertText}</td>`;
+                  tbody.appendChild(tr);
+                });
               }
 
-              // Actualizar notificaciones de procesamiento
-              updateProcessingSection(data.processing);
-            } catch (err) {
-              console.error("Error actualizando el dashboard:", err);
-            }
+              // Charts
+              if(data.noise_data) { noiseChart.data.labels=data.noise_data.labels; noiseChart.data.datasets[0].data=data.noise_data.levels; noiseChart.update(); }
+              if(data.frequency_data&&data.frequency_data.length) {
+                document.getElementById('freqEmpty').style.display='none';
+                frequencyChart.data.labels=data.frequency_data.map(i=>i.identificador);
+                frequencyChart.data.datasets[0].data=data.frequency_data.map(i=>i.frequency);
+                frequencyChart.update();
+              } else {
+                document.getElementById('freqEmpty').style.display='';
+              }
+
+              // Processing
+              updateProcessingSection(data.processing||[]);
+            } catch(err) { console.error('Dashboard update error:', err); }
           }
 
           updateDashboard();
           setInterval(updateDashboard, 5000);
         });
       </script>
-
 
       <!-- Escenarios Programados -->
       <div class="tab-pane fade" id="escenarios">
@@ -788,7 +749,6 @@
   <!-- Bootstrap Bundle con Popper -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Control del menú en móviles
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('overlay');
@@ -797,14 +757,18 @@
       sidebar.classList.toggle('open');
       overlay.classList.toggle('visible');
     });
-
     overlay.addEventListener('click', () => {
       sidebar.classList.remove('open');
       overlay.classList.remove('visible');
     });
 
-    // Opcional: cerrar el menú móvil al pulsar un enlace
-    document.querySelectorAll('#sidebar .nav-link').forEach(link => {
+    // Update topbar title when switching tabs + close sidebar on mobile
+    document.querySelectorAll('#sidebar .nav-link[data-bs-toggle="tab"]').forEach(link => {
+      link.addEventListener('shown.bs.tab', () => {
+        const label = link.getAttribute('data-label') || 'Dashboard';
+        const el = document.getElementById('topbar-section-name');
+        if (el) el.textContent = label;
+      });
       link.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
           sidebar.classList.remove('open');
@@ -812,17 +776,12 @@
         }
       });
     });
-
-
   </script>
 
-
   <!-- Footer -->
-  <footer>
-    <div class="container">
-      <span>&copy; 2025 Evaluación Acústica. Todos los derechos reservados.
-        Proyecto tesis UNI, con la colaboración del INICTEL-UNI y el Laboratorio de IoT.
-      </span>
+  <footer class="dash-footer">
+    <div class="content">
+      &copy; 2025 Evaluación Acústica Ocupacional · Proyecto Tesis UNI · INICTEL-UNI · Laboratorio de IoT
     </div>
   </footer>
 

@@ -984,6 +984,9 @@ def dashboard_data():
     total_audios = Audio.query.count()
     total_microphones = Microfono.query.count()
     active_microphones = Microfono.query.filter(Microfono.escenario_id.isnot(None)).count()
+    escenarios_activos = Escenario.query.filter_by(estado='activo').count()
+    escenarios_culminados = Escenario.query.filter_by(estado='culminado').count()
+    escenarios_programados = Escenario.query.filter_by(estado='programado').count()
 
     recent_results = AudioResultado.query.order_by(AudioResultado.timestamp.desc()).limit(10).all()
     recent_audios = []
@@ -1043,6 +1046,9 @@ def dashboard_data():
         "total_audios": total_audios,
         "total_microphones": total_microphones,
         "active_microphones": active_microphones,
+        "escenarios_activos": escenarios_activos,
+        "escenarios_culminados": escenarios_culminados,
+        "escenarios_programados": escenarios_programados,
         "recent_audios": recent_audios,
         "alerts": alerts,
         "processing": list(processing_audios.values()),
