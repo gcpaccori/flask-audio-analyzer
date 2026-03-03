@@ -15,7 +15,7 @@
 
   <style>
     body {
-      padding-top: 70px;
+      padding-top: 78px;
       background-color: #f8f9fa;
     }
 
@@ -24,11 +24,24 @@
       backdrop-filter: blur(10px);
     }
 
+    .page-container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+
     .section-title {
-      margin-top: 40px;
-      margin-bottom: 20px;
+      margin-top: 32px;
+      margin-bottom: 16px;
       border-bottom: 2px solid #007bff;
-      padding-bottom: 5px;
+      padding-bottom: 8px;
+    }
+
+    .chart-wrapper {
+      background-color: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: .25rem;
+      padding: 16px;
     }
 
     #waveform {
@@ -54,7 +67,7 @@
     </div>
   </nav>
 
-  <div class="container">
+  <div class="container page-container">
 
     <div class="text-center mb-5">
       <h1>Resultados del Análisis</h1>
@@ -119,9 +132,9 @@
 
 
     <!-- Estadísticas-->
-    <h3 class="section-title" style="display:none;>Datos Estadísticos de la presión sonora equivalente continua durante un intervalo de
+    <h3 class="section-title" style="display:none;">Datos Estadísticos de la presión sonora equivalente continua durante un intervalo de
       tiempo</h3>
-    <ul class="list-group mb-4" style="display:none;>
+    <ul class="list-group mb-4" style="display:none;">
       <li class="list-group-item">Puntos medidos: <strong id="numPuntos"></strong></li>
       <li class="list-group-item">Nivel mínimo: <strong id="minNivel"></strong> dB</li>
       <li class="list-group-item">Nivel máximo: <strong id="maxNivel"></strong> dB</li>
@@ -131,7 +144,9 @@
    
     <!-- Gráfico Interactivo -->
     <h3 class="section-title">Gráfico</h3>
-    <canvas id="chart" height="100"></canvas>
+    <div class="chart-wrapper">
+      <canvas id="chart" height="100"></canvas>
+    </div>
 
     <!-- Espectrograma -->
     <h3 class="section-title">Espectrograma</h3>
@@ -143,42 +158,40 @@
         Tu navegador no soporta el elemento de audio.
       </audio>
     </div>
-
-  </div>
-
-  <!-- Sección: Análisis Detallado -->
-  <h3 class="section-title">Análisis Detallado por Intervalos</h3>
-  <div class="table-responsive">
-    <table class="table table-bordered table-sm">
-      <thead class="thead-light">
-        <tr>
-          <th>Timestamp</th>
-          <th>Presión sonora equivalente continua durante un intervalo de tiempo</th>
-          <th>Presión sonora máxima</th>
-          <th>Energía acústica total</th>
-          <th>Nivel de energía acústica</th>
-          <th>Energía de Joules</th>
-          <th>Nivel de energía de Joules</th>
-          <th>Índice de intensidad acústica</th>
-          <th>Nivel de intensidad acústica</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for chunk in detailed_results %}
-        <tr>
-          <td>{{ chunk.timestamp }}</td>
-          <td>{{ chunk.Lp_eqT }}</td>
-          <td>{{ chunk.Lp_max }}</td>
-          <td>{{ chunk.ET }}</td>
-          <td>{{ chunk.LE }}</td>
-          <td>{{ chunk.J_energy }}</td>
-          <td>{{ chunk.LJ }}</td>
-          <td>{{ chunk.IT }}</td>
-          <td>{{ chunk.LI }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <!-- Sección: Análisis Detallado -->
+    <h3 class="section-title">Análisis Detallado por Intervalos</h3>
+    <div class="table-responsive">
+      <table class="table table-bordered table-sm">
+        <thead class="thead-light">
+          <tr>
+            <th>Timestamp</th>
+            <th>Presión sonora equivalente continua durante un intervalo de tiempo</th>
+            <th>Presión sonora máxima</th>
+            <th>Energía acústica total</th>
+            <th>Nivel de energía acústica</th>
+            <th>Energía de Joules</th>
+            <th>Nivel de energía de Joules</th>
+            <th>Índice de intensidad acústica</th>
+            <th>Nivel de intensidad acústica</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for chunk in detailed_results %}
+          <tr>
+            <td>{{ chunk.timestamp }}</td>
+            <td>{{ chunk.Lp_eqT }}</td>
+            <td>{{ chunk.Lp_max }}</td>
+            <td>{{ chunk.ET }}</td>
+            <td>{{ chunk.LE }}</td>
+            <td>{{ chunk.J_energy }}</td>
+            <td>{{ chunk.LJ }}</td>
+            <td>{{ chunk.IT }}</td>
+            <td>{{ chunk.LI }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Botón flotante para generar PDF -->
