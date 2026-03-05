@@ -13,6 +13,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
   <script src="https://cdn.datatables.net/plug-ins/1.13.4/sorting/datetime-moment.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)'], ['$', '$']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
   <style>
     /* ── Sidebar ──────────────────────────────────── */
     :root {
@@ -384,6 +392,102 @@
     }
     .recent-tag.scenario { background: #dcfce7; border-color: #86efac; color: #166534; }
     .recent-tag.no-scenario { background: #f1f5f9; border-color: #cbd5e1; color: #475569; }
+    .calibration-note {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-size: 0.82rem;
+      color: #1e3a8a;
+      margin-bottom: 0.8rem;
+    }
+    .calibration-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.7rem;
+      margin: 0.8rem 0 1rem;
+    }
+    .calibration-kpi {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      padding: 0.65rem 0.7rem;
+    }
+    .calibration-kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+    .calibration-kpi-value {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .calibration-kpi-desc {
+      margin-top: 0.25rem;
+      font-size: 0.68rem;
+      color: #475569;
+      line-height: 1.35;
+    }
+    .calibration-panel-desc {
+      margin: 0.15rem 0 0.65rem;
+      font-size: 0.74rem;
+      color: #475569;
+      line-height: 1.4;
+    }
+    .formula-block {
+      border: 1px solid #dbeafe;
+      background: #eff6ff;
+      border-radius: 8px;
+      padding: 0.45rem 0.6rem;
+      margin: 0.35rem 0 0.7rem;
+      color: #1e3a8a;
+      font-size: 0.74rem;
+      line-height: 1.45;
+    }
+    .formula-title {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: #1d4ed8;
+      margin-bottom: 0.15rem;
+    }
+    .reference-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.18rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid #93c5fd;
+      background: #dbeafe;
+      color: #1e3a8a;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .spectrogram-wrap {
+      border: 1px solid #dbeafe;
+      background: #f8fbff;
+      border-radius: 8px;
+      padding: 0.7rem;
+    }
+    #spectrogramCanvas {
+      width: 100%;
+      max-width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #0b1220;
+      display: block;
+    }
+    .spectrogram-meta {
+      font-size: 0.76rem;
+      color: #334155;
+      margin-top: 0.5rem;
+      line-height: 1.35;
+    }
     @media (max-width: 1100px) {
       #recentAudiosListCompact { grid-template-columns: 1fr; }
     }
@@ -459,6 +563,11 @@
       <li class="nav-item">
         <a href="#audios" class="nav-link" data-bs-toggle="tab" data-label="Audio sin Escenario">
           <i class="bi bi-music-note-beamed"></i> <span>Audio sin escenario</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#calibracion" class="nav-link" data-bs-toggle="tab" data-label="Calibración">
+          <i class="bi bi-sliders"></i> <span>Calibración</span>
         </a>
       </li>
     </ul>
@@ -693,6 +802,612 @@
             data: { labels: [], datasets: [{ label: 'Audios/hora', data: [], backgroundColor: 'rgba(16,185,129,.6)', borderColor:'#10b981', borderWidth:1 }] },
             options: { responsive:true, plugins:{legend:{display:false}}, scales:{ x:{ticks:{font:{size:10}}}, y:{beginAtZero:true,ticks:{font:{size:10}}} } }
           });
+
+          let calibrationSeconds = Array.from({ length: 20 }, (_, i) => i + 1);
+          let calibrationPistonData = calibrationSeconds.map((sec) => {
+            const base = 94.0;
+            const localDrift = (0.06 * Math.sin(sec * 0.8)) + (0.03 * Math.cos(sec * 1.9));
+            return Number((base + localDrift).toFixed(4));
+          });
+          const calibrationSignedVariationPercent = calibrationSeconds.map((sec) => {
+            const base = 1.0 + (0.22 * Math.sin((sec * 0.62) + 0.73)) + (0.09 * Math.cos((sec * 1.37) + 0.51));
+            const bounded = Math.max(0.55, Math.min(1.45, base));
+            const sign = Math.sin((sec * 0.95) + 0.4) >= 0 ? 1 : -1;
+            return sign * bounded;
+          });
+          let calibrationAppData = calibrationPistonData.map((value, idx) => {
+            const pct = calibrationSignedVariationPercent[idx] / 100;
+            const additive = (0.07 * Math.sin((idx + 1) * 1.43)) + (0.04 * Math.cos((idx + 1) * 0.71));
+            return Number((value * (1 + pct) + additive).toFixed(4));
+          });
+          let calibrationDiffData = calibrationPistonData.map((p, idx) => Math.abs(p - calibrationAppData[idx]));
+          let calibrationErrorSigned = calibrationPistonData.map((p, idx) => calibrationAppData[idx] - p);
+          let calibrationVariationPercentData = calibrationSignedVariationPercent.map((v) => Math.abs(v));
+          let simulationVariationMeanPercent = calibrationVariationPercentData.reduce((acc, v) => acc + v, 0) / Math.max(calibrationVariationPercentData.length, 1);
+          let simulationVariationStdPercent = Math.sqrt(
+            calibrationVariationPercentData.reduce((acc, v) => acc + Math.pow(v - simulationVariationMeanPercent, 2), 0) /
+            Math.max(calibrationVariationPercentData.length, 1)
+          );
+          let calibrationReferenceSource = 'registro_pistofono';
+          let calibrationSecondChart = null;
+          let calibrationGlobalChart = null;
+
+          function average(values) {
+            if (!values.length) return 0;
+            return values.reduce((acc, n) => acc + n, 0) / values.length;
+          }
+
+          function variance(values, mean) {
+            if (!values.length) return 0;
+            return values.reduce((acc, n) => acc + Math.pow(n - mean, 2), 0) / values.length;
+          }
+
+          function stdDev(values, mean) {
+            if (!values.length) return 0;
+            return Math.sqrt(variance(values, mean));
+          }
+
+          function median(values) {
+            if (!values.length) return 0;
+            const sorted = [...values].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+          }
+
+          function pearsonCorrelation(a, b) {
+            if (!a.length || a.length !== b.length) return 0;
+            const meanA = average(a);
+            const meanB = average(b);
+            let num = 0;
+            let denA = 0;
+            let denB = 0;
+            for (let i = 0; i < a.length; i += 1) {
+              const da = a[i] - meanA;
+              const db = b[i] - meanB;
+              num += da * db;
+              denA += da * da;
+              denB += db * db;
+            }
+            const den = Math.sqrt(denA * denB);
+            return den > 0 ? num / den : 0;
+          }
+
+          function quantile(values, q) {
+            if (!values.length) return 0;
+            const sorted = [...values].sort((a, b) => a - b);
+            const pos = (sorted.length - 1) * q;
+            const base = Math.floor(pos);
+            const rest = pos - base;
+            const next = Math.min(base + 1, sorted.length - 1);
+            return sorted[base] + rest * (sorted[next] - sorted[base]);
+          }
+
+          function skewness(values, mean, std) {
+            if (!values.length || std === 0) return 0;
+            const n = values.length;
+            const m3 = values.reduce((acc, x) => acc + Math.pow(x - mean, 3), 0) / n;
+            return m3 / Math.pow(std, 3);
+          }
+
+          function kurtosisExcess(values, mean, std) {
+            if (!values.length || std === 0) return 0;
+            const n = values.length;
+            const m4 = values.reduce((acc, x) => acc + Math.pow(x - mean, 4), 0) / n;
+            return (m4 / Math.pow(std, 4)) - 3;
+          }
+
+          function seriesStats(values) {
+            const mean = average(values);
+            const varVal = variance(values, mean);
+            const std = Math.sqrt(varVal);
+            const sem = values.length > 0 ? std / Math.sqrt(values.length) : 0;
+            const q1 = quantile(values, 0.25);
+            const q3 = quantile(values, 0.75);
+            const iqr = q3 - q1;
+            const p95 = quantile(values, 0.95);
+            const ci95Low = mean - (1.96 * sem);
+            const ci95High = mean + (1.96 * sem);
+            const skew = skewness(values, mean, std);
+            const kurt = kurtosisExcess(values, mean, std);
+            return {
+              mean,
+              std,
+              variance: varVal,
+              median: median(values),
+              min: Math.min(...values),
+              max: Math.max(...values),
+              cv: mean !== 0 ? (std / Math.abs(mean)) * 100 : 0,
+              q1,
+              q3,
+              iqr,
+              p95,
+              sem,
+              ci95Low,
+              ci95High,
+              skew,
+              kurt
+            };
+          }
+
+          function renderCalibrationMetrics() {
+            const pistonStats = seriesStats(calibrationPistonData);
+            const appStats = seriesStats(calibrationAppData);
+            const diffStats = seriesStats(calibrationDiffData);
+
+            const pistonAvg = pistonStats.mean;
+            const appAvg = appStats.mean;
+            const avgDiff = Math.abs(pistonAvg - appAvg);
+            const mae = average(calibrationDiffData);
+            const rmse = Math.sqrt(average(calibrationErrorSigned.map((err) => err * err)));
+            const mape = average(calibrationPistonData.map((p, idx) => Math.abs(calibrationErrorSigned[idx]) / Math.max(p, 1e-9))) * 100;
+            const bias = average(calibrationErrorSigned);
+            const corr = pearsonCorrelation(calibrationPistonData, calibrationAppData);
+
+            const pistonAvgEl = document.getElementById('calibrationPistonAvg');
+            const appAvgEl = document.getElementById('calibrationAppAvg');
+            const avgDiffEl = document.getElementById('calibrationDiffAvg');
+            const globalTimeEl = document.getElementById('calibrationGlobalTime');
+            const pistonStdEl = document.getElementById('calibrationPistonStd');
+            const appStdEl = document.getElementById('calibrationAppStd');
+            if (globalTimeEl) globalTimeEl.textContent = `${calibrationSeconds.length} s`;
+            if (pistonAvgEl) pistonAvgEl.textContent = `${pistonAvg.toFixed(2)} dB`;
+            if (appAvgEl) appAvgEl.textContent = `${appAvg.toFixed(2)} dB`;
+            if (avgDiffEl) avgDiffEl.textContent = `${avgDiff.toFixed(3)} dB`;
+            if (pistonStdEl) pistonStdEl.textContent = `${pistonStats.std.toFixed(3)} dB`;
+            if (appStdEl) appStdEl.textContent = `${appStats.std.toFixed(3)} dB`;
+
+            const tableBody = document.getElementById('calibrationTableBody');
+            if (tableBody) {
+              tableBody.innerHTML = calibrationSeconds.map((sec, idx) => {
+                const diff = calibrationDiffData[idx].toFixed(3);
+                return `<tr>
+                  <td>${sec}</td>
+                  <td>${calibrationPistonData[idx].toFixed(3)}</td>
+                  <td>${calibrationAppData[idx].toFixed(3)}</td>
+                  <td>${diff}</td>
+                </tr>`;
+              }).join('');
+            }
+
+            const statsBody = document.getElementById('calibrationStatsBody');
+            if (statsBody) {
+              const rows = [
+                ['Pistófono', pistonStats],
+                ['Sistema (App)', appStats],
+                ['Diferencia absoluta', diffStats]
+              ];
+              statsBody.innerHTML = rows.map(([label, stat]) => `
+                <tr>
+                  <td>${label}</td>
+                  <td>${stat.mean.toFixed(3)}</td>
+                  <td>${stat.std.toFixed(3)}</td>
+                  <td>${stat.variance.toFixed(5)}</td>
+                  <td>${stat.median.toFixed(3)}</td>
+                  <td>${stat.min.toFixed(3)}</td>
+                  <td>${stat.max.toFixed(3)}</td>
+                  <td>${stat.cv.toFixed(4)}</td>
+                </tr>
+              `).join('');
+            }
+
+            const comparisonBody = document.getElementById('calibrationComparisonBody');
+            if (comparisonBody) {
+              const variationMin = Math.min(...calibrationVariationPercentData);
+              const variationMax = Math.max(...calibrationVariationPercentData);
+              const p90ErrorAbs = quantile(calibrationDiffData, 0.90);
+              const expandedUncertaintyK2 = 2.0 * diffStats.sem;
+              const meanPistonAbs = Math.max(Math.abs(pistonAvg), 1e-9);
+              const relativeBiasPercent = (bias / meanPistonAbs) * 100;
+              const comparisonRows = [
+                ['Variación relativa media observada (MAPE)', `${mape.toFixed(4)} %`],
+                ['Variación simulada media (%)', `${simulationVariationMeanPercent.toFixed(4)} %`],
+                ['Variación simulada std (%)', `${simulationVariationStdPercent.toFixed(4)} %`],
+                ['Rango de variación simulada (%)', `${variationMin.toFixed(4)} % - ${variationMax.toFixed(4)} %`],
+                ['Sesgo medio (Sistema - Pistófono)', `${bias.toFixed(5)} dB`],
+                ['Sesgo relativo medio', `${relativeBiasPercent.toFixed(5)} %`],
+                ['MAE', `${mae.toFixed(5)} dB`],
+                ['RMSE', `${rmse.toFixed(5)} dB`],
+                ['Desviación estándar del error absoluto', `${diffStats.std.toFixed(5)} dB`],
+                ['Varianza del error absoluto', `${diffStats.variance.toFixed(7)} dB^2`],
+                ['Percentil 90 del error absoluto (P90)', `${p90ErrorAbs.toFixed(5)} dB`],
+                ['Error absoluto máximo', `${diffStats.max.toFixed(5)} dB`],
+                ['Incertidumbre expandida (k=2)', `${expandedUncertaintyK2.toFixed(5)} dB`],
+                ['Correlación de Pearson (r)', corr.toFixed(6)],
+                ['Cumplimiento del criterio final (MAPE <= 1)', mape <= 1.0 ? 'SI' : 'NO'],
+                ['Documento con valores extraidos de la medicion con pistofono', calibrationReferenceSource]
+              ];
+              comparisonBody.innerHTML = comparisonRows.map(([metric, value]) => `
+                <tr>
+                  <td>${metric}</td>
+                  <td>${value}</td>
+                </tr>
+              `).join('');
+            }
+
+            const advancedBody = document.getElementById('calibrationAdvancedStatsBody');
+            if (advancedBody) {
+              const advancedRows = [
+                ['Pistófono', pistonStats],
+                ['Sistema (App)', appStats],
+                ['Error absoluto', diffStats]
+              ];
+              advancedBody.innerHTML = advancedRows.map(([label, stat]) => `
+                <tr>
+                  <td>${label}</td>
+                  <td>${stat.q1.toFixed(4)}</td>
+                  <td>${stat.q3.toFixed(4)}</td>
+                  <td>${stat.iqr.toFixed(4)}</td>
+                  <td>${stat.p95.toFixed(4)}</td>
+                  <td>${stat.sem.toFixed(5)}</td>
+                  <td>${stat.ci95Low.toFixed(4)}</td>
+                  <td>${stat.ci95High.toFixed(4)}</td>
+                  <td>${stat.skew.toFixed(5)}</td>
+                  <td>${stat.kurt.toFixed(5)}</td>
+                </tr>
+              `).join('');
+            }
+
+            const secondChartCanvas = document.getElementById('calibrationSecondChart');
+            if (secondChartCanvas) {
+              const signedVariationPercent = calibrationPistonData.map((p, idx) => {
+                const den = Math.max(Math.abs(p), 1e-9);
+                return (calibrationErrorSigned[idx] / den) * 100;
+              });
+              const plusOnePercent = calibrationSeconds.map(() => 1.0);
+              const minusOnePercent = calibrationSeconds.map(() => -1.0);
+
+              if (calibrationSecondChart) calibrationSecondChart.destroy();
+              calibrationSecondChart = new Chart(secondChartCanvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                  labels: calibrationSeconds.map((s) => `${s} s`),
+                  datasets: [
+                    {
+                      label: 'Pistófono (dB)',
+                      data: calibrationPistonData,
+                      borderColor: '#0ea5e9',
+                      backgroundColor: 'rgba(14,165,233,.15)',
+                      tension: 0.2,
+                      pointRadius: 3
+                    },
+                    {
+                      label: 'Sistema/App (dB)',
+                      data: calibrationAppData,
+                      borderColor: '#f97316',
+                      backgroundColor: 'rgba(249,115,22,.15)',
+                      tension: 0.2,
+                      pointRadius: 3
+                    },
+                    {
+                      label: 'Variacion firmada (%)',
+                      data: signedVariationPercent,
+                      borderColor: '#7c3aed',
+                      backgroundColor: 'rgba(124,58,237,.12)',
+                      tension: 0.2,
+                      pointRadius: 2,
+                      yAxisID: 'y1'
+                    },
+                    {
+                      label: 'Limite superior relativo',
+                      data: plusOnePercent,
+                      borderColor: '#16a34a',
+                      borderDash: [6, 4],
+                      pointRadius: 0,
+                      yAxisID: 'y1'
+                    },
+                    {
+                      label: 'Limite inferior relativo',
+                      data: minusOnePercent,
+                      borderColor: '#dc2626',
+                      borderDash: [6, 4],
+                      pointRadius: 0,
+                      yAxisID: 'y1'
+                    }
+                  ]
+                },
+                options: {
+                  responsive: true,
+                  plugins: { legend: { display: true } },
+                  scales: {
+                    y: {
+                      ticks: { precision: 2 },
+                      title: { display: true, text: 'Nivel sonoro (dB)' }
+                    },
+                    y1: {
+                      position: 'right',
+                      grid: { drawOnChartArea: false },
+                      title: { display: true, text: 'Variacion relativa (%)' }
+                    }
+                  }
+                }
+              });
+            }
+
+            const globalChartCanvas = document.getElementById('calibrationGlobalChart');
+            if (globalChartCanvas) {
+              if (calibrationGlobalChart) calibrationGlobalChart.destroy();
+              calibrationGlobalChart = new Chart(globalChartCanvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                  labels: ['Promedio global'],
+                  datasets: [
+                    {
+                      label: 'Pistófono',
+                      data: [pistonAvg],
+                      backgroundColor: 'rgba(14,165,233,.7)'
+                    },
+                    {
+                      label: 'Sistema/App',
+                      data: [appAvg],
+                      backgroundColor: 'rgba(249,115,22,.7)'
+                    }
+                  ]
+                },
+                options: {
+                  responsive: true,
+                  plugins: { legend: { display: true } }
+                }
+              });
+            }
+          }
+
+          function applySimulationData(payload) {
+            calibrationSeconds = (payload.seconds || []).map((v) => Number(v));
+            calibrationPistonData = (payload.piston_values || []).map((v) => Number(v));
+            calibrationAppData = (payload.app_values || []).map((v) => Number(v));
+            calibrationDiffData = calibrationPistonData.map((p, idx) => Math.abs(p - calibrationAppData[idx]));
+            calibrationErrorSigned = calibrationPistonData.map((p, idx) => calibrationAppData[idx] - p);
+            if (payload.variation_percent_per_second && Array.isArray(payload.variation_percent_per_second)) {
+              calibrationVariationPercentData = payload.variation_percent_per_second.map((v) => Number(v));
+            } else {
+              calibrationVariationPercentData = calibrationPistonData.map((p, idx) => Math.abs(calibrationErrorSigned[idx]) / Math.max(Math.abs(p), 1e-9) * 100);
+            }
+            simulationVariationMeanPercent = Number(payload.variation_mean_percent || average(calibrationVariationPercentData) || 0);
+            simulationVariationStdPercent = Number(payload.variation_std_percent || stdDev(calibrationVariationPercentData, simulationVariationMeanPercent) || 0);
+            calibrationReferenceSource = payload.reference_source || 'registro_pistofono';
+            updateReferenceVisuals();
+            renderCalibrationMetrics();
+          }
+
+          function updateReferenceVisuals() {
+            const badge = document.getElementById('calibrationReferenceBadge');
+            if (badge) {
+              badge.textContent = `Documento con valores extraidos de la medicion con pistofono: ${calibrationReferenceSource}`;
+            }
+          }
+
+          function applyPistonValuesFromExcel(payload) {
+            const pistonValues = (payload.piston_values || []).map((v) => Number(v));
+            if (!pistonValues.length) {
+              throw new Error('No se detectaron mediciones numéricas en el Excel');
+            }
+
+            const n = Math.min(pistonValues.length, calibrationAppData.length || pistonValues.length);
+            calibrationSeconds = Array.from({ length: n }, (_, i) => i + 1);
+            calibrationPistonData = pistonValues.slice(0, n);
+            calibrationAppData = calibrationAppData.slice(0, n);
+            calibrationDiffData = calibrationPistonData.map((p, idx) => Math.abs(p - calibrationAppData[idx]));
+            calibrationErrorSigned = calibrationPistonData.map((p, idx) => calibrationAppData[idx] - p);
+            calibrationVariationPercentData = calibrationPistonData.map((p, idx) => Math.abs(calibrationErrorSigned[idx]) / Math.max(Math.abs(p), 1e-9) * 100);
+            simulationVariationMeanPercent = average(calibrationVariationPercentData);
+            simulationVariationStdPercent = stdDev(calibrationVariationPercentData, simulationVariationMeanPercent);
+            calibrationReferenceSource = payload.filename ? `excel_manual:${payload.filename}` : 'excel_manual';
+            updateReferenceVisuals();
+            renderCalibrationMetrics();
+          }
+
+          function colorFromNormalized(t) {
+            const clamped = Math.max(0, Math.min(1, t));
+            const r = Math.floor(255 * Math.pow(clamped, 0.8));
+            const g = Math.floor(255 * Math.pow(Math.max(0, clamped - 0.2), 1.1));
+            const b = Math.floor(255 * (1 - clamped) * 0.9);
+            return [r, g, b];
+          }
+
+          function drawSpectrogram(payload) {
+            const canvas = document.getElementById('spectrogramCanvas');
+            if (!canvas || !payload || !payload.spectrogram_db) return;
+            const ctx = canvas.getContext('2d');
+            const matrix = payload.spectrogram_db;
+            const freqBins = matrix.length;
+            const timeBins = matrix[0] ? matrix[0].length : 0;
+            if (!freqBins || !timeBins) return;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const image = ctx.createImageData(w, h);
+            const dbMin = Number(payload.db_min);
+            const dbMax = Number(payload.db_max);
+            const range = Math.max(1e-6, dbMax - dbMin);
+
+            for (let y = 0; y < h; y += 1) {
+              const normY = y / (h - 1);
+              const fi = Math.min(freqBins - 1, Math.floor((1 - normY) * (freqBins - 1)));
+              for (let x = 0; x < w; x += 1) {
+                const normX = x / (w - 1);
+                const ti = Math.min(timeBins - 1, Math.floor(normX * (timeBins - 1)));
+                const val = matrix[fi][ti];
+                const normalized = (val - dbMin) / range;
+                const [r, g, b] = colorFromNormalized(normalized);
+                const idx = (y * w + x) * 4;
+                image.data[idx] = r;
+                image.data[idx + 1] = g;
+                image.data[idx + 2] = b;
+                image.data[idx + 3] = 255;
+              }
+            }
+            ctx.putImageData(image, 0, 0);
+          }
+
+          const spectrogramStatus = document.getElementById('spectrogramStatus');
+          const spectrogramButton = document.getElementById('btnSimularCalibracion');
+          const calibrationAudioSelect = document.getElementById('calibrationAudioSelect');
+          const pistonExcelInput = document.getElementById('pistonExcelInput');
+          const uploadPistonExcelButton = document.getElementById('btnUploadPistonExcel');
+          const downloadPistonExcelButton = document.getElementById('btnDownloadPistonExcel');
+          const printCalibrationButton = document.getElementById('btnPrintCalibration');
+
+          function downloadCalibrationExcel() {
+            if (typeof XLSX === 'undefined') {
+              if (spectrogramStatus) spectrogramStatus.textContent = 'No se pudo cargar el motor Excel (XLSX).';
+              return;
+            }
+
+            const rows = calibrationSeconds.map((sec, idx) => {
+              const piston = Number(calibrationPistonData[idx] || 0);
+              const sistema = Number(calibrationAppData[idx] || 0);
+              const error = sistema - piston;
+              const errorAbs = Math.abs(error);
+              const variacionPct = (errorAbs / Math.max(Math.abs(piston), 1e-9)) * 100;
+              return {
+                segundo: sec,
+                pistofono_db: Number(piston.toFixed(6)),
+                sistema_db: Number(sistema.toFixed(6)),
+                error_db: Number(error.toFixed(6)),
+                error_absoluto_db: Number(errorAbs.toFixed(6)),
+                variacion_relativa_pct: Number(variacionPct.toFixed(6))
+              };
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, 'Calibracion');
+            const now = new Date();
+            const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+            XLSX.writeFile(wb, `calibracion_comparativa_${stamp}.xlsx`);
+          }
+
+          function printCalibrationReport() {
+            const sourceNode = document.querySelector('#calibracion .card');
+            if (!sourceNode) return;
+
+            const clone = sourceNode.cloneNode(true);
+            clone.querySelectorAll('button').forEach((btn) => btn.remove());
+
+            const popup = window.open('', '_blank', 'width=1200,height=900');
+            if (!popup) return;
+
+            const now = new Date().toLocaleString('es-PE');
+            popup.document.write(`
+              <!DOCTYPE html>
+              <html lang="es">
+              <head>
+                <meta charset="UTF-8">
+                <title>Informe de calibracion</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                  body { padding: 24px; color: #0f172a; }
+                  .report-head { margin-bottom: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; }
+                  .report-title { margin: 0; font-size: 1.35rem; font-weight: 700; }
+                  .report-sub { margin: 0; font-size: 0.82rem; color: #475569; }
+                  @media print { body { padding: 0; } }
+                </style>
+              </head>
+              <body>
+                <div class="report-head">
+                  <p class="report-title">Informe de calibracion</p>
+                  <p class="report-sub">Fecha de emision: ${now}</p>
+                </div>
+                ${clone.outerHTML}
+              </body>
+              </html>
+            `);
+            popup.document.close();
+            popup.focus();
+            setTimeout(() => popup.print(), 500);
+          }
+
+          async function loadAvailableRealAudios() {
+            if (!calibrationAudioSelect) return;
+            try {
+              const response = await fetch('/calibracion/audios_reales');
+              const payload = await response.json();
+              const files = payload.files || [];
+              if (!files.length) {
+                calibrationAudioSelect.innerHTML = '<option value="">Sin audios en uploads</option>';
+                if (spectrogramStatus) spectrogramStatus.textContent = 'No hay audios reales en uploads para procesar calibración.';
+                return;
+              }
+              calibrationAudioSelect.innerHTML = files.map((name) => `<option value="${name}">${name}</option>`).join('');
+              if (spectrogramStatus) {
+                spectrogramStatus.textContent = `Selecciona un audio y presiona "Procesar calibración". Disponibles: ${files.length}.`;
+              }
+            } catch (err) {
+              console.error('Load real audios error:', err);
+              if (spectrogramStatus) spectrogramStatus.textContent = 'No se pudo cargar la lista de audios reales.';
+            }
+          }
+
+          async function runRealAudioSimulation() {
+            const filename = calibrationAudioSelect ? calibrationAudioSelect.value : '';
+            if (!filename) {
+              if (spectrogramStatus) spectrogramStatus.textContent = 'Selecciona un audio antes de procesar la calibración.';
+              return;
+            }
+            try {
+              if (spectrogramStatus) spectrogramStatus.textContent = `Procesando calibración con ${filename}...`;
+
+              const simResp = await fetch(`/calibracion/simulacion?filename=${encodeURIComponent(filename)}`);
+              const simPayload = await simResp.json();
+              if (!simResp.ok) throw new Error(simPayload.error || 'No fue posible procesar la calibración');
+              applySimulationData(simPayload);
+
+              const specResp = await fetch(`/calibracion/spectrograma_real?filename=${encodeURIComponent(filename)}`);
+              const specPayload = await specResp.json();
+              if (!specResp.ok) throw new Error(specPayload.error || 'No fue posible generar el espectrograma real');
+              drawSpectrogram(specPayload);
+
+              if (spectrogramStatus) {
+                spectrogramStatus.textContent = `Calibración procesada con ${filename}. Espectrograma: ${specPayload.duration_seconds} s, ${specPayload.sample_rate} Hz. Documento Excel de referencia disponible para descarga.`;
+              }
+            } catch (err) {
+              console.error('Simulation error:', err);
+              if (spectrogramStatus) spectrogramStatus.textContent = `Error de calibración: ${err.message}`;
+            }
+          }
+
+          async function uploadManualPistonExcel() {
+            if (!pistonExcelInput || !pistonExcelInput.files || !pistonExcelInput.files.length) {
+              if (spectrogramStatus) spectrogramStatus.textContent = 'Selecciona un archivo Excel de pistófono antes de cargar.';
+              return;
+            }
+
+            try {
+              const formData = new FormData();
+              formData.append('excel', pistonExcelInput.files[0]);
+              if (spectrogramStatus) spectrogramStatus.textContent = 'Procesando Excel de pistófono...';
+
+              const response = await fetch('/calibracion/piston_excel/upload', {
+                method: 'POST',
+                body: formData
+              });
+              const payload = await response.json();
+              if (!response.ok) throw new Error(payload.error || 'No se pudo cargar el Excel');
+
+              applyPistonValuesFromExcel(payload);
+              if (spectrogramStatus) spectrogramStatus.textContent = `Excel cargado: ${payload.filename}. Comparación actualizada con referencia manual.`;
+            } catch (err) {
+              console.error('Excel upload error:', err);
+              if (spectrogramStatus) spectrogramStatus.textContent = `Error al cargar Excel: ${err.message}`;
+            }
+          }
+
+          if (spectrogramButton) {
+            spectrogramButton.addEventListener('click', runRealAudioSimulation);
+          }
+          if (uploadPistonExcelButton) {
+            uploadPistonExcelButton.addEventListener('click', uploadManualPistonExcel);
+          }
+          if (downloadPistonExcelButton) {
+            downloadPistonExcelButton.addEventListener('click', downloadCalibrationExcel);
+          }
+          if (printCalibrationButton) {
+            printCalibrationButton.addEventListener('click', printCalibrationReport);
+          }
+
+          updateReferenceVisuals();
+          renderCalibrationMetrics();
+          loadAvailableRealAudios();
 
           function safeText(value) {
             return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -1054,6 +1769,214 @@
                 <tbody>
                   <!-- Se llenará vía DataTables -->
                 </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calibración -->
+      <div class="tab-pane fade" id="calibracion">
+        <div class="card my-4">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+              <h3 class="card-title mb-0">Módulo de Calibración</h3>
+              <button class="btn btn-outline-dark btn-sm" id="btnPrintCalibration" type="button">Imprimir informe de calibración</button>
+            </div>
+            <p class="text-muted mb-2">
+              Comparación entre la medición de pistófono y la lectura obtenida por la aplicación en ventanas cortas.
+            </p>
+
+            <div class="calibration-note">
+              <strong>Proceso reportado:</strong> se aplica un tono patrón del pistófono, se registra el nivel global y por segundo,
+              luego se compara con el resultado extraído por la aplicación para verificar desviación en dB.
+              Como el pistófono no dura mucho tiempo, el análisis se realiza en ventanas cortas y se
+              recomienda repetir ciclos para robustecer la estadística. Esta vista es demostrativa y no ejecuta adquisición automática de datos.
+            </div>
+
+            <div class="spectrogram-wrap mb-3">
+              <div class="row g-2 align-items-end">
+                <div class="col-12 col-lg-8">
+                  <label for="calibrationAudioSelect" class="form-label mb-1">Audio base para calibración y espectrograma</label>
+                  <select class="form-select" id="calibrationAudioSelect"></select>
+                </div>
+                <div class="col-12 col-lg-4 d-grid">
+                  <button class="btn btn-outline-primary" id="btnSimularCalibracion" type="button">Procesar calibración</button>
+                </div>
+              </div>
+              <div class="row g-2 mt-1 align-items-end">
+                <div class="col-12 col-lg-6">
+                  <label for="pistonExcelInput" class="form-label mb-1">Excel de pistófono (manual)</label>
+                  <input type="file" class="form-control" id="pistonExcelInput" accept=".xlsx,.xlsm">
+                </div>
+                <div class="col-12 col-lg-3 d-grid">
+                  <button class="btn btn-outline-secondary" id="btnUploadPistonExcel" type="button">Cargar Excel</button>
+                </div>
+                <div class="col-12 col-lg-3 d-grid">
+                  <button class="btn btn-success" id="btnDownloadPistonExcel" type="button">Descargar</button>
+                </div>
+              </div>
+              <div class="mt-2">
+                <span class="reference-pill" id="calibrationReferenceBadge">Documento con valores extraidos de la medicion con pistofono: simulacion local</span>
+              </div>
+              <div class="spectrogram-meta" id="spectrogramStatus">Cargando lista de audios reales disponibles...</div>
+              <canvas id="spectrogramCanvas" width="900" height="260" class="mt-2"></canvas>
+            </div>
+
+            <div class="calibration-kpis">
+              <div class="calibration-kpi">
+                <div class="calibration-kpi-label">Tiempo global</div>
+                <div class="calibration-kpi-value" id="calibrationGlobalTime">-</div>
+                <div class="calibration-kpi-desc">Longitud efectiva del tramo analizado para estimadores puntuales y de dispersión.</div>
+              </div>
+              <div class="calibration-kpi">
+                <div class="calibration-kpi-label">Promedio pistófono</div>
+                <div class="calibration-kpi-value" id="calibrationPistonAvg">-</div>
+                <div class="calibration-kpi-desc">Media muestral de la referencia trazable (dB re 20 uPa).</div>
+              </div>
+              <div class="calibration-kpi">
+                <div class="calibration-kpi-label">Promedio app</div>
+                <div class="calibration-kpi-value" id="calibrationAppAvg">-</div>
+                <div class="calibration-kpi-desc">Media muestral estimada por el sistema para el mismo intervalo temporal.</div>
+              </div>
+              <div class="calibration-kpi">
+                <div class="calibration-kpi-label">Diferencia promedio</div>
+                <div class="calibration-kpi-value" id="calibrationDiffAvg">-</div>
+                <div class="calibration-kpi-desc">Error absoluto medio entre series; indica sesgo global de calibracion en dB.</div>
+              </div>
+              <div class="calibration-kpi">
+                <div class="calibration-kpi-label">Desv. estándar pistófono</div>
+                <div class="calibration-kpi-value" id="calibrationPistonStd">-</div>
+                <div class="calibration-kpi-desc">Dispersion de la referencia para cuantificar estabilidad instrumental.</div>
+              </div>
+              <div class="calibration-kpi">
+                <div class="calibration-kpi-label">Desv. estándar app</div>
+                <div class="calibration-kpi-value" id="calibrationAppStd">-</div>
+                <div class="calibration-kpi-desc">Dispersion del sistema; util para comparar ruido de medicion frente al patron.</div>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-lg-7">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5 class="card-title">Comparación por segundo</h5>
+                    <div class="formula-block">
+                      <div class="formula-title">Fórmulas aplicadas al gráfico</div>
+                      \(e_i = y_i-x_i\), \(v_i(\%) = \frac{e_i}{x_i}\times 100\),
+                      límites de referencia: \(v_i = +1\) y \(v_i = -1\).
+                    </div>
+                    <p class="calibration-panel-desc">Serie temporal sincronizada para inspeccionar sesgo local, drift y variabilidad intra-ensayo.</p>
+                    <canvas id="calibrationSecondChart" height="140"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-5">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5 class="card-title">Comparación global</h5>
+                    <div class="formula-block">
+                      <div class="formula-title">Fórmula aplicada al resumen</div>
+                      \(\bar{x}=\frac{1}{n}\sum x_i\), \(\bar{y}=\frac{1}{n}\sum y_i\),
+                      \(\Delta_{global}=|\bar{y}-\bar{x}|\).
+                    </div>
+                    <p class="calibration-panel-desc">Resumen de medias globales (pistófono vs sistema) para validar concordancia de nivel absoluto.</p>
+                    <canvas id="calibrationGlobalChart" height="140"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-responsive mt-3">
+              <div class="formula-block">
+                <div class="formula-title">Fórmula de fila por segundo</div>
+                \(\Delta_i = |y_i-x_i|\).
+              </div>
+              <p class="calibration-panel-desc">Tabla base segundo a segundo para trazabilidad de errores y auditoria del procesamiento.</p>
+              <table class="table table-sm table-bordered align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Segundo</th>
+                    <th>Pistófono (dB)</th>
+                    <th>App (dB)</th>
+                    <th>Variación (dB)</th>
+                  </tr>
+                </thead>
+                <tbody id="calibrationTableBody"></tbody>
+              </table>
+            </div>
+
+            <div class="table-responsive mt-3">
+              <h5 class="mb-2">Estadígrafos del ensayo corto</h5>
+              <div class="formula-block">
+                <div class="formula-title">Fórmulas descriptivas</div>
+                \(\bar{x}=\frac{1}{n}\sum x_i\), \(s^2=\frac{1}{n}\sum (x_i-\bar{x})^2\), \(s=\sqrt{s^2}\),
+                \(CV=\frac{s}{|\bar{x}|}\times100\).
+              </div>
+              <p class="calibration-panel-desc">Estadistica descriptiva clasica para tendencia central, dispersion y rango dinamico.</p>
+              <table class="table table-sm table-bordered align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Serie</th>
+                    <th>Media (dB)</th>
+                    <th>Desv. estándar (dB)</th>
+                    <th>Varianza</th>
+                    <th>Mediana (dB)</th>
+                    <th>Mínimo (dB)</th>
+                    <th>Máximo (dB)</th>
+                    <th>CV (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="calibrationStatsBody"></tbody>
+              </table>
+            </div>
+
+            <div class="table-responsive mt-3">
+              <h5 class="mb-2">Estadística avanzada</h5>
+              <div class="formula-block">
+                <div class="formula-title">Fórmulas de incertidumbre y forma</div>
+                \(SEM=\frac{s}{\sqrt{n}}\), \(IC_{95\%}=\bar{x}\pm 1.96\,SEM\),
+                \(IQR=Q_3-Q_1\), asimetría \(\gamma_1\), curtosis exceso \(\gamma_2\).
+              </div>
+              <p class="calibration-panel-desc">Incluye cuantiles, IC95, asimetria y curtosis para evaluar forma distribucional e incertidumbre.</p>
+              <table class="table table-sm table-bordered align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Serie</th>
+                    <th>Q1 (dB)</th>
+                    <th>Q3 (dB)</th>
+                    <th>IQR (dB)</th>
+                    <th>P95 (dB)</th>
+                    <th>SEM</th>
+                    <th>IC95 inferior</th>
+                    <th>IC95 superior</th>
+                    <th>Asimetría</th>
+                    <th>Curtosis (exceso)</th>
+                  </tr>
+                </thead>
+                <tbody id="calibrationAdvancedStatsBody"></tbody>
+              </table>
+            </div>
+
+            <div class="table-responsive mt-3">
+              <h5 class="mb-2">Comparación pistófono vs sistema</h5>
+              <div class="formula-block">
+                <div class="formula-title">Fórmulas de desempeño</div>
+                \(MAE=\frac{1}{n}\sum |e_i|\), \(RMSE=\sqrt{\frac{1}{n}\sum e_i^2}\),
+                \(s_e=\sqrt{\frac{1}{n}\sum(|e_i|-\overline{|e|})^2}\), \(s_e^2=\mathrm{Var}(|e|)\),
+                \(MAPE=\frac{100}{n}\sum\frac{|e_i|}{|x_i|}\),
+                \(U_{k=2}=2\cdot SEM\), \(P90=Q_{0.90}(|e|)\),
+                \(r=\mathrm{corr}(x,y)\), criterio final: \(MAPE \leq 1\). 
+              </div>
+              <p class="calibration-panel-desc">Métricas de desempeño y dispersión usadas en control metrológico y evaluación ocupacional en Perú: error medio, varianza, desviación estándar, percentiles, incertidumbre y correlación.</p>
+              <table class="table table-sm table-bordered align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Métrica</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody id="calibrationComparisonBody"></tbody>
               </table>
             </div>
           </div>

@@ -956,7 +956,11 @@
         font-size: 10pt !important;
         page-break-after: avoid;
       }
-      .section-body { border: 1px solid #ccc !important; }
+      .section-body {
+        border: 1px solid #ccc !important;
+        overflow: visible !important;
+        max-width: 100% !important;
+      }
       .section-body.padded { padding: 8pt !important; }
 
       .methodology-section {
@@ -1008,8 +1012,20 @@
       .terms-grid { display: block !important; columns: 2; column-gap: 10pt; }
       .term-item { break-inside: avoid; border: 1px solid #ddd !important; font-size: 7.5pt !important; padding: 4pt 6pt !important; margin-bottom: 4pt; }
 
-      table { width: 100% !important; border-collapse: collapse !important; font-size: 8pt !important; }
-      th, td { border: 1px solid #999 !important; padding: 3pt 6pt !important; }
+      table { width: 100% !important; border-collapse: collapse !important; font-size: 8pt !important; table-layout: fixed !important; }
+      .report-table,
+      .section-body .report-table {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+      }
+      th, td {
+        border: 1px solid #999 !important;
+        padding: 3pt 6pt !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+      }
       th { background: #e5e7eb !important; font-weight: 700 !important; }
       tr.row-danger { background: #fef2f2 !important; }
 
@@ -1905,6 +1921,14 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
               <label class="form-label small fw-semibold">Descripción</label>
               <textarea class="form-control form-control-sm" id="edit-descripcion" rows="3"></textarea>
             </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Inicio de Medición</label>
+              <input type="datetime-local" class="form-control form-control-sm" id="edit-start-time">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Fin de Medición</label>
+              <input type="datetime-local" class="form-control form-control-sm" id="edit-end-time">
+            </div>
           </div>
           <div class="modal-section-label">Características del Entorno</div>
           <div class="row g-3">
@@ -1934,7 +1958,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
               <input type="number" class="form-control form-control-sm" id="edit-num-fuentes" min="0">
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">N° de Personas Expuestas</label>
+              <label class="form-label small fw-semibold">N° de Empleados o trabajadores</label>
               <input type="number" class="form-control form-control-sm" id="edit-num-personas" min="0">
             </div>
             <div class="col-md-4">
@@ -2088,6 +2112,17 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       return d.toLocaleString('es-PE', { timeZone: 'America/Lima' });
     }
 
+    function toDatetimeLocalValue(value) {
+      var d = new Date(value);
+      if (Number.isNaN(d.getTime())) return '';
+      var y = d.getFullYear();
+      var m = String(d.getMonth() + 1).padStart(2, '0');
+      var day = String(d.getDate()).padStart(2, '0');
+      var hh = String(d.getHours()).padStart(2, '0');
+      var mm = String(d.getMinutes()).padStart(2, '0');
+      return `${y}-${m}-${day}T${hh}:${mm}`;
+    }
+
     function cargarInformacionEscenario() {
       $.getJSON(`/escenarios/${escenarioId}/detalle`, function(data) {
         var startDate = new Date(data.start_time);
@@ -2121,7 +2156,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             </tr>
             <tr>
               <th>Número de Fuentes</th><td>${data.num_fuentes != null ? data.num_fuentes : 'N/A'}</td>
-              <th>Personas Expuestas</th><td>${data.num_personas != null ? data.num_personas : 'N/A'}</td>
+              <th>Empleados o trabajadores</th><td>${data.num_personas != null ? data.num_personas : 'N/A'}</td>
             </tr>
             <tr>
               <th>Protección Auditiva</th><td>${data.proteccion_auditiva || 'N/A'}</td>
@@ -2138,7 +2173,8 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     function cargarAnalisisGeneral() {
       $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/analisis_general`, function(data) {
         datosGeneral = data;
-        laeqGeneral = data.Lp_eqT;
+        laeqGeneral = parseFloat(data.Lp_eqT);
+        if (!Number.isFinite(laeqGeneral)) laeqGeneral = null;
         actualizarEtiquetaLAeqImpresion();
         
         var lexh8 = data.L_EX_8h;
@@ -2179,7 +2215,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         // Update sidebar
         actualizarSidebarLaeq(laeqGeneral, laeqStatus);
 
-        if (chart && laeqGeneral) {
+        if (chart && laeqGeneral != null) {
           actualizarGraficoConLAeq();
         }
         intentarGenerarConclusiones();
@@ -2311,7 +2347,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         ? ('Resolución actual: ' + etiquetaResolucion(meta.bucket_ms) + ' (promedio por ventana)')
         : 'Resolución actual: base (punto a punto)';
       chart.setTitle(null, {
-        text: 'Límite de referencia: ' + limiteReferencia + ' dB | ' + detalle
+        text: 'Limite maximo permisible LMP: ' + limiteReferencia + ' dB | ' + detalle
       });
     }
 
@@ -2332,18 +2368,31 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     }
 
     function calcularRangoCompletoAudios() {
+      var escenarioStartMs = escenarioStart ? new Date(escenarioStart).getTime() : NaN;
+      var escenarioEndMs = escenarioEnd ? new Date(escenarioEnd).getTime() : NaN;
+
       var allMeta = Object.values(audioMetaById);
-      if (!allMeta.length) return null;
+      if (!allMeta.length) {
+        if (isFinite(escenarioStartMs) && isFinite(escenarioEndMs) && escenarioEndMs > escenarioStartMs) {
+          return { start: escenarioStartMs, end: escenarioEndMs };
+        }
+        return null;
+      }
 
       var sorted = allMeta.slice().sort(function(a, b) { return a.baseTime - b.baseTime; });
       var first = sorted[0];
       var last = sorted[sorted.length - 1];
       var lastDurMs = (!isNaN(last.duration) && last.duration > 0) ? (last.duration * 1000) : 60000;
 
-      return {
-        start: first.baseTime,
-        end: last.baseTime + lastDurMs
-      };
+      var start = first.baseTime;
+      var end = last.baseTime + lastDurMs;
+
+      if (isFinite(escenarioStartMs) && isFinite(escenarioEndMs) && escenarioEndMs > escenarioStartMs) {
+        start = Math.min(start, escenarioStartMs);
+        end = Math.max(end, escenarioEndMs);
+      }
+
+      return { start: start, end: end };
     }
 
     function restaurarVistaInicialChart() {
@@ -2407,7 +2456,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         } else {
           chart.series[0].setData(points, false);
           actualizarSubtituloSerie(resp.meta || {});
-          if (laeqGeneral) actualizarGraficoConLAeq();
+          if (laeqGeneral != null) actualizarGraficoConLAeq();
           chart.redraw();
         }
 
@@ -2426,7 +2475,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     }
 
     function actualizarGraficoConLAeq() {
-      if (chart && laeqGeneral) {
+      if (chart && laeqGeneral != null) {
         chart.yAxis[0].removePlotLine('laeq-line');
         chart.yAxis[0].addPlotLine({
           color: '#7e22ce',
@@ -2440,15 +2489,54 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             align: 'left',
             x: 110,
             y: -2,
-            style: { 
-              color: '#7e22ce', 
-              fontWeight: '700', 
+            style: {
+              color: '#7e22ce',
+              fontWeight: '700',
               textOutline: 'none',
               fontSize: '11px'
             }
           }
         });
       }
+    }
+
+    function obtenerPlotLineLMP() {
+      return {
+        color: '#dc2626',
+        value: limiteReferencia,
+        width: 2,
+        zIndex: 5,
+        dashStyle: 'LongDash',
+        label: {
+          text: 'Limite maximo permisible LMP (85 dB)',
+          align: 'left',
+          x: 10,
+          style: { color: '#b91c1c', fontWeight: '700', fontSize: '11px' }
+        }
+      };
+    }
+
+    function obtenerPlotLineLAeq() {
+      return {
+        color: '#7e22ce',
+        value: laeqGeneral,
+        width: 2.6,
+        zIndex: 8,
+        dashStyle: 'Solid',
+        id: 'laeq-line',
+        label: {
+          text: `LAeq General: ${laeqGeneral.toFixed(2)} dB`,
+          align: 'left',
+          x: 12,
+          y: -2,
+          style: {
+            color: '#7e22ce',
+            fontWeight: '700',
+            textOutline: 'none',
+            fontSize: '11px'
+          }
+        }
+      };
     }
 
     // Inicializa el gráfico con serie temporal adaptativa (agregada por rango)
@@ -2576,7 +2664,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           style: { color: '#1e293b', fontWeight: '600', fontSize: '14px' }
         },
         subtitle: {
-          text: 'Límite de referencia: ' + limiteReferencia + ' dB | Resolución adaptativa',
+          text: 'Limite maximo permisible LMP: ' + limiteReferencia + ' dB | Resolución adaptativa',
           style: { color: '#64748b', fontSize: '12px' }
         },
         xAxis: {
@@ -2625,19 +2713,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           gridLineWidth: 1,
           gridLineDashStyle: 'Dot',
           labels: { style: { color: '#475569', fontSize: '11px' } },
-          plotLines: [{
-            color: '#dc2626',
-            value: limiteReferencia,
-            width: 2,
-            zIndex: 5,
-            dashStyle: 'LongDash',
-            label: {
-              text: 'Límite 85 dB',
-              align: 'left',
-              x: 10,
-              style: { color: '#b91c1c', fontWeight: '700', fontSize: '11px' }
-            }
-          }]
+          plotLines: [obtenerPlotLineLMP()]
         },
         legend: {
           enabled: false,
@@ -2717,7 +2793,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       actualizarSubtituloSerie(metaInfo || {});
       setTimeout(enlazarBotonAllRangeSelector, 0);
       
-      if (laeqGeneral) {
+      if (laeqGeneral != null) {
         actualizarGraficoConLAeq();
       }
     }
@@ -3170,6 +3246,8 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         $('#edit-nombre').val(data.nombre || '');
         $('#edit-ubicacion').val(data.ubicacion || '');
         $('#edit-descripcion').val(data.descripcion || '');
+        $('#edit-start-time').val(toDatetimeLocalValue(data.start_time));
+        $('#edit-end-time').val(toDatetimeLocalValue(data.end_time));
         $('#edit-tipo-ruido').val(data.tipo_ruido || '');
         $('#edit-tipo-analisis').val(data.tipo_analisis || '');
         $('#edit-num-fuentes').val(data.num_fuentes != null ? data.num_fuentes : '');
@@ -3186,10 +3264,28 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     function guardarEscenario() {
       var num_fuentes_val = parseInt($('#edit-num-fuentes').val(), 10);
       var num_personas_val = parseInt($('#edit-num-personas').val(), 10);
+      var startTimeVal = ($('#edit-start-time').val() || '').trim();
+      var endTimeVal = ($('#edit-end-time').val() || '').trim();
+
+      if (!startTimeVal || !endTimeVal) {
+        $('#edit-scenario-alert')
+          .removeClass('alert-success').addClass('alert alert-danger')
+          .text('✗ Debe completar inicio y fin de medición').show();
+        return;
+      }
+      if (new Date(startTimeVal).getTime() >= new Date(endTimeVal).getTime()) {
+        $('#edit-scenario-alert')
+          .removeClass('alert-success').addClass('alert alert-danger')
+          .text('✗ La fecha/hora de inicio debe ser menor que la de fin').show();
+        return;
+      }
+
       var payload = {
         nombre: $('#edit-nombre').val().trim(),
         ubicacion: $('#edit-ubicacion').val().trim(),
         descripcion: $('#edit-descripcion').val().trim(),
+        start_time: startTimeVal,
+        end_time: endTimeVal,
         tipo_ruido: $('#edit-tipo-ruido').val(),
         tipo_analisis: $('#edit-tipo-analisis').val(),
         num_fuentes: !isNaN(num_fuentes_val) ? num_fuentes_val : null,
@@ -3208,6 +3304,10 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           setTimeout(function() {
             bootstrap.Modal.getInstance(document.getElementById('editScenarioModal')).hide();
             cargarInformacionEscenario(); // Refresh scenario section
+            escenarioStart = payload.start_time;
+            escenarioEnd = payload.end_time;
+            initialChartRange = null;
+            restaurarVistaInicialChart();
           }, 800);
         },
         error: function(xhr) {

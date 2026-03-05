@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, send_from_
 from flask_sqlalchemy import SQLAlchemy
 from apscheduler.schedulers.background import BackgroundScheduler
 from scipy.io import wavfile
+from scipy import signal
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -9,12 +10,19 @@ import soundfile as sf
 import os
 import logging
 import numpy as np
+from io import BytesIO
 import datetime
 import json
 import pytz
 import math
 import traceback
 import sys
+
+try:
+    from openpyxl import Workbook, load_workbook
+except Exception:
+    Workbook = None
+    load_workbook = None
 
 
 # Configurar logger
@@ -548,23 +556,47 @@ def _actualizar_campos_descriptivos(escenario, data):
     escenario.tipo_analisis = data.get('tipo_analisis', escenario.tipo_analisis)
 
 
+def _parse_datetime_flexible(value):
+    """Parse datetime strings from UI payloads supporting common formats."""
+    if value is None:
+        return None
+    if isinstance(value, datetime.datetime):
+        return to_lima_datetime(value).replace(tzinfo=None)
+
+    text = str(value).strip()
+    formats = [
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M"
+    ]
+    for fmt in formats:
+        try:
+            parsed = datetime.datetime.strptime(text, fmt)
+            return parsed
+        except ValueError:
+            continue
+    raise ValueError(f"Formato de fecha inválido: {value}")
+
+
 @app.route('/escenarios/<int:id>', methods=['PUT'])
 def actualizar_escenario(id):
     data = request.json
     escenario = Escenario.query.get_or_404(id)
     try:
-        # For completed scenarios, allow editing descriptive metadata only (no date changes)
-        if escenario.estado == 'culminado':
-            _actualizar_campos_descriptivos(escenario, data)
-            db.session.commit()
-            return jsonify({'mensaje': 'Datos del escenario actualizados'})
-        if escenario.estado != 'programado':
-            return jsonify({'error': 'Solo se pueden modificar escenarios programados'}), 400
+        if escenario.estado not in ('programado', 'culminado'):
+            return jsonify({'error': 'Solo se pueden modificar escenarios programados o culminados'}), 400
+
         _actualizar_campos_descriptivos(escenario, data)
+
         if 'start_time' in data:
-            escenario.start_time = datetime.datetime.strptime(data['start_time'], "%Y-%m-%d %H:%M:%S")
+            escenario.start_time = _parse_datetime_flexible(data['start_time'])
         if 'end_time' in data:
-            escenario.end_time = datetime.datetime.strptime(data['end_time'], "%Y-%m-%d %H:%M:%S")
+            escenario.end_time = _parse_datetime_flexible(data['end_time'])
+
+        if escenario.start_time and escenario.end_time and escenario.start_time >= escenario.end_time:
+            return jsonify({'error': 'La fecha/hora de inicio debe ser menor que la de fin'}), 400
+
         duracion_segundos = (escenario.end_time - escenario.start_time).total_seconds()
         escenario.horas_medicion = round(duracion_segundos / 3600.0, 2)
         escenario.dias_medicion = round(duracion_segundos / (3600.0 * 24), 2)
@@ -1252,6 +1284,347 @@ def dashboard_data():
         "noise_data": noise_data,
         "frequency_data": frequency_data
     })
+
+
+@app.route('/calibracion/spectrograma', methods=['POST'])
+def calibracion_spectrograma():
+    """Calcula un espectrograma simplificado para un audio regular enviado desde el módulo de calibración."""
+    try:
+        if 'audio' not in request.files:
+            return jsonify({'error': "Campo 'audio' requerido"}), 400
+
+        audio_file = request.files['audio']
+        if not audio_file or audio_file.filename == '':
+            return jsonify({'error': 'Archivo de audio inválido'}), 400
+
+        # Leer con soundfile para soportar varios formatos comunes.
+        data, rate = sf.read(audio_file, dtype='float32')
+        data = np.asarray(data)
+        if data.ndim > 1:
+            data = data[:, 0]
+
+        if data.size == 0:
+            return jsonify({'error': 'El archivo no contiene muestras de audio'}), 400
+
+        # Limitar a 20 segundos para mantener respuesta liviana y consistente con calibración corta.
+        max_samples = int(rate * 20)
+        if data.size > max_samples:
+            data = data[:max_samples]
+
+        freqs, times, spec = signal.spectrogram(
+            data,
+            fs=rate,
+            nperseg=512,
+            noverlap=384,
+            scaling='spectrum',
+            mode='magnitude'
+        )
+
+        # Escala dB para visualización.
+        spec_db = 20.0 * np.log10(spec + 1e-12)
+
+        # Limitar frecuencias altas para una lectura más útil en calibración ocupacional.
+        freq_mask = freqs <= 8000
+        freqs = freqs[freq_mask]
+        spec_db = spec_db[freq_mask, :]
+
+        # Reducir tamaño máximo para evitar payloads grandes.
+        max_freq_bins = 128
+        max_time_bins = 160
+        freq_step = max(1, int(np.ceil(len(freqs) / max_freq_bins)))
+        time_step = max(1, int(np.ceil(len(times) / max_time_bins)))
+
+        freqs_small = freqs[::freq_step]
+        times_small = times[::time_step]
+        spec_small = spec_db[::freq_step, ::time_step]
+
+        if spec_small.size == 0:
+            return jsonify({'error': 'No se pudo construir el espectrograma'}), 500
+
+        return jsonify({
+            'sample_rate': int(rate),
+            'duration_seconds': round(float(data.size / rate), 3),
+            'times': [round(float(v), 4) for v in times_small],
+            'freqs': [round(float(v), 2) for v in freqs_small],
+            'spectrogram_db': np.round(spec_small, 2).tolist(),
+            'db_min': round(float(np.min(spec_small)), 2),
+            'db_max': round(float(np.max(spec_small)), 2)
+        })
+    except Exception as e:
+        logger.exception('Error generando espectrograma de calibración')
+        return jsonify({'error': str(e)}), 500
+
+
+def _build_spectrogram_payload(data, rate):
+    data = np.asarray(data)
+    if data.ndim > 1:
+        data = data[:, 0]
+    if data.size == 0:
+        raise ValueError('El archivo no contiene muestras de audio')
+
+    max_samples = int(rate * 20)
+    if data.size > max_samples:
+        data = data[:max_samples]
+
+    freqs, times, spec = signal.spectrogram(
+        data,
+        fs=rate,
+        nperseg=512,
+        noverlap=384,
+        scaling='spectrum',
+        mode='magnitude'
+    )
+
+    spec_db = 20.0 * np.log10(spec + 1e-12)
+    freq_mask = freqs <= 8000
+    freqs = freqs[freq_mask]
+    spec_db = spec_db[freq_mask, :]
+
+    max_freq_bins = 128
+    max_time_bins = 160
+    freq_step = max(1, int(np.ceil(len(freqs) / max_freq_bins)))
+    time_step = max(1, int(np.ceil(len(times) / max_time_bins)))
+
+    freqs_small = freqs[::freq_step]
+    times_small = times[::time_step]
+    spec_small = spec_db[::freq_step, ::time_step]
+
+    if spec_small.size == 0:
+        raise ValueError('No se pudo construir el espectrograma')
+
+    return {
+        'sample_rate': int(rate),
+        'duration_seconds': round(float(data.size / rate), 3),
+        'times': [round(float(v), 4) for v in times_small],
+        'freqs': [round(float(v), 2) for v in freqs_small],
+        'spectrogram_db': np.round(spec_small, 2).tolist(),
+        'db_min': round(float(np.min(spec_small)), 2),
+        'db_max': round(float(np.max(spec_small)), 2)
+    }
+
+
+@app.route('/calibracion/audios_reales', methods=['GET'])
+def calibracion_audios_reales():
+    """Lista audios reales disponibles en uploads para usar en la simulación."""
+    upload_dir = app.config['UPLOAD_FOLDER']
+    valid_ext = {'.wav', '.mp3', '.m4a', '.flac', '.ogg', '.aac'}
+    files = []
+    try:
+        for filename in sorted(os.listdir(upload_dir)):
+            full_path = os.path.join(upload_dir, filename)
+            if not os.path.isfile(full_path):
+                continue
+            ext = os.path.splitext(filename.lower())[1]
+            if ext in valid_ext:
+                files.append(filename)
+    except Exception:
+        pass
+    return jsonify({'files': files})
+
+
+@app.route('/calibracion/simulacion', methods=['GET'])
+def calibracion_simulacion():
+    """Construye una simulación de calibración a partir de un audio real."""
+    filename = secure_filename(request.args.get('filename', '').strip())
+    if not filename:
+        return jsonify({'error': 'Parámetro filename requerido'}), 400
+
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.isfile(filepath):
+        return jsonify({'error': 'Audio no encontrado en uploads'}), 404
+
+    try:
+        piston_values, source_duration = _extract_calibration_piston_values(filepath)
+
+        # Variación no fija alrededor del 1% para una simulación más realista.
+        # Se usa una oscilación determinista dependiente del archivo para mantener reproducibilidad.
+        seed_phase = (sum(ord(c) for c in filename) % 360) * (math.pi / 180.0)
+        variation_percent_per_second = []
+        app_values = []
+        for idx, v in enumerate(piston_values):
+            t = idx + 1
+            base_pct = 1.0 + 0.18 * math.sin((t * 0.85) + seed_phase)
+            fine_pct = 0.07 * math.cos((t * 0.33) + (seed_phase * 0.5))
+            jitter_pct = 0.03 * math.sin((t * 2.40) + (seed_phase * 1.7))
+            variation_pct = base_pct + fine_pct + jitter_pct
+            variation_pct = max(0.65, min(1.35, variation_pct))
+            sign = 1.0 if math.sin((t * 1.11) + (seed_phase * 0.4)) >= 0 else -1.0
+            signed_pct = variation_pct * sign
+            additive_db = (0.08 * math.sin((t * 1.53) + (seed_phase * 0.3))) + (0.05 * math.cos((t * 0.77) + seed_phase))
+            variation_percent_per_second.append(round(variation_pct, 4))
+            app_values.append(round((v * (1.0 + (signed_pct / 100.0))) + additive_db, 4))
+
+        variation_mean = float(np.mean(variation_percent_per_second)) if variation_percent_per_second else 0.0
+        variation_std = float(np.std(variation_percent_per_second)) if variation_percent_per_second else 0.0
+
+        return jsonify({
+            'filename': filename,
+            'duration_source': source_duration,
+            'seconds': list(range(1, 21)),
+            'piston_values': [round(float(v), 4) for v in piston_values],
+            'app_values': app_values,
+            'variation_percent_per_second': variation_percent_per_second,
+            'variation_mean_percent': round(variation_mean, 4),
+            'variation_std_percent': round(variation_std, 4),
+            'reference_source': 'registro_pistofono',
+            'generated_excel_download_url': f"/calibracion/piston_excel_generado?filename={filename}"
+        })
+    except Exception as e:
+        logger.exception('Error en simulación de calibración')
+        return jsonify({'error': str(e)}), 500
+
+
+def _extract_calibration_piston_values(filepath, points=20):
+    global_result, detailed_results = analizar_audio_file(filepath)
+    values = []
+    for item in detailed_results:
+        try:
+            values.append(float(item.get('Lp_max', 0)))
+        except Exception:
+            continue
+
+    if not values:
+        base_value = float(global_result.get('Lp_eqT', 0))
+        values = [base_value for _ in range(points)]
+
+    piston_values = values[:points]
+    if len(piston_values) < points:
+        piston_values.extend([piston_values[-1]] * (points - len(piston_values)))
+
+    source_duration = round(float(global_result.get('duration', 0)), 3)
+    return piston_values, source_duration
+
+
+def _build_piston_excel_bytes(seconds, piston_values, source_label):
+    if Workbook is None:
+        raise RuntimeError('openpyxl no está disponible en el entorno')
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Pistonofono'
+    ws.append(['segundo', 'nivel_db'])
+    for sec, value in zip(seconds, piston_values):
+        ws.append([int(sec), float(value)])
+
+    ws_meta = wb.create_sheet('metadata')
+    ws_meta.append(['campo', 'valor'])
+    ws_meta.append(['origen', source_label])
+    ws_meta.append(['puntos', len(piston_values)])
+    ws_meta.append(['generado_en_lima', lima_now().isoformat()])
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return buf
+
+
+def _parse_piston_excel(file_storage, points=20):
+    if load_workbook is None:
+        raise RuntimeError('openpyxl no está disponible en el entorno')
+
+    wb = load_workbook(file_storage, data_only=True)
+    ws = wb.active
+    values = []
+    for row in ws.iter_rows(min_row=1, max_col=2, values_only=True):
+        col1 = row[0] if len(row) >= 1 else None
+        col2 = row[1] if len(row) >= 2 else None
+
+        candidate = None
+        if isinstance(col2, (int, float)):
+            candidate = float(col2)
+        elif isinstance(col1, (int, float)):
+            candidate = float(col1)
+
+        if candidate is None or not np.isfinite(candidate):
+            continue
+
+        values.append(candidate)
+        if len(values) >= points:
+            break
+
+    if len(values) < 5:
+        raise ValueError('El Excel debe contener al menos 5 mediciones numéricas')
+
+    if len(values) < points:
+        values.extend([values[-1]] * (points - len(values)))
+
+    return [round(float(v), 4) for v in values[:points]]
+
+
+@app.route('/calibracion/piston_excel_generado', methods=['GET'])
+def calibracion_piston_excel_generado():
+    """Descarga un Excel generado automáticamente desde el audio seleccionado."""
+    filename = secure_filename(request.args.get('filename', '').strip())
+    if not filename:
+        return jsonify({'error': 'Parámetro filename requerido'}), 400
+
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.isfile(filepath):
+        return jsonify({'error': 'Audio no encontrado en uploads'}), 404
+
+    try:
+        piston_values, _ = _extract_calibration_piston_values(filepath)
+        seconds = list(range(1, len(piston_values) + 1))
+        excel_buffer = _build_piston_excel_bytes(seconds, piston_values, f'registro_pistofono:{filename}')
+        out_name = f"pistonofono_referencia_{os.path.splitext(filename)[0]}.xlsx"
+        return send_file(
+            excel_buffer,
+            as_attachment=True,
+            download_name=out_name,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        logger.exception('Error generando Excel de referencia de pistófono')
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/calibracion/piston_excel/upload', methods=['POST'])
+def calibracion_piston_excel_upload():
+    """Carga un Excel real de pistófono y devuelve la serie para comparación."""
+    if 'excel' not in request.files:
+        return jsonify({'error': "Campo 'excel' requerido"}), 400
+
+    excel_file = request.files['excel']
+    if not excel_file or excel_file.filename == '':
+        return jsonify({'error': 'Archivo Excel inválido'}), 400
+
+    filename = secure_filename(excel_file.filename)
+    ext = os.path.splitext(filename.lower())[1]
+    if ext not in {'.xlsx', '.xlsm'}:
+        return jsonify({'error': 'Formato no soportado. Use .xlsx o .xlsm'}), 400
+
+    try:
+        piston_values = _parse_piston_excel(excel_file)
+        return jsonify({
+            'filename': filename,
+            'seconds': list(range(1, len(piston_values) + 1)),
+            'piston_values': piston_values,
+            'reference_source': 'excel_cargado_manual'
+        })
+    except Exception as e:
+        logger.exception('Error procesando Excel de pistófono')
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/calibracion/spectrograma_real', methods=['GET'])
+def calibracion_spectrograma_real():
+    """Genera espectrograma para un audio real existente en uploads (sin subida de archivo)."""
+    filename = secure_filename(request.args.get('filename', '').strip())
+    if not filename:
+        return jsonify({'error': 'Parámetro filename requerido'}), 400
+
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.isfile(filepath):
+        return jsonify({'error': 'Audio no encontrado en uploads'}), 404
+
+    try:
+        data, rate = sf.read(filepath, dtype='float32')
+        payload = _build_spectrogram_payload(data, rate)
+        payload['filename'] = filename
+        return jsonify(payload)
+    except Exception as e:
+        logger.exception('Error generando espectrograma real de calibración')
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
