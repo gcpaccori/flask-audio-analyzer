@@ -3578,14 +3578,17 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
      * Returns a Promise<string|null> (base64 data only, no data: prefix).
      */
     function _getChartPngB64() {
+      var CHART_EXPORT_WIDTH = 1100;
+      var CHART_EXPORT_HEIGHT = 480;
+      var DOWNLOAD_CLEANUP_DELAY_MS = 1000;
       return new Promise(function(resolve) {
         if (!chart || typeof chart.getSVG !== 'function') { resolve(null); return; }
         try {
-          var svg = chart.getSVG({ chart: { width: 1100, height: 480 } });
+          var svg = chart.getSVG({ chart: { width: CHART_EXPORT_WIDTH, height: CHART_EXPORT_HEIGHT } });
           if (!svg) { resolve(null); return; }
           var canvas = document.createElement('canvas');
-          canvas.width = 1100;
-          canvas.height = 480;
+          canvas.width = CHART_EXPORT_WIDTH;
+          canvas.height = CHART_EXPORT_HEIGHT;
           var ctx = canvas.getContext('2d');
           var img = new Image();
           img.onload = function() {
@@ -3606,13 +3609,14 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
 
     /** Trigger a file download from a Blob. */
     function _triggerDownload(blob, filename) {
+      var DOWNLOAD_CLEANUP_DELAY_MS = 1000;
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+      setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, DOWNLOAD_CLEANUP_DELAY_MS);
     }
 
     /** Set a button into a loading state and return a restore function. */

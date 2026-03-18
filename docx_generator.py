@@ -27,6 +27,8 @@ MARGIN_TOP_MM = 15
 MARGIN_BOTTOM_MM = 20
 USABLE_WIDTH_MM = PAGE_WIDTH_MM - MARGIN_LEFT_MM - MARGIN_RIGHT_MM  # 180 mm
 
+LIMITE_SEGURO_DB = 85.0   # Límite máximo permisible de referencia (dB)
+
 MAX_PHOTO_BYTES = 10 * 1024 * 1024  # 10 MB guard
 MAX_CHART_BYTES = 8 * 1024 * 1024   # 8 MB guard
 
@@ -415,7 +417,7 @@ def _sec_indicadores(doc, general_data):
     _add_kv_table(doc, rows)
 
     # Status banner
-    limite = 85.0
+    limite = LIMITE_SEGURO_DB
     if laeq is not None:
         if laeq >= limite:
             status_txt = f'⚠  LÍMITE EXCEDIDO — LAeq {laeq:.2f} dB ≥ {limite} dB — ACCIÓN OBLIGATORIA'
@@ -520,7 +522,7 @@ def _sec_conclusiones(doc, general_data, excesos_data):
     pct_exceso = excesos_data.get('porcentaje_exceso', 0) if excesos_data else 0
     max_nivel = excesos_data.get('nivel_maximo_registrado', 0) if excesos_data else 0
     dur_min = excesos_data.get('duracion_total_exceso_minutos', 0) if excesos_data else 0
-    limite = 85.0
+    limite = LIMITE_SEGURO_DB
 
     if laeq is None:
         _para(doc, '[No hay datos suficientes para generar conclusiones]', size=9, color='94A3B8')
@@ -662,7 +664,7 @@ def _sec_datos_tecnicos(doc, audios_data):
         # Check exceedance
         excede = False
         for pt in (audio.get('detailed_results') or []):
-            if float(pt.get('Lp_max', 0)) > 85.0:
+            if float(pt.get('Lp_max', 0)) > LIMITE_SEGURO_DB:
                 excede = True
                 break
         et_val = gr.get('ET')
@@ -806,7 +808,7 @@ def build_informe_docx(
     _inc = lambda k: secciones.get(k, True)
 
     if fecha_generacion is None:
-        fecha_generacion = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+        fecha_generacion = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
 
     if fotos_paths is None:
         fotos_paths = []
@@ -874,7 +876,7 @@ def build_informe_combinado_docx(informes, fecha_generacion=None):
     BytesIO with the combined DOCX content (position at 0).
     """
     if fecha_generacion is None:
-        fecha_generacion = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+        fecha_generacion = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
 
     if not informes:
         doc = _new_document()
