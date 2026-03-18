@@ -2064,13 +2064,19 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           </div>
 
         </div>
-        <div class="modal-footer d-flex gap-2">
+        <div class="modal-footer d-flex gap-2 flex-wrap">
           <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" class="btn btn-sm btn-outline-primary" onclick="ejecutarImpresionActual()">
             <i class="bi bi-printer me-1"></i>Imprimir este informe
           </button>
           <button type="button" class="btn btn-sm btn-primary" onclick="ejecutarImpresionMultiple()">
             <i class="bi bi-files me-1"></i>Imprimir seleccionados como PDF único
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-success" onclick="exportarWordActual()" id="btnExportWordActual">
+            <i class="bi bi-file-earmark-word me-1"></i>Exportar Word (.docx)
+          </button>
+          <button type="button" class="btn btn-sm btn-success" onclick="exportarWordCombinado()" id="btnExportWordComb">
+            <i class="bi bi-files me-1"></i>Exportar Word combinado (.docx)
           </button>
         </div>
       </div>
@@ -3563,6 +3569,140 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     function escapeHtml(str) {
       if (!str) return '';
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ─── Word (.docx) Export ─────────────────────────────────────────────────
+
+    /**
+     * Convert the Highcharts chart SVG to a base64 PNG using an off-screen canvas.
+     * Returns a Promise<string|null> (base64 data only, no data: prefix).
+     */
+    function _getChartPngB64() {
+      return new Promise(function(resolve) {
+        if (!chart || typeof chart.getSVG !== 'function') { resolve(null); return; }
+        try {
+          var svg = chart.getSVG({ chart: { width: 1100, height: 480 } });
+          if (!svg) { resolve(null); return; }
+          var canvas = document.createElement('canvas');
+          canvas.width = 1100;
+          canvas.height = 480;
+          var ctx = canvas.getContext('2d');
+          var img = new Image();
+          img.onload = function() {
+            try {
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0);
+              URL.revokeObjectURL(img.src);
+              var dataUrl = canvas.toDataURL('image/png');
+              resolve(dataUrl.split(',')[1] || null);
+            } catch(e) { URL.revokeObjectURL(img.src); resolve(null); }
+          };
+          img.onerror = function() { URL.revokeObjectURL(img.src); resolve(null); };
+          img.src = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+        } catch(e) { resolve(null); }
+      });
+    }
+
+    /** Trigger a file download from a Blob. */
+    function _triggerDownload(blob, filename) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+    }
+
+    /** Set a button into a loading state and return a restore function. */
+    function _btnLoading(btn, text) {
+      var orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>' + text;
+      return function() { btn.disabled = false; btn.innerHTML = orig; };
+    }
+
+    /** Export current scenario report as Word (.docx). */
+    function exportarWordActual() {
+      var btn = document.getElementById('btnExportWordActual');
+      var restore = _btnLoading(btn, 'Generando…');
+      var vis = _getSectionVisibility();
+      bootstrap.Modal.getInstance(document.getElementById('printConfigModal')).hide();
+
+      _getChartPngB64().then(function(chartB64) {
+        var payload = {
+          chart_image: chartB64,
+          secciones: vis
+        };
+        return fetch('/escenarios/' + escenarioId + '/microfono/' + microfonoId + '/exportar-docx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }).then(function(resp) {
+        if (!resp.ok) {
+          return resp.json().then(function(d) { throw new Error(d.error || 'Error ' + resp.status); });
+        }
+        var disposition = resp.headers.get('Content-Disposition') || '';
+        var fnMatch = disposition.match(/filename="?([^";\n]+)"?/);
+        var filename = fnMatch ? fnMatch[1] : 'Informe.docx';
+        return resp.blob().then(function(blob) { _triggerDownload(blob, filename); });
+      }).catch(function(err) {
+        alert('Error al exportar Word: ' + err.message);
+      }).finally(function() { restore(); });
+    }
+
+    /** Export combined Word (.docx) for selected scenarios. */
+    function exportarWordCombinado() {
+      var btn = document.getElementById('btnExportWordComb');
+
+      // Collect selected scenarios + mic pairs
+      var seleccionados = [];
+      $('#scenarios-picker input[type="checkbox"]:checked').each(function() {
+        var escId = parseInt($(this).val(), 10);
+        var esc = escenariosDisponibles.find(function(e) { return e.id === escId; });
+        var mics = esc ? (esc.microfonos || []) : [];
+        if (mics.length) {
+          mics.forEach(function(m) { seleccionados.push({ escenario_id: escId, microfono_id: m.id }); });
+        }
+      });
+
+      if (!seleccionados.length) {
+        alert('Selecciona al menos un escenario con micrófono asignado.');
+        return;
+      }
+
+      var restore = _btnLoading(btn, 'Generando…');
+      var vis = _getSectionVisibility();
+      bootstrap.Modal.getInstance(document.getElementById('printConfigModal')).hide();
+
+      // Capture current chart image to include in the current scenario's entry
+      _getChartPngB64().then(function(chartB64) {
+        // Attach chart image only to the current scenario (others won't have it from client)
+        var items = seleccionados.map(function(s) {
+          var item = { escenario_id: s.escenario_id, microfono_id: s.microfono_id, secciones: vis };
+          if (String(s.escenario_id) === String(escenarioId) && String(s.microfono_id) === String(microfonoId)) {
+            item.chart_image = chartB64;
+          }
+          return item;
+        });
+        return fetch('/escenarios/exportar-docx-combinado', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ escenarios: items })
+        });
+      }).then(function(resp) {
+        if (!resp.ok) {
+          return resp.json().then(function(d) { throw new Error(d.error || 'Error ' + resp.status); });
+        }
+        var disposition = resp.headers.get('Content-Disposition') || '';
+        var fnMatch = disposition.match(/filename="?([^";\n]+)"?/);
+        var filename = fnMatch ? fnMatch[1] : 'Informe_Combinado.docx';
+        return resp.blob().then(function(blob) { _triggerDownload(blob, filename); });
+      }).catch(function(err) {
+        alert('Error al exportar Word combinado: ' + err.message);
+      }).finally(function() { restore(); });
     }
   </script>
 </body>

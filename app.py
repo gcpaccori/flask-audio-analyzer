@@ -24,6 +24,12 @@ except Exception:
     Workbook = None
     load_workbook = None
 
+try:
+    from docx_generator import build_informe_docx, build_informe_combinado_docx, _image_from_path
+    _docx_available = True
+except Exception:
+    _docx_available = False
+
 
 # Configurar logger
 logger = logging.getLogger(__name__)
@@ -1625,6 +1631,343 @@ def calibracion_spectrograma_real():
     except Exception as e:
         logger.exception('Error generando espectrograma real de calibración')
         return jsonify({'error': str(e)}), 500
+
+
+# ─── DOCX export helpers ──────────────────────────────────────────────────────
+
+def _compilar_datos_informe(escenario_id, microfono_id):
+    """
+    Compile all report data from the database for a given scenario + microphone.
+    Returns a dict with esc_data, mic_data, general_data, excesos_data, audios_data.
+    Raises ValueError if the scenario is not found.
+    """
+    escenario = Escenario.query.get(escenario_id)
+    if escenario is None:
+        raise ValueError(f"Escenario {escenario_id} no encontrado")
+
+    microfono = Microfono.query.get(microfono_id) if microfono_id else None
+
+    # Build esc_data (mirrors /escenarios/<id>/detalle)
+    microfonos_data = []
+    try:
+        mic_ids = json.loads(escenario.microfonos_historial) if escenario.microfonos_historial else []
+    except Exception:
+        mic_ids = []
+    for mid in mic_ids:
+        m = Microfono.query.get(mid)
+        if m:
+            micro_data = {
+                'id': m.id,
+                'identificador': m.identificador,
+                'modelo': m.modelo or '',
+            }
+            microfonos_data.append(micro_data)
+
+    horas_medicion = None
+    if escenario.start_time and escenario.end_time:
+        delta = escenario.end_time - escenario.start_time
+        horas_medicion = delta.total_seconds() / 3600.0
+
+    esc_data = {
+        'id': escenario.id,
+        'nombre': escenario.nombre,
+        'descripcion': escenario.descripcion,
+        'ubicacion': escenario.ubicacion,
+        'start_time': to_lima_datetime(escenario.start_time).strftime("%Y-%m-%d %H:%M:%S"),
+        'end_time': to_lima_datetime(escenario.end_time).strftime("%Y-%m-%d %H:%M:%S"),
+        'estado': escenario.estado,
+        'horas_medicion': horas_medicion,
+        'tipo_ruido': escenario.tipo_ruido,
+        'tipo_analisis': escenario.tipo_analisis,
+        'num_fuentes': escenario.num_fuentes,
+        'num_personas': escenario.num_personas,
+        'proteccion_auditiva': escenario.proteccion_auditiva,
+        'microfonos': microfonos_data,
+        'fotos': json.loads(escenario.fotos) if escenario.fotos else [],
+    }
+
+    mic_data = None
+    if microfono:
+        mic_data = {
+            'id': microfono.id,
+            'identificador': microfono.identificador,
+            'modelo': microfono.modelo or '',
+        }
+
+    # General acoustic analysis (mirrors /analisis_general)
+    resultados = AudioResultado.query.filter_by(
+        escenario_id=escenario_id,
+        microfono_id=microfono_id
+    ).all()
+
+    general_data = {}
+    excesos_data = {}
+    audios_data = []
+
+    if resultados:
+        total_duration = 0.0
+        total_ET = 0.0
+        weighted_sum_pressure_sq = 0.0
+
+        limite_seguro = 85.0
+        total_puntos = 0
+        puntos_excedidos = 0
+        excesos_por_audio = []
+        max_exceso = 0.0
+        duracion_total_exceso = 0
+
+        for res in resultados:
+            try:
+                global_result = json.loads(res.global_result) if res.global_result else {}
+            except Exception:
+                global_result = {}
+            try:
+                detailed_results = json.loads(res.detailed_results) if res.detailed_results else []
+            except Exception:
+                detailed_results = []
+
+            duration = float(global_result.get("duration", 0))
+            Lp_eqT = float(global_result.get("Lp_eqT", 0))
+            ET = float(global_result.get("ET", 0))
+            pressure_sq = (2.0e-5) ** 2 * (10 ** (Lp_eqT / 10)) if Lp_eqT else 0
+
+            total_duration += duration
+            total_ET += ET
+            weighted_sum_pressure_sq += pressure_sq * duration
+
+            # Exceedance analysis
+            audio_excesos = 0
+            duracion_audio_exceso = 0
+            for punto in detailed_results:
+                total_puntos += 1
+                lp_max = float(punto.get('Lp_max', 0))
+                if lp_max > limite_seguro:
+                    puntos_excedidos += 1
+                    audio_excesos += 1
+                    duracion_audio_exceso += 1
+                    if lp_max > max_exceso:
+                        max_exceso = lp_max
+            duracion_total_exceso += duracion_audio_exceso
+
+            excesos_por_audio.append({
+                "audio_id": res.audio_id,
+                "timestamp": lima_iso(res.timestamp),
+                "puntos_excedidos": audio_excesos,
+                "duracion_exceso_segundos": duracion_audio_exceso,
+                "nivel_maximo": float(global_result.get("Lp_max", 0)),
+            })
+
+            audio_entry = Audio.query.get(res.audio_id)
+            audios_data.append({
+                "audio_id": res.audio_id,
+                "timestamp": lima_iso(res.timestamp),
+                "global_result": global_result,
+                "detailed_results": detailed_results,
+                "filename": audio_entry.filename if audio_entry else "",
+            })
+
+        mean_pressure_sq = weighted_sum_pressure_sq / total_duration if total_duration > 0 else 0
+        Lp_eqT_global = 10 * np.log10(mean_pressure_sq / (2.0e-5) ** 2) if mean_pressure_sq > 0 else 0
+        LE_global = 10 * np.log10(total_ET / 4.0e-10) if total_ET > 0 else 0
+        duracion_horas = total_duration / 3600.0
+        L_EX_8h = round(
+            Lp_eqT_global + 10 * np.log10(duracion_horas / 8.0), 2
+        ) if duracion_horas >= (1.0 / 60.0) else None
+
+        general_data = {
+            "duration": total_duration,
+            "ET": total_ET,
+            "Lp_eqT": round(Lp_eqT_global, 2),
+            "LE": round(LE_global, 2),
+            "L_EX_8h": L_EX_8h,
+            "cantidad_audios": len(resultados),
+        }
+
+        porcentaje_exceso = (puntos_excedidos / total_puntos * 100) if total_puntos > 0 else 0
+        excesos_data = {
+            "limite_referencia": limite_seguro,
+            "total_puntos_medidos": total_puntos,
+            "puntos_que_excedieron": puntos_excedidos,
+            "porcentaje_exceso": round(porcentaje_exceso, 2),
+            "duracion_total_exceso_segundos": duracion_total_exceso,
+            "duracion_total_exceso_minutos": round(duracion_total_exceso / 60, 2),
+            "nivel_maximo_registrado": round(max_exceso, 2),
+            "cantidad_audios": len(resultados),
+            "excesos_por_audio": excesos_por_audio,
+            "evaluacion_seguridad": "SEGURO" if puntos_excedidos == 0 else "ATENCIÓN REQUERIDA",
+        }
+
+    return {
+        'esc_data': esc_data,
+        'mic_data': mic_data,
+        'general_data': general_data,
+        'excesos_data': excesos_data,
+        'audios_data': audios_data,
+    }
+
+
+def _cargar_fotos_escenario(esc_data):
+    """Load photo BytesIO streams for a scenario from disk."""
+    fotos = esc_data.get('fotos') or []
+    streams = []
+    for fname in fotos:
+        path = os.path.join(app.config['PHOTOS_FOLDER'], secure_filename(fname))
+        stream = _image_from_path(path) if _docx_available else None
+        streams.append(stream)
+    return streams
+
+
+MAX_DOCX_CHART_B64 = 12 * 1024 * 1024  # 12 MB base64 guard
+
+
+def _validar_chart_b64(b64_str):
+    """Return b64_str if it looks valid and not oversized, else None."""
+    if not b64_str or not isinstance(b64_str, str):
+        return None
+    # Remove prefix if present
+    if ',' in b64_str:
+        b64_str = b64_str.split(',', 1)[1]
+    if len(b64_str) > MAX_DOCX_CHART_B64:
+        return None
+    return b64_str
+
+
+# ─── DOCX export endpoints ────────────────────────────────────────────────────
+
+@app.route('/escenarios/<int:escenario_id>/microfono/<int:mic_id>/exportar-docx', methods=['POST'])
+def exportar_docx_individual(escenario_id, mic_id):
+    """Generate and download an individual DOCX report for a scenario + microphone."""
+    if not _docx_available:
+        return jsonify({'error': 'La generación de DOCX no está disponible. Instale python-docx.'}), 503
+
+    try:
+        payload = request.get_json(silent=True) or {}
+    except Exception:
+        payload = {}
+
+    chart_img_b64 = _validar_chart_b64(payload.get('chart_image'))
+    secciones = payload.get('secciones') or {}
+
+    try:
+        datos = _compilar_datos_informe(escenario_id, mic_id)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        logger.exception('Error compilando datos del informe')
+        return jsonify({'error': f'Error interno: {str(e)}'}), 500
+
+    fotos_paths = _cargar_fotos_escenario(datos['esc_data'])
+
+    from datetime import datetime as _dt
+    import pytz as _pytz
+    lima_tz = _pytz.timezone('America/Lima')
+    now_lima = _dt.now(_pytz.utc).astimezone(lima_tz)
+    fecha_gen = now_lima.strftime('%Y-%m-%d %H:%M (Lima)')
+
+    try:
+        buf = build_informe_docx(
+            esc_data=datos['esc_data'],
+            mic_data=datos['mic_data'],
+            general_data=datos['general_data'],
+            excesos_data=datos['excesos_data'],
+            audios_data=datos['audios_data'],
+            chart_img_b64=chart_img_b64,
+            fotos_paths=fotos_paths,
+            secciones=secciones,
+            fecha_generacion=fecha_gen,
+        )
+    except Exception as e:
+        logger.exception('Error generando DOCX individual')
+        return jsonify({'error': f'Error generando documento: {str(e)}'}), 500
+
+    nombre_esc = datos['esc_data'].get('nombre') or f"Escenario{escenario_id}"
+    # sanitize filename
+    safe_nombre = "".join(c if c.isalnum() or c in (' ', '_', '-') else '_' for c in nombre_esc)[:40].strip()
+    fecha_str = now_lima.strftime('%Y%m%d')
+    filename = f"Informe_{safe_nombre}_{fecha_str}.docx"
+
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    )
+
+
+@app.route('/escenarios/exportar-docx-combinado', methods=['POST'])
+def exportar_docx_combinado():
+    """Generate and download a combined DOCX report for multiple scenarios."""
+    if not _docx_available:
+        return jsonify({'error': 'La generación de DOCX no está disponible. Instale python-docx.'}), 503
+
+    try:
+        payload = request.get_json(silent=True) or {}
+    except Exception:
+        payload = {}
+
+    escenarios_payload = payload.get('escenarios') or []
+    if not escenarios_payload:
+        return jsonify({'error': 'Se requiere al menos un escenario en el payload.'}), 400
+
+    if len(escenarios_payload) > 20:
+        return jsonify({'error': 'Máximo 20 escenarios por informe combinado.'}), 400
+
+    from datetime import datetime as _dt
+    import pytz as _pytz
+    lima_tz = _pytz.timezone('America/Lima')
+    now_lima = _dt.now(_pytz.utc).astimezone(lima_tz)
+    fecha_gen = now_lima.strftime('%Y-%m-%d %H:%M (Lima)')
+
+    informes = []
+    for item in escenarios_payload:
+        try:
+            esc_id = int(item.get('escenario_id') or item.get('escId') or 0)
+            mic_id = int(item.get('microfono_id') or item.get('micId') or 0)
+        except (TypeError, ValueError):
+            continue
+        if not esc_id or not mic_id:
+            continue
+
+        chart_img_b64 = _validar_chart_b64(item.get('chart_image'))
+        secciones = item.get('secciones') or {}
+
+        try:
+            datos = _compilar_datos_informe(esc_id, mic_id)
+        except Exception as e:
+            logger.warning('Escenario %s: %s (omitido)', esc_id, e)
+            continue
+
+        fotos_paths = _cargar_fotos_escenario(datos['esc_data'])
+
+        informes.append({
+            'esc_data': datos['esc_data'],
+            'mic_data': datos['mic_data'],
+            'general_data': datos['general_data'],
+            'excesos_data': datos['excesos_data'],
+            'audios_data': datos['audios_data'],
+            'chart_img_b64': chart_img_b64,
+            'fotos_paths': fotos_paths,
+            'secciones': secciones,
+        })
+
+    if not informes:
+        return jsonify({'error': 'Ningún escenario válido encontrado en el payload.'}), 400
+
+    try:
+        buf = build_informe_combinado_docx(informes, fecha_generacion=fecha_gen)
+    except Exception as e:
+        logger.exception('Error generando DOCX combinado')
+        return jsonify({'error': f'Error generando documento combinado: {str(e)}'}), 500
+
+    fecha_str = now_lima.strftime('%Y%m%d')
+    filename = f"Informe_Comb_{fecha_str}.docx"
+
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    )
 
 
 if __name__ == '__main__':
