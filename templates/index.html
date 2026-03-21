@@ -1246,6 +1246,64 @@
           const uploadPistonExcelButton = document.getElementById('btnUploadPistonExcel');
           const downloadPistonExcelButton = document.getElementById('btnDownloadPistonExcel');
           const printCalibrationButton = document.getElementById('btnPrintCalibration');
+          const wordCalibrationButton = document.getElementById('btnWordCalibration');
+
+          async function downloadCalibrationWord() {
+            try {
+              if (spectrogramStatus) spectrogramStatus.textContent = 'Generando informe Word de calibración...';
+
+              const secondChartImage = calibrationSecondChart ? calibrationSecondChart.toBase64Image('image/png', 1.0) : null;
+              const globalChartImage = calibrationGlobalChart ? calibrationGlobalChart.toBase64Image('image/png', 1.0) : null;
+              const spectrogramCanvas = document.getElementById('spectrogramCanvas');
+              const spectrogramImage = spectrogramCanvas ? spectrogramCanvas.toDataURL('image/png') : null;
+
+              const payload = {
+                seconds: calibrationSeconds,
+                piston_values: calibrationPistonData,
+                app_values: calibrationAppData,
+                metadata: {
+                  selected_audio: latestCalibrationAudioName || (calibrationAudioSelect ? calibrationAudioSelect.value : ''),
+                  reference_source: calibrationReferenceSource,
+                  generated_at: new Date().toLocaleString('es-PE')
+                },
+                chart_images: {
+                  second_chart: secondChartImage,
+                  global_chart: globalChartImage,
+                  spectrogram: spectrogramImage
+                }
+              };
+
+              const response = await fetch('/calibracion/reporte_word', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+
+              if (!response.ok) {
+                const errorPayload = await response.json().catch(() => ({}));
+                throw new Error(errorPayload.error || 'No se pudo generar el informe Word');
+              }
+
+              const blob = await response.blob();
+              const disposition = response.headers.get('Content-Disposition') || '';
+              const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+              const filename = decodeURIComponent((match && (match[1] || match[2])) || `calibracion_informe_word_${Date.now()}.docx`);
+
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              window.URL.revokeObjectURL(url);
+
+              if (spectrogramStatus) spectrogramStatus.textContent = `Informe Word generado correctamente: ${filename}`;
+            } catch (err) {
+              console.error('Word report error:', err);
+              if (spectrogramStatus) spectrogramStatus.textContent = `Error al generar Word: ${err.message}`;
+            }
+          }
 
           function downloadCalibrationExcel() {
             if (typeof XLSX === 'undefined') {
@@ -1351,6 +1409,7 @@
               const simPayload = await simResp.json();
               if (!simResp.ok) throw new Error(simPayload.error || 'No fue posible procesar la calibración');
               applySimulationData(simPayload);
+              latestCalibrationAudioName = filename;
 
               const specResp = await fetch(`/calibracion/spectrograma_real?filename=${encodeURIComponent(filename)}`);
               const specPayload = await specResp.json();
@@ -1403,6 +1462,9 @@
           }
           if (printCalibrationButton) {
             printCalibrationButton.addEventListener('click', printCalibrationReport);
+          }
+          if (wordCalibrationButton) {
+            wordCalibrationButton.addEventListener('click', downloadCalibrationWord);
           }
 
           updateReferenceVisuals();
@@ -1754,6 +1816,17 @@
         <div class="card my-4">
           <div class="card-body">
             <h3 class="card-title">Audio sin escenario</h3>
+            <div class="border rounded p-3 mb-3" style="background:#f8fafc;">
+              <div class="d-flex flex-wrap align-items-end gap-2">
+                <div style="min-width:280px;flex:1;">
+                  <label for="zipEscenariosInput" class="form-label mb-1"><strong>Importación inicial masiva (ZIP)</strong></label>
+                  <input type="file" class="form-control" id="zipEscenariosInput" accept=".zip">
+                  <small class="text-muted">Formato: una carpeta por escenario y dentro audios WAV.</small>
+                </div>
+                <button class="btn btn-primary" id="btnImportZipEscenarios" type="button">Importar ZIP como escenarios culminados</button>
+              </div>
+              <div id="zipImportStatus" class="mt-2 small text-muted">Sin importaciones recientes.</div>
+            </div>
             <div class="table-responsive">
               <table class="table table-bordered table-hover" id="tablaAudios">
                 <thead>
@@ -1781,7 +1854,10 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
               <h3 class="card-title mb-0">Módulo de Calibración</h3>
-              <button class="btn btn-outline-dark btn-sm" id="btnPrintCalibration" type="button">Imprimir informe de calibración</button>
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary btn-sm" id="btnWordCalibration" type="button">Descargar Word completo</button>
+                <button class="btn btn-outline-dark btn-sm" id="btnPrintCalibration" type="button">Imprimir informe de calibración</button>
+              </div>
             </div>
             <p class="text-muted mb-2">
               Comparación entre la medición de pistófono y la lectura obtenida por la aplicación en ventanas cortas.
@@ -1997,6 +2073,7 @@
       overlay.classList.toggle('visible');
     });
     overlay.addEventListener('click', () => {
+          let latestCalibrationAudioName = '';
       sidebar.classList.remove('open');
       overlay.classList.remove('visible');
     });
@@ -2510,6 +2587,47 @@
       });
     }
 
+    function importarZipEscenariosInicial() {
+      var input = document.getElementById('zipEscenariosInput');
+      var statusEl = document.getElementById('zipImportStatus');
+      if (!input || !input.files || !input.files.length) {
+        if (statusEl) statusEl.textContent = 'Seleccione un archivo ZIP antes de importar.';
+        return;
+      }
+
+      var file = input.files[0];
+      if (!file.name.toLowerCase().endsWith('.zip')) {
+        if (statusEl) statusEl.textContent = 'El archivo debe tener extensión .zip';
+        return;
+      }
+
+      var fd = new FormData();
+      fd.append('zip_file', file);
+      if (statusEl) statusEl.textContent = 'Importando ZIP... esto puede tardar varios minutos.';
+
+      fetch('/escenarios/importar_zip', {
+        method: 'POST',
+        body: fd
+      })
+        .then(async function (res) {
+          var payload = await res.json().catch(function () { return {}; });
+          if (!res.ok) {
+            throw new Error(payload.error || 'No se pudo importar el ZIP');
+          }
+          var escenarios = payload.escenarios_creados || 0;
+          var audios = payload.audios_importados || 0;
+          if (statusEl) {
+            statusEl.textContent = 'Importación completada: ' + escenarios + ' escenarios y ' + audios + ' audios procesados.';
+          }
+          input.value = '';
+          recargarTodasLasVistas();
+        })
+        .catch(function (err) {
+          console.error('Error importando ZIP:', err);
+          if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+        });
+    }
+
     function recargarTodasLasVistas() {
       cargarEscenarios();
       cargarEscenariosVivos();
@@ -2551,6 +2669,11 @@
       setInterval(recargarTodasLasVistas, 10000);
       $('#startTimeEscenario, #endTimeEscenario').change(updateDurationCalculation);
       $('#editarStartTimeEscenario, #editarEndTimeEscenario').change(updateEditarDurationCalculation);
+
+      var btnZipImport = document.getElementById('btnImportZipEscenarios');
+      if (btnZipImport) {
+        btnZipImport.addEventListener('click', importarZipEscenariosInicial);
+      }
     });
 
     // Botón: Preseleccionar 8 horas de trabajo

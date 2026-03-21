@@ -17,6 +17,31 @@ import pytz
 import math
 import traceback
 import sys
+import base64
+import zipfile
+import uuid
+
+try:
+    from docx import Document
+    from docx.shared import Inches, Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+except Exception:
+    Document = None
+    Inches = None
+    Pt = None
+    WD_ALIGN_PARAGRAPH = None
+    OxmlElement = None
+    qn = None
+
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+except Exception:
+    matplotlib = None
+    plt = None
 
 try:
     from openpyxl import Workbook, load_workbook
@@ -44,6 +69,7 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__fil
 app.config['PHOTOS_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'fotos')
 app.config['ALLOWED_IMAGE_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['API_KEY'] = 'acoustics'
+app.config['ALLOWED_IMPORT_AUDIO_EXTENSIONS'] = {'.wav'}
 db = SQLAlchemy(app)
 
 # Crear carpetas de subidas si no existen
@@ -328,6 +354,62 @@ def analyze_audio(audio_id):
         logger.error(f"Error al analizar el archivo: {e}")
         return render_template('error.html', message="Error al analizar el archivo de audio.")
 
+
+@app.route('/audio/<int:audio_id>/reporte_word', methods=['GET'])
+def reporte_word_audio_individual(audio_id):
+    deps = _export_dependencies_status()
+    if not deps['python_docx']['available']:
+        return jsonify({
+            'error': 'python-docx no esta disponible en el entorno',
+            'hint': 'Ejecuta: python -m pip install -r requirements.txt y reinicia la app',
+            'dependencies': deps
+        }), 500
+    if not deps['matplotlib']['available']:
+        return jsonify({
+            'error': 'matplotlib no esta disponible en el entorno',
+            'hint': 'Ejecuta: python -m pip install -r requirements.txt y reinicia la app',
+            'dependencies': deps
+        }), 500
+
+    audio = Audio.query.get_or_404(audio_id)
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], audio.filename)
+    try:
+        global_result, detailed_results = analizar_audio_file(filepath, audio_id=audio.id)
+    except Exception as e:
+        return jsonify({'error': f'No se pudo analizar el audio: {e}'}), 500
+
+    doc = Document()
+    _set_doc_base_style(doc)
+    doc.add_heading('INFORME TECNICO DE ANALISIS INDIVIDUAL', level=0)
+    doc.add_paragraph(f'Audio ID: {audio.id}')
+    doc.add_paragraph(f'Titulo: {audio.title}')
+    doc.add_paragraph(f'Fuente: {audio.source}')
+    doc.add_paragraph(f'Archivo: {audio.filename}')
+    doc.add_paragraph(f'Fecha de analisis: {lima_now().strftime("%Y-%m-%d %H:%M:%S")} (America/Lima)')
+    doc.add_page_break()
+
+    doc.add_heading('Grafico temporal del audio', level=1)
+    chart_buffer = _build_audio_chart_png(detailed_results, audio.id, limite_referencia=SAFE_NOISE_LEVEL)
+    doc.add_picture(chart_buffer, width=Inches(6.5))
+    doc.add_page_break()
+
+    doc.add_heading('Resumen global editable', level=1)
+    _add_key_value_table(doc, 'Resultados globales', global_result)
+    doc.add_paragraph('')
+    _add_detailed_table(doc, detailed_results)
+
+    output = BytesIO()
+    doc.save(output)
+    output.seek(0)
+    safe_name = secure_filename(audio.title) or f'audio_{audio.id}'
+    filename = f'informe_word_audio_{audio.id}_{safe_name}.docx'
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
     try:
@@ -443,6 +525,228 @@ def upload_audio():
 
     finally:
         logger.debug("=== FIN DE SOLICITUD ===")
+
+
+def _get_or_create_sensor1_microfono():
+    micro = Microfono.query.filter_by(identificador='sensor_1').first()
+    if micro:
+        return micro
+    micro = Microfono(
+        identificador='sensor_1',
+        modelo='Sensor virtual (importacion ZIP)',
+        ubicacion='Importado'
+    )
+    db.session.add(micro)
+    db.session.flush()
+    return micro
+
+
+def _zip_member_scenario_and_file(member_name):
+    normalized = str(member_name or '').replace('\\', '/').strip('/')
+    if not normalized or normalized.endswith('/'):
+        return None, None
+    parts = [p for p in normalized.split('/') if p and p != '__MACOSX']
+    if not parts:
+        return None, None
+    if len(parts) == 1:
+        scenario_name = 'escenario_importado'
+        filename = parts[0]
+    else:
+        scenario_name = parts[0]
+        filename = parts[-1]
+    return scenario_name, filename
+
+
+def _zip_member_path_parts(member_name):
+    normalized = str(member_name or '').replace('\\', '/').strip('/')
+    if not normalized or normalized.endswith('/'):
+        return []
+    parts = [p for p in normalized.split('/') if p and p != '__MACOSX']
+    return parts
+
+
+def _naive_lima_now():
+    return lima_now().replace(tzinfo=None)
+
+
+@app.route('/escenarios/importar_zip', methods=['POST'])
+def importar_zip_escenarios():
+    """Importa un ZIP con estructura escenarios/<archivos.wav> y crea escenarios culminados."""
+    if 'zip_file' not in request.files:
+        return jsonify({'error': "Campo 'zip_file' requerido"}), 400
+
+    zip_file = request.files['zip_file']
+    if not zip_file or not zip_file.filename:
+        return jsonify({'error': 'Archivo ZIP invalido'}), 400
+
+    filename = secure_filename(zip_file.filename)
+    if not filename.lower().endswith('.zip'):
+        return jsonify({'error': 'Solo se admite formato .zip'}), 400
+
+    try:
+        zf = zipfile.ZipFile(zip_file.stream)
+    except Exception:
+        return jsonify({'error': 'No se pudo abrir el ZIP'}), 400
+
+    try:
+        grouped = {}
+        candidate_members = []
+        for info in zf.infolist():
+            if info.is_dir():
+                continue
+            parts = _zip_member_path_parts(info.filename)
+            if not parts:
+                continue
+            inner_file = parts[-1]
+            ext = os.path.splitext(inner_file.lower())[1]
+            if ext not in app.config['ALLOWED_IMPORT_AUDIO_EXTENSIONS']:
+                continue
+            candidate_members.append((info, parts))
+
+        if not candidate_members:
+            return jsonify({'error': 'No se encontraron audios WAV en el ZIP'}), 400
+
+        # Si todo el ZIP está dentro de una sola carpeta contenedora,
+        # se elimina ese prefijo para que cada subcarpeta sea un escenario.
+        first_segments = {parts[0] for _, parts in candidate_members if len(parts) >= 2}
+        has_nested_paths = any(len(parts) >= 3 for _, parts in candidate_members)
+        strip_root_container = len(first_segments) == 1 and has_nested_paths
+
+        for info, parts in candidate_members:
+            work_parts = parts[1:] if strip_root_container and len(parts) > 1 else parts
+            if len(work_parts) == 1:
+                scenario_name = 'escenario_importado'
+                inner_file = work_parts[0]
+            else:
+                scenario_name = work_parts[0]
+                inner_file = work_parts[-1]
+            grouped.setdefault(scenario_name, []).append((info, inner_file))
+
+        if not grouped:
+            return jsonify({'error': 'No se encontraron audios WAV en el ZIP'}), 400
+
+        base_start = _naive_lima_now()
+        global_offset_seconds = 0.0
+        created_scenarios = []
+        total_imported_audios = 0
+
+        sensor1 = _get_or_create_sensor1_microfono()
+
+        for scen_idx, scenario_name in enumerate(sorted(grouped.keys()), start=1):
+            members = sorted(grouped[scenario_name], key=lambda m: m[0].filename.lower())
+
+            escenario_start = base_start + datetime.timedelta(seconds=global_offset_seconds)
+            provisional_end = escenario_start + datetime.timedelta(seconds=1)
+            escenario = Escenario(
+                nombre=scenario_name,
+                descripcion='Escenario importado masivamente desde ZIP',
+                ubicacion='Importado',
+                start_time=escenario_start,
+                end_time=provisional_end,
+                estado='culminado',
+                horas_medicion=0,
+                dias_medicion=0,
+                tipo_ruido='Importado',
+                num_fuentes=1,
+                num_personas=0,
+                proteccion_auditiva='Sí',
+                tipo_analisis='Importacion masiva'
+            )
+            db.session.add(escenario)
+            db.session.flush()
+
+            elapsed_seconds = 0.0
+            imported_in_scenario = 0
+
+            for audio_idx, member_entry in enumerate(members, start=1):
+                member, original_name = member_entry
+                try:
+                    raw = zf.read(member)
+                except Exception:
+                    logger.warning(f'No se pudo leer miembro ZIP: {member.filename}')
+                    continue
+
+                safe_name = secure_filename(original_name or f'audio_{audio_idx}.wav')
+                if not safe_name:
+                    safe_name = f'audio_{audio_idx}.wav'
+
+                unique_name = f"imp_{escenario.id}_{audio_idx:04d}_{uuid.uuid4().hex[:8]}_{safe_name}"
+                save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+
+                with open(save_path, 'wb') as f:
+                    f.write(raw)
+
+                audio_timestamp = escenario_start + datetime.timedelta(seconds=elapsed_seconds)
+                audio = Audio(
+                    filename=unique_name,
+                    title=f'{scenario_name} - Audio {audio_idx}',
+                    source='Importacion ZIP',
+                    timestamp=audio_timestamp
+                )
+                db.session.add(audio)
+                db.session.flush()
+
+                global_result, detailed_results = analizar_audio_file(save_path, audio_id=audio.id)
+                resultado = AudioResultado(
+                    audio_id=audio.id,
+                    microfono_id=sensor1.id,
+                    escenario_id=escenario.id,
+                    timestamp=audio_timestamp,
+                    global_result=json.dumps(global_result),
+                    detailed_results=json.dumps(detailed_results)
+                )
+                db.session.add(resultado)
+
+                duration = float(global_result.get('duration', 0) or 0)
+                if duration <= 0:
+                    duration = max(float(len(detailed_results or [])), 1.0)
+
+                elapsed_seconds += duration + 0.1
+                imported_in_scenario += 1
+                total_imported_audios += 1
+
+            if imported_in_scenario == 0:
+                db.session.delete(escenario)
+                continue
+
+            escenario.end_time = escenario_start + datetime.timedelta(seconds=max(elapsed_seconds - 0.1, 1.0))
+            duracion_segundos = (escenario.end_time - escenario.start_time).total_seconds()
+            escenario.horas_medicion = round(duracion_segundos / 3600.0, 2)
+            escenario.dias_medicion = round(duracion_segundos / (3600.0 * 24), 2)
+            escenario.microfonos_historial = json.dumps([sensor1.id])
+
+            created_scenarios.append({
+                'escenario_id': escenario.id,
+                'nombre': escenario.nombre,
+                'audios_importados': imported_in_scenario,
+                'inicio': escenario.start_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'fin': escenario.end_time.strftime('%Y-%m-%d %H:%M:%S')
+            })
+
+            global_offset_seconds += elapsed_seconds + 1.0
+
+        db.session.commit()
+
+        if not created_scenarios:
+            return jsonify({'error': 'No se pudieron importar audios validos del ZIP'}), 400
+
+        return jsonify({
+            'mensaje': 'Importacion completada',
+            'sensor_virtual': {'id': sensor1.id, 'identificador': sensor1.identificador},
+            'escenarios_creados': len(created_scenarios),
+            'audios_importados': total_imported_audios,
+            'detalle': created_scenarios
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        logger.exception('Error importando ZIP de escenarios')
+        return jsonify({'error': str(e)}), 500
+    finally:
+        try:
+            zf.close()
+        except Exception:
+            pass
+
 # Endpoints para escenarios y micrófonos
 
 @app.route('/escenarios', methods=['POST'])
@@ -719,6 +1023,7 @@ def detalle_escenario(escenario_id):
         'num_personas': escenario.num_personas,
         'proteccion_auditiva': escenario.proteccion_auditiva,
         'tipo_analisis': escenario.tipo_analisis,
+        'microfonos_historial': escenario.microfonos_historial,
         'microfonos': microfonos_data,
         'fotos': json.loads(escenario.fotos) if escenario.fotos else []
     }
@@ -866,6 +1171,776 @@ def obtener_audios(escenario_id, microfono_id):
             "filename": filename
         })
     return jsonify(audios)
+
+
+def _build_audio_chart_png(detailed_results, audio_id, limite_referencia=85.0, lp_eq_global=None):
+    """Build a PNG chart for a single audio using detailed points."""
+    if plt is None:
+        raise RuntimeError('matplotlib no esta disponible en el entorno')
+
+    seconds = []
+    lp_eq_values = []
+    lp_max_values = []
+
+    for p in detailed_results or []:
+        try:
+            sec = float(p.get('timestamp', 0))
+            seconds.append(sec)
+            lp_eq_values.append(float(p.get('Lp_eqT', 0)))
+            lp_max_values.append(float(p.get('Lp_max', 0)))
+        except Exception:
+            continue
+
+    fig, ax = plt.subplots(figsize=(10, 4.8), dpi=160)
+    if seconds:
+        ax.plot(seconds, lp_eq_values, color='#2563eb', linewidth=2.0, label='Lp_eqT (dB)')
+        ax.plot(seconds, lp_max_values, color='#ef4444', linewidth=1.8, alpha=0.9, label='Lp_max (dB)')
+    else:
+        ax.text(0.5, 0.5, 'Sin datos detallados para este audio', ha='center', va='center', transform=ax.transAxes)
+
+    ax.axhline(y=limite_referencia, color='#dc2626', linestyle='--', linewidth=1.8, label=f'Referencia {limite_referencia} dB')
+    if lp_eq_global is not None:
+        try:
+            lp_eq_global = float(lp_eq_global)
+            if np.isfinite(lp_eq_global):
+                ax.axhline(y=lp_eq_global, color='#7e22ce', linestyle='-.', linewidth=1.8, label=f'LEQ global audio {lp_eq_global:.2f} dB')
+        except Exception:
+            pass
+    ax.set_title(f'Audio {audio_id} - Analisis temporal por segundo', fontsize=12, pad=10)
+    ax.set_xlabel('Tiempo relativo (s)')
+    ax.set_ylabel('Nivel (dB)')
+    ax.grid(True, linestyle='--', alpha=0.25)
+    ax.legend(loc='best', fontsize=8)
+    fig.tight_layout()
+
+    buffer = BytesIO()
+    fig.savefig(buffer, format='png')
+    plt.close(fig)
+    buffer.seek(0)
+    return buffer
+
+
+def _parse_bool_param(name, default=True):
+    value = request.args.get(name)
+    if value is None:
+        return default
+    return str(value).strip().lower() in ('1', 'true', 'yes', 'si', 'on')
+
+
+def _export_dependencies_status():
+    return {
+        'python_docx': {
+            'available': Document is not None and Inches is not None,
+            'detail': 'ok' if (Document is not None and Inches is not None) else 'python-docx no cargado en runtime'
+        },
+        'matplotlib': {
+            'available': plt is not None,
+            'detail': 'ok' if plt is not None else 'matplotlib no cargado en runtime'
+        },
+        'openpyxl': {
+            'available': Workbook is not None and load_workbook is not None,
+            'detail': 'ok' if (Workbook is not None and load_workbook is not None) else 'openpyxl no cargado en runtime'
+        }
+    }
+
+
+@app.route('/diagnostico/exportes', methods=['GET'])
+def diagnostico_exportes():
+    deps = _export_dependencies_status()
+    word_ok = deps['python_docx']['available'] and deps['matplotlib']['available']
+    return jsonify({
+        'word_export_available': word_ok,
+        'dependencies': deps,
+        'recommendation': 'Ejecuta: python -m pip install -r requirements.txt y reinicia la app' if not word_ok else 'Entorno listo para exportar Word'
+    })
+
+
+def _label_global_metric(key):
+    labels = {
+        'Lp_eqT': 'Nivel equivalente (Lp_eqT, dB)',
+        'Lp_max': 'Nivel maximo (Lp_max, dB)',
+        'ET': 'Energia total (ET)',
+        'LE': 'Nivel de energia (LE, dB)',
+        'J_energy': 'Energia J',
+        'LJ': 'Nivel de energia LJ (dB)',
+        'IT': 'Intensidad IT',
+        'LI': 'Nivel de intensidad LI (dB)',
+        'duration': 'Duracion (s)',
+        'sample_rate': 'Frecuencia de muestreo (Hz)',
+        'alert': 'Alerta'
+    }
+    return labels.get(key, str(key))
+
+
+def _set_doc_base_style(doc):
+    if Pt is None:
+        return
+    normal = doc.styles['Normal']
+    normal.font.name = 'Calibri'
+    normal.font.size = Pt(10.5)
+
+
+def _set_table_header_cell(cell, text, fill='1E293B', color='FFFFFF'):
+    cell.text = str(text)
+    if OxmlElement is None or qn is None:
+        return
+    try:
+        tc_pr = cell._tc.get_or_add_tcPr()
+        shd = OxmlElement('w:shd')
+        shd.set(qn('w:val'), 'clear')
+        shd.set(qn('w:color'), 'auto')
+        shd.set(qn('w:fill'), fill)
+        tc_pr.append(shd)
+        for p in cell.paragraphs:
+            for r in p.runs:
+                if r.font is not None:
+                    r.font.bold = True
+                    r.font.color.rgb = None
+    except Exception:
+        return
+
+
+def _add_doc_cover(doc, escenario, microfono, total_audios):
+    title = doc.add_heading('INFORME TECNICO DE MONITOREO ACUSTICO', level=0)
+    if WD_ALIGN_PARAGRAPH is not None:
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    sub = doc.add_paragraph('Resultados por audio y analisis detallado por escenario culminado')
+    if WD_ALIGN_PARAGRAPH is not None:
+        sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    doc.add_paragraph('')
+    meta = doc.add_table(rows=0, cols=2)
+    meta.style = 'Table Grid'
+    rows = [
+        ('Escenario', f'{escenario.nombre} (ID {escenario.id})'),
+        ('Microfono', f'{microfono.identificador} (ID {microfono.id})'),
+        ('Estado', 'Culminado'),
+        ('Total de audios analizados', str(total_audios)),
+        ('Generado en', f"{lima_now().strftime('%Y-%m-%d %H:%M:%S')} (America/Lima)"),
+        ('Limite de referencia', f'{SAFE_NOISE_LEVEL} dB')
+    ]
+    for k, v in rows:
+        r = meta.add_row().cells
+        r[0].text = k
+        r[1].text = v
+
+
+def _add_key_value_table(doc, title, values):
+    doc.add_heading(title, level=2)
+    table = doc.add_table(rows=1, cols=2)
+    table.style = 'Table Grid'
+    hdr = table.rows[0].cells
+    _set_table_header_cell(hdr[0], 'Metrica')
+    _set_table_header_cell(hdr[1], 'Valor')
+    for key, value in values.items():
+        row = table.add_row().cells
+        row[0].text = _label_global_metric(key)
+        row[1].text = str(value)
+
+def _add_detailed_table(doc, detailed_results, chunk_size=45):
+    headers = ['Segundo', 'Lp_eqT', 'Lp_max', 'ET', 'LE', 'J_energy', 'LJ', 'IT', 'LI', 'Alerta']
+    rows = detailed_results or []
+    if not rows:
+        doc.add_paragraph('No hay datos detallados por segundo para este audio.')
+        return
+
+    parts = [rows[i:i + chunk_size] for i in range(0, len(rows), chunk_size)]
+    for part_idx, part in enumerate(parts, start=1):
+        if len(parts) > 1:
+            doc.add_heading(f'Datos detallados por segundo (parte {part_idx}/{len(parts)})', level=2)
+        else:
+            doc.add_heading('Datos detallados por segundo', level=2)
+
+        table = doc.add_table(rows=1, cols=len(headers))
+        table.style = 'Table Grid'
+        for idx, header in enumerate(headers):
+            _set_table_header_cell(table.rows[0].cells[idx], header)
+
+        for p in part:
+            row = table.add_row().cells
+            row[0].text = str(p.get('timestamp', ''))
+            row[1].text = str(p.get('Lp_eqT', ''))
+            row[2].text = str(p.get('Lp_max', ''))
+            row[3].text = str(p.get('ET', ''))
+            row[4].text = str(p.get('LE', ''))
+            row[5].text = str(p.get('J_energy', ''))
+            row[6].text = str(p.get('LJ', ''))
+            row[7].text = str(p.get('IT', ''))
+            row[8].text = str(p.get('LI', ''))
+            row[9].text = str(p.get('alert', ''))
+
+        if part_idx < len(parts):
+            doc.add_page_break()
+
+
+def _compute_general_analysis_from_results(resultados):
+    total_duration = 0.0
+    total_ET = 0.0
+    weighted_sum_pressure_sq = 0.0
+    for res in resultados:
+        try:
+            global_result = json.loads(res.global_result) if res.global_result else {}
+        except Exception:
+            global_result = {}
+
+        duration = float(global_result.get('duration', 0) or 0)
+        lp_eqt = float(global_result.get('Lp_eqT', 0) or 0)
+        et = float(global_result.get('ET', 0) or 0)
+
+        pressure_sq = (2.0e-5) ** 2 * (10 ** (lp_eqt / 10)) if lp_eqt else 0
+        total_duration += duration
+        total_ET += et
+        weighted_sum_pressure_sq += pressure_sq * duration
+
+    mean_pressure_sq = weighted_sum_pressure_sq / total_duration if total_duration > 0 else 0
+    lp_eqt_global = 10 * np.log10(mean_pressure_sq / (2.0e-5) ** 2) if mean_pressure_sq > 0 else 0
+    le_global = 10 * np.log10(total_ET / 4.0e-10) if total_ET > 0 else 0
+    duracion_horas = total_duration / 3600.0
+    l_ex_8h = (lp_eqt_global + 10 * np.log10(duracion_horas / 8.0)) if duracion_horas >= (1.0 / 60.0) else None
+
+    return {
+        'duration': round(total_duration, 2),
+        'ET': round(total_ET, 6),
+        'Lp_eqT': round(lp_eqt_global, 2),
+        'LE': round(le_global, 2),
+        'L_EX_8h': round(l_ex_8h, 2) if l_ex_8h is not None else 'No aplica',
+        'cantidad_audios': len(resultados)
+    }
+
+
+def _build_principal_chart_png(resultados, laeq_global=None, limite_referencia=85.0, escenario_id=None, microfono_id=None):
+    if plt is None:
+        raise RuntimeError('matplotlib no esta disponible en el entorno')
+
+    # Prioriza la misma serie temporal usada por la vista web del informe final.
+    x_seconds = []
+    y_lpmax = []
+
+    if escenario_id is not None and microfono_id is not None:
+        try:
+            client = app.test_client()
+            resp = client.get(
+                f'/escenarios/{int(escenario_id)}/microfono/{int(microfono_id)}/serie_temporal?max_points=1800'
+            )
+            if resp.status_code == 200:
+                payload = resp.get_json(silent=True) or {}
+                points = payload.get('points') or []
+                # Mantener TODOS los puntos incluyendo None para discontinuidades entre audios
+                base_x = None
+                for p in points:
+                    x = p.get('x')
+                    y = p.get('y')
+                    if x is not None:
+                        if base_x is None:
+                            base_x = x
+                        x_seconds.append((x - base_x) / 1000.0)
+                        y_lpmax.append(y)  # y puede ser None, matplotlib maneja eso
+        except Exception:
+            x_seconds = []
+            y_lpmax = []
+
+    # Fallback: reconstruye con resultados detallados si no se pudo leer la serie del informe web.
+    if not x_seconds:
+        offset = 0.0
+        for res in resultados:
+            try:
+                global_result = json.loads(res.global_result) if res.global_result else {}
+            except Exception:
+                global_result = {}
+            try:
+                detailed_results = json.loads(res.detailed_results) if res.detailed_results else []
+            except Exception:
+                detailed_results = []
+
+            local_max_t = 0.0
+            for point in detailed_results:
+                try:
+                    t = float(point.get('timestamp', 0) or 0)
+                    lp_max = float(point.get('Lp_max', 0) or 0)
+                except Exception:
+                    continue
+                x_seconds.append(offset + t)
+                y_lpmax.append(lp_max)
+                if t > local_max_t:
+                    local_max_t = t
+
+            duration = float(global_result.get('duration', 0) or 0)
+            if duration <= 0:
+                duration = local_max_t if local_max_t > 0 else 1.0
+            offset += duration
+
+    fig, ax = plt.subplots(figsize=(14, 7), dpi=220)
+    if x_seconds:
+        ax.plot(x_seconds, y_lpmax, color='#1d4ed8', linewidth=2.2, label='Lp,max (escenario completo)', zorder=3)
+    else:
+        ax.text(0.5, 0.5, 'Sin datos para grafico principal del escenario', ha='center', va='center', transform=ax.transAxes)
+
+    ax.axhline(y=limite_referencia, color='#dc2626', linestyle='--', linewidth=2.2, label=f'LMP {limite_referencia} dB', zorder=2)
+    if laeq_global is not None:
+        try:
+            laeq = float(laeq_global)
+            if np.isfinite(laeq):
+                ax.axhline(y=laeq, color='#7e22ce', linestyle='-.', linewidth=2.2, label=f'LAeq general {laeq:.2f} dB', zorder=2)
+        except Exception:
+            pass
+
+    ax.set_title('Informe final principal: Lp,max vs tiempo del escenario', fontsize=16, fontweight='bold', pad=15)
+    ax.set_xlabel('Tiempo acumulado del escenario (s)', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Nivel de Presión Sonora (dB)', fontsize=12, fontweight='bold')
+    ax.grid(True, linestyle='-', alpha=0.3, linewidth=0.7)
+    ax.legend(loc='best', fontsize=11, framealpha=0.95)
+    fig.tight_layout()
+
+    buffer = BytesIO()
+    fig.savefig(buffer, format='png', dpi=220, bbox_inches='tight', pad_inches=0.15)
+    plt.close(fig)
+    buffer.seek(0)
+    return buffer
+
+
+def _add_principal_technical_table(doc, resultados, limite_referencia=85.0):
+    headers = ['Audio', 'Fecha/Hora', 'LAeq (dB)', 'Lp,max (dB)', 'Duracion (s)', 'Sample Rate (Hz)', 'ET', 'LE (dB)', 'LI (dB)', 'LJ (dB)', 'Estado']
+    doc.add_heading('Tabla tecnica consolidada del informe principal', level=2)
+    table = doc.add_table(rows=1, cols=len(headers))
+    table.style = 'Table Grid'
+    for i, h in enumerate(headers):
+        _set_table_header_cell(table.rows[0].cells[i], h)
+
+    for res in resultados:
+        try:
+            g = json.loads(res.global_result) if res.global_result else {}
+        except Exception:
+            g = {}
+
+        lp_max = float(g.get('Lp_max', 0) or 0)
+        status = f'Excede {limite_referencia} dB' if lp_max > limite_referencia else 'Dentro del limite'
+        ts = to_lima_datetime(res.timestamp).strftime('%Y-%m-%d %H:%M:%S') if res.timestamp else 'N/A'
+
+        row = table.add_row().cells
+        row[0].text = str(res.audio_id)
+        row[1].text = ts
+        row[2].text = str(g.get('Lp_eqT', 'N/A'))
+        row[3].text = str(g.get('Lp_max', 'N/A'))
+        row[4].text = str(g.get('duration', 'N/A'))
+        row[5].text = str(g.get('sample_rate', 'N/A'))
+        et_val = g.get('ET', 'N/A')
+        if isinstance(et_val, (int, float)):
+            et_val = f'{float(et_val):.2e}'
+        row[6].text = str(et_val)
+        row[7].text = str(g.get('LE', 'N/A'))
+        row[8].text = str(g.get('LI', 'N/A'))
+        row[9].text = str(g.get('LJ', 'N/A'))
+        row[10].text = status
+
+
+def _build_excess_summary(resultados, limite_referencia=85.0):
+    total_points = 0
+    exceeded_points = 0
+    max_level = 0.0
+    per_audio = []
+
+    for res in resultados:
+        try:
+            g = json.loads(res.global_result) if res.global_result else {}
+        except Exception:
+            g = {}
+        try:
+            d = json.loads(res.detailed_results) if res.detailed_results else []
+        except Exception:
+            d = []
+
+        audio_exceeded = 0
+        for p in d:
+            try:
+                val = float(p.get('Lp_max', 0) or 0)
+            except Exception:
+                continue
+            total_points += 1
+            if val > limite_referencia:
+                exceeded_points += 1
+                audio_exceeded += 1
+            if val > max_level:
+                max_level = val
+
+        per_audio.append({
+            'audio_id': res.audio_id,
+            'timestamp': to_lima_datetime(res.timestamp).strftime('%Y-%m-%d %H:%M:%S') if res.timestamp else 'N/A',
+            'laeq': g.get('Lp_eqT', 'N/A'),
+            'lpmax': g.get('Lp_max', 'N/A'),
+            'puntos_excedidos': audio_exceeded,
+            'estado': 'Excede' if audio_exceeded > 0 else 'OK'
+        })
+
+    percent = (exceeded_points / total_points * 100.0) if total_points > 0 else 0.0
+    return {
+        'limite_referencia_db': limite_referencia,
+        'total_puntos_medidos': total_points,
+        'puntos_excedidos': exceeded_points,
+        'porcentaje_excedido': round(percent, 2),
+        'nivel_maximo_registrado': round(max_level, 2),
+        'evaluacion': 'ATENCION REQUERIDA' if exceeded_points > 0 else 'DENTRO DEL LIMITE'
+    }, per_audio
+
+
+def _add_excess_detail_table(doc, per_audio_rows):
+    doc.add_heading('Detalle de excedencias por audio', level=2)
+    headers = ['Audio', 'Fecha/Hora', 'LAeq (dB)', 'Lp,max (dB)', 'Puntos excedidos', 'Estado']
+    table = doc.add_table(rows=1, cols=len(headers))
+    table.style = 'Table Grid'
+    for i, h in enumerate(headers):
+        _set_table_header_cell(table.rows[0].cells[i], h)
+
+    for item in per_audio_rows:
+        row = table.add_row().cells
+        row[0].text = str(item.get('audio_id', 'N/A'))
+        row[1].text = str(item.get('timestamp', 'N/A'))
+        row[2].text = str(item.get('laeq', 'N/A'))
+        row[3].text = str(item.get('lpmax', 'N/A'))
+        row[4].text = str(item.get('puntos_excedidos', 0))
+        row[5].text = str(item.get('estado', 'N/A'))
+
+
+def _build_scenario_summary(escenario, resultados):
+    total_duration = 0.0
+    total_ET = 0.0
+    weighted_pressure_sq = 0.0
+    total_points = 0
+    points_exceeded = 0
+    peak_max = 0.0
+
+    for res in resultados:
+        try:
+            g = json.loads(res.global_result) if res.global_result else {}
+        except Exception:
+            g = {}
+        try:
+            d = json.loads(res.detailed_results) if res.detailed_results else []
+        except Exception:
+            d = []
+
+        duration = float(g.get('duration', 0) or 0)
+        lp_eq = float(g.get('Lp_eqT', 0) or 0)
+        et = float(g.get('ET', 0) or 0)
+        pressure_sq = (2.0e-5) ** 2 * (10 ** (lp_eq / 10)) if lp_eq else 0.0
+
+        total_duration += duration
+        total_ET += et
+        weighted_pressure_sq += pressure_sq * duration
+
+        for p in d:
+            try:
+                lp_max = float(p.get('Lp_max', 0) or 0)
+            except Exception:
+                continue
+            total_points += 1
+            if lp_max > SAFE_NOISE_LEVEL:
+                points_exceeded += 1
+            if lp_max > peak_max:
+                peak_max = lp_max
+
+    mean_pressure_sq = weighted_pressure_sq / total_duration if total_duration > 0 else 0
+    lp_eq_global = 10 * np.log10(mean_pressure_sq / (2.0e-5) ** 2) if mean_pressure_sq > 0 else 0
+    le_global = 10 * np.log10(total_ET / 4.0e-10) if total_ET > 0 else 0
+    dur_hours = total_duration / 3600.0 if total_duration > 0 else 0
+    l_ex_8h = (lp_eq_global + 10 * np.log10(dur_hours / 8.0)) if dur_hours >= (1.0 / 60.0) else None
+    exceed_pct = (points_exceeded / total_points * 100.0) if total_points > 0 else 0.0
+
+    duration_hours = ((total_duration / 3600.0) if total_duration > 0 else 0.0)
+    photo_count = 0
+    if escenario.fotos:
+        try:
+            parsed_photos = json.loads(escenario.fotos)
+            if isinstance(parsed_photos, list):
+                photo_count = len(parsed_photos)
+        except Exception:
+            photo_count = 0
+
+    historial_txt = 'No registrado'
+    if escenario.microfonos_historial:
+        try:
+            hist = json.loads(escenario.microfonos_historial)
+            if isinstance(hist, list) and hist:
+                etiquetas = []
+                for mic_id in hist:
+                    try:
+                        mic = Microfono.query.get(int(mic_id))
+                    except Exception:
+                        mic = None
+                    if mic and mic.identificador:
+                        etiquetas.append(mic.identificador)
+                    else:
+                        etiquetas.append(f'ID {mic_id}')
+                historial_txt = ', '.join(etiquetas)
+        except Exception:
+            historial_txt = str(escenario.microfonos_historial)
+
+    def _opt_text(v):
+        if v is None:
+            return 'No registrado'
+        s = str(v).strip()
+        return s if s else 'No registrado'
+
+    scenario_rows = {
+        'Escenario ID': escenario.id,
+        'Nombre': escenario.nombre,
+        'Descripcion': _opt_text(escenario.descripcion),
+        'Ubicacion': _opt_text(escenario.ubicacion),
+        'Estado': escenario.estado,
+        'Inicio': to_lima_datetime(escenario.start_time).strftime('%Y-%m-%d %H:%M:%S') if escenario.start_time else 'N/A',
+        'Fin': to_lima_datetime(escenario.end_time).strftime('%Y-%m-%d %H:%M:%S') if escenario.end_time else 'N/A',
+        'Duracion total medida (h)': round(duration_hours, 2),
+        'Horas de medicion (declaradas)': _opt_text(escenario.horas_medicion),
+        'Dias de medicion (declarados)': _opt_text(escenario.dias_medicion),
+        'Tipo de ruido': _opt_text(escenario.tipo_ruido),
+        'Tipo de analisis': _opt_text(escenario.tipo_analisis),
+        'Proteccion auditiva': _opt_text(escenario.proteccion_auditiva),
+        'Fuentes declaradas': escenario.num_fuentes if escenario.num_fuentes is not None else 'No registrado',
+        'Personas expuestas': escenario.num_personas if escenario.num_personas is not None else 'No registrado',
+        'Microfonos (historial)': historial_txt,
+        'Fotos adjuntas': photo_count
+    }
+
+    kpis = {
+        'Audios procesados': len(resultados),
+        'Duracion total (s)': round(total_duration, 2),
+        'LAeq global (dB)': round(lp_eq_global, 2),
+        'LE global (dB)': round(le_global, 2),
+        'L_EX,8h (dB)': round(l_ex_8h, 2) if l_ex_8h is not None else 'No aplica',
+        'Nivel maximo registrado (dB)': round(peak_max, 2),
+        'Puntos sobre 85 dB': points_exceeded,
+        'Porcentaje sobre 85 dB': f'{round(exceed_pct, 2)} %'
+    }
+
+    return scenario_rows, kpis
+
+
+@app.route('/escenarios/<int:escenario_id>/microfono/<int:microfono_id>/reporte_word', methods=['GET'])
+def reporte_word_por_audio(escenario_id, microfono_id):
+    """Generate an editable DOCX report for all audios of a scenario/microphone."""
+    deps = _export_dependencies_status()
+    if not deps['python_docx']['available']:
+        return jsonify({
+            'error': 'python-docx no esta disponible en el entorno',
+            'hint': 'Ejecuta: python -m pip install -r requirements.txt y reinicia la app',
+            'dependencies': deps
+        }), 500
+    if not deps['matplotlib']['available']:
+        return jsonify({
+            'error': 'matplotlib no esta disponible en el entorno',
+            'hint': 'Ejecuta: python -m pip install -r requirements.txt y reinicia la app',
+            'dependencies': deps
+        }), 500
+
+    escenario = Escenario.query.get_or_404(escenario_id)
+    microfono = Microfono.query.get_or_404(microfono_id)
+
+    include_chart = _parse_bool_param('include_chart', default=True)
+    include_global = _parse_bool_param('include_global', default=True)
+    include_detailed = _parse_bool_param('include_detailed', default=True)
+    include_metodologia = _parse_bool_param('include_metodologia', default=False)
+    include_fotos = _parse_bool_param('include_fotos', default=False)
+    include_glosario = _parse_bool_param('include_glosario', default=False)
+    include_referencias = _parse_bool_param('include_referencias', default=False)
+    # Regla de negocio: el informe final principal SIEMPRE se incluye.
+    include_final_summary = True
+
+    audio_ids_raw = (request.args.get('audio_ids') or '').strip()
+    selected_audio_ids = set()
+    if audio_ids_raw:
+        for token in audio_ids_raw.split(','):
+            token = token.strip()
+            if not token:
+                continue
+            try:
+                selected_audio_ids.add(int(token))
+            except Exception:
+                continue
+
+    resultados_all = AudioResultado.query.filter_by(
+        escenario_id=escenario_id,
+        microfono_id=microfono_id
+    ).order_by(AudioResultado.timestamp.asc()).all()
+
+    if not resultados_all:
+        return jsonify({'error': 'No hay audios analizados para este escenario y microfono'}), 404
+
+    # Los audios seleccionados aplican SOLO a secciones individuales.
+    resultados = resultados_all
+    if selected_audio_ids:
+        resultados = [r for r in resultados_all if int(r.audio_id) in selected_audio_ids]
+
+    doc = Document()
+    _set_doc_base_style(doc)
+    if include_final_summary:
+        _add_doc_cover(doc, escenario, microfono, len(resultados_all))
+        if selected_audio_ids:
+            doc.add_paragraph(f'Modo de seleccion individual: manual ({len(resultados)} audio(s) incluidos)')
+        else:
+            doc.add_paragraph('Modo de seleccion individual: todos los audios del escenario para este microfono')
+        doc.add_paragraph('El informe final principal del escenario se incluye siempre con la totalidad de audios.')
+
+        scenario_rows, kpis = _build_scenario_summary(escenario, resultados_all)
+        _add_key_value_table(doc, 'Cuadro 1. Datos del escenario', scenario_rows)
+        doc.add_paragraph('')
+        _add_key_value_table(doc, 'Cuadro 2. Indicadores globales del escenario', kpis)
+        doc.add_page_break()
+
+    doc.add_heading('Indice de contenido', level=1)
+    if include_final_summary:
+        doc.add_paragraph('0. Informe final principal del escenario (resumen + grafica + tabla tecnica)')
+    for idx, res in enumerate(resultados, start=1):
+        ts = to_lima_datetime(res.timestamp).strftime('%Y-%m-%d %H:%M:%S') if res.timestamp else 'N/A'
+        doc.add_paragraph(f'{idx}. Audio ID {res.audio_id} - {ts}')
+    doc.add_page_break()
+
+    if include_final_summary:
+        # El bloque principal SIEMPRE usa todos los audios del escenario (igual que el informe web/PDF).
+        general = _compute_general_analysis_from_results(resultados_all)
+        excess_summary, excess_rows = _build_excess_summary(resultados_all, limite_referencia=SAFE_NOISE_LEVEL)
+        doc.add_heading('Informe final principal del escenario', level=1)
+        doc.add_paragraph('Esta seccion replica el bloque principal del informe PDF/web: grafica global temporal, resumen tecnico, excedencias y tablas consolidadas del escenario completo.')
+
+        if include_chart:
+            chart_principal = _build_principal_chart_png(
+                resultados_all,
+                laeq_global=general.get('Lp_eqT'),
+                limite_referencia=SAFE_NOISE_LEVEL,
+                escenario_id=escenario_id,
+                microfono_id=microfono_id
+            )
+            doc.add_paragraph('Grafica principal del escenario (Lp,max temporal con lineas de LAeq general y LMP):')
+            doc.add_picture(chart_principal, width=Inches(7.5))
+            doc.add_paragraph('')
+
+        if include_global:
+            _add_key_value_table(doc, 'Resumen global del informe principal', {
+                'Duracion total (s)': general.get('duration', 'N/A'),
+                'ET total': general.get('ET', 'N/A'),
+                'LAeq general (dB)': general.get('Lp_eqT', 'N/A'),
+                'LE global (dB)': general.get('LE', 'N/A'),
+                'L_EX,8h (dB)': general.get('L_EX_8h', 'N/A'),
+                'Cantidad de audios': general.get('cantidad_audios', len(resultados_all))
+            })
+            doc.add_paragraph('')
+            _add_key_value_table(doc, 'Resumen de excedencias del informe principal', {
+                'Limite de referencia (dB)': excess_summary.get('limite_referencia_db'),
+                'Total puntos medidos': excess_summary.get('total_puntos_medidos'),
+                'Puntos excedidos': excess_summary.get('puntos_excedidos'),
+                'Porcentaje excedido (%)': excess_summary.get('porcentaje_excedido'),
+                'Nivel maximo registrado (dB)': excess_summary.get('nivel_maximo_registrado'),
+                'Evaluacion': excess_summary.get('evaluacion')
+            })
+            doc.add_paragraph('')
+            conclusion = (
+                'Conclusion principal: Se identifican excedencias del limite de referencia en el escenario.'
+                if excess_summary.get('puntos_excedidos', 0) > 0
+                else 'Conclusion principal: No se identifican excedencias del limite de referencia en el escenario.'
+            )
+            doc.add_paragraph(conclusion)
+
+        if include_detailed:
+            _add_principal_technical_table(doc, resultados_all, limite_referencia=SAFE_NOISE_LEVEL)
+            doc.add_paragraph('')
+            _add_excess_detail_table(doc, excess_rows)
+
+        doc.add_page_break()
+
+    for idx, res in enumerate(resultados, start=1):
+        try:
+            global_result = json.loads(res.global_result) if res.global_result else {}
+        except Exception:
+            global_result = {}
+        try:
+            detailed_results = json.loads(res.detailed_results) if res.detailed_results else []
+        except Exception:
+            detailed_results = []
+
+        doc.add_heading(f'Audio {idx} de {len(resultados)} - ID {res.audio_id}', level=1)
+        doc.add_paragraph(f"Timestamp de analisis: {to_lima_datetime(res.timestamp).strftime('%Y-%m-%d %H:%M:%S')}")
+        doc.add_paragraph(f'Escenario: {escenario.nombre} (ID {escenario.id})')
+        doc.add_paragraph(f'Microfono: {microfono.identificador} (ID {microfono.id})')
+
+        if include_chart:
+            lp_eq_global_audio = global_result.get('Lp_eqT', None) if isinstance(global_result, dict) else None
+            chart_buffer = _build_audio_chart_png(
+                detailed_results,
+                res.audio_id,
+                limite_referencia=SAFE_NOISE_LEVEL,
+                lp_eq_global=lp_eq_global_audio
+            )
+            doc.add_paragraph('Grafico del analisis temporal (imagen incrustada):')
+            doc.add_picture(chart_buffer, width=Inches(6.5))
+            if include_global or include_detailed:
+                doc.add_page_break()
+
+        if include_global or include_detailed:
+            doc.add_heading(f'Datos editables - Audio ID {res.audio_id}', level=1)
+            if include_global:
+                _add_key_value_table(doc, 'Resumen global', global_result)
+                doc.add_paragraph('')
+            if include_detailed:
+                _add_detailed_table(doc, detailed_results)
+
+        if idx < len(resultados):
+            doc.add_page_break()
+
+    if include_metodologia:
+        doc.add_page_break()
+        doc.add_heading('Metodologia aplicada', level=1)
+        doc.add_paragraph('El procesamiento calcula niveles globales y detallados por segundo a partir de la señal de audio normalizada, incluyendo indicadores de energia e intensidad sonora, con umbral de referencia ocupacional de 85 dB para alertas de excedencia.')
+
+    if include_glosario:
+        doc.add_page_break()
+        doc.add_heading('Glosario tecnico', level=1)
+        glossary = {
+            'LAeq': 'Nivel continuo equivalente de presion sonora durante el periodo analizado.',
+            'Lp,max': 'Nivel maximo instantaneo registrado en el periodo.',
+            'LE': 'Nivel de exposicion sonora acumulada.',
+            'L_EX,8h': 'Nivel de exposicion normalizado a 8 horas laborales.',
+            'ET': 'Energia acustica total integrada en el tiempo.'
+        }
+        _add_key_value_table(doc, 'Terminos y definiciones', glossary)
+
+    if include_referencias:
+        doc.add_page_break()
+        doc.add_heading('Referencias tecnicas', level=1)
+        refs = {
+            'ISO/TR 25417:2007': 'Definiciones de cantidades y terminos acusticos.',
+            'NTP ISO 9612:2010': 'Determinacion de la exposicion al ruido en el trabajo.',
+            'D.S. N° 005-2012-TR (Peru)': 'Reglamento de Seguridad y Salud en el Trabajo.'
+        }
+        _add_key_value_table(doc, 'Normativa aplicada', refs)
+
+    if include_fotos:
+        fotos = json.loads(escenario.fotos) if escenario.fotos else []
+        fotos_validas = []
+        for foto_name in fotos:
+            fp = os.path.join(app.config['PHOTOS_FOLDER'], foto_name)
+            if os.path.isfile(fp):
+                fotos_validas.append(fp)
+        if fotos_validas:
+            doc.add_page_break()
+            doc.add_heading('Registro fotografico del escenario', level=1)
+            for i, fp in enumerate(fotos_validas, start=1):
+                doc.add_paragraph(f'Foto {i}')
+                try:
+                    doc.add_picture(fp, width=Inches(5.8))
+                except Exception:
+                    doc.add_paragraph('No se pudo incrustar una imagen del escenario.')
+
+    output = BytesIO()
+    doc.save(output)
+    output.seek(0)
+
+    safe_esc = secure_filename(escenario.nombre) or f'escenario_{escenario.id}'
+    filename = f'informe_word_{safe_esc}_mic_{microfono.id}.docx'
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
 
 @app.route('/escenarios/<int:escenario_id>/microfono/<int:microfono_id>/serie_temporal', methods=['GET'])
 def obtener_serie_temporal(escenario_id, microfono_id):
@@ -1064,6 +2139,20 @@ def monitoring(escenario_id, microfono_id):
             escenario_start=lima_iso(escenario.start_time),
             escenario_end=lima_iso(escenario.end_time)
         )
+
+
+@app.route('/monitoring_por_audio/<int:escenario_id>/microfono/<int:microfono_id>')
+def monitoring_por_audio(escenario_id, microfono_id):
+    """Vista alternativa: muestra el analisis de cada audio por separado."""
+    escenario = Escenario.query.get_or_404(escenario_id)
+    return render_template(
+        'monitoring_by_audio.html',
+        escenario_id=escenario_id,
+        microfono_id=microfono_id,
+        escenario_start=lima_iso(escenario.start_time),
+        escenario_end=lima_iso(escenario.end_time),
+        limite_referencia=85.0
+    )
 
 # AGREGAR nuevo endpoint para estadísticas de excesos del límite
 @app.route('/escenarios/<int:escenario_id>/microfono/<int:mic_id>/analisis_excesos', methods=['GET'])
@@ -1555,6 +2644,284 @@ def _parse_piston_excel(file_storage, points=20):
         values.extend([values[-1]] * (points - len(values)))
 
     return [round(float(v), 4) for v in values[:points]]
+
+
+def _safe_float_list(values):
+    out = []
+    for v in values or []:
+        try:
+            f = float(v)
+            if np.isfinite(f):
+                out.append(f)
+        except Exception:
+            continue
+    return out
+
+
+def _series_stats(values):
+    arr = np.array(_safe_float_list(values), dtype=np.float64)
+    if arr.size == 0:
+        return {
+            'mean': 0.0,
+            'std': 0.0,
+            'variance': 0.0,
+            'median': 0.0,
+            'min': 0.0,
+            'max': 0.0,
+            'cv': 0.0,
+            'q1': 0.0,
+            'q3': 0.0,
+            'iqr': 0.0,
+            'p95': 0.0,
+            'sem': 0.0,
+            'ci95_low': 0.0,
+            'ci95_high': 0.0,
+            'skew': 0.0,
+            'kurt': 0.0
+        }
+
+    n = arr.size
+    mean = float(np.mean(arr))
+    var = float(np.mean((arr - mean) ** 2))
+    std = float(np.sqrt(var))
+    sem = float(std / np.sqrt(n)) if n > 0 else 0.0
+
+    q1 = float(np.quantile(arr, 0.25))
+    q3 = float(np.quantile(arr, 0.75))
+    p95 = float(np.quantile(arr, 0.95))
+
+    skew = 0.0
+    kurt = 0.0
+    if std > 0:
+        m3 = float(np.mean((arr - mean) ** 3))
+        m4 = float(np.mean((arr - mean) ** 4))
+        skew = float(m3 / (std ** 3))
+        kurt = float((m4 / (std ** 4)) - 3.0)
+
+    cv = float((std / abs(mean)) * 100.0) if mean != 0 else 0.0
+
+    return {
+        'mean': mean,
+        'std': std,
+        'variance': var,
+        'median': float(np.median(arr)),
+        'min': float(np.min(arr)),
+        'max': float(np.max(arr)),
+        'cv': cv,
+        'q1': q1,
+        'q3': q3,
+        'iqr': float(q3 - q1),
+        'p95': p95,
+        'sem': sem,
+        'ci95_low': float(mean - (1.96 * sem)),
+        'ci95_high': float(mean + (1.96 * sem)),
+        'skew': skew,
+        'kurt': kurt
+    }
+
+
+def _pearson_corr(a_values, b_values):
+    a = np.array(_safe_float_list(a_values), dtype=np.float64)
+    b = np.array(_safe_float_list(b_values), dtype=np.float64)
+    n = min(a.size, b.size)
+    if n == 0:
+        return 0.0
+    a = a[:n]
+    b = b[:n]
+    a_mean = float(np.mean(a))
+    b_mean = float(np.mean(b))
+    da = a - a_mean
+    db = b - b_mean
+    den = float(np.sqrt(np.sum(da ** 2) * np.sum(db ** 2)))
+    if den <= 0:
+        return 0.0
+    return float(np.sum(da * db) / den)
+
+
+def _decode_data_uri_image(data_uri):
+    if not data_uri or not isinstance(data_uri, str):
+        return None
+    prefix = 'base64,'
+    idx = data_uri.find(prefix)
+    if idx == -1:
+        return None
+    b64 = data_uri[idx + len(prefix):]
+    try:
+        raw = base64.b64decode(b64)
+        bio = BytesIO(raw)
+        bio.seek(0)
+        return bio
+    except Exception:
+        return None
+
+
+def _add_calibration_stats_table(doc, title, rows, headers):
+    doc.add_heading(title, level=2)
+    table = doc.add_table(rows=1, cols=len(headers))
+    table.style = 'Table Grid'
+    for i, h in enumerate(headers):
+        table.rows[0].cells[i].text = h
+    for row_vals in rows:
+        row = table.add_row().cells
+        for i, val in enumerate(row_vals):
+            row[i].text = str(val)
+
+
+@app.route('/calibracion/reporte_word', methods=['POST'])
+def calibracion_reporte_word():
+    """Genera un informe Word completo del modulo de calibracion."""
+    if Document is None or Inches is None:
+        return jsonify({'error': 'python-docx no esta disponible en el entorno'}), 500
+
+    payload = request.get_json(silent=True) or {}
+    seconds = _safe_float_list(payload.get('seconds', []))
+    piston = _safe_float_list(payload.get('piston_values', []))
+    app_values = _safe_float_list(payload.get('app_values', []))
+
+    n = min(len(seconds), len(piston), len(app_values))
+    if n == 0:
+        return jsonify({'error': 'No se recibieron datos de calibracion para generar el informe'}), 400
+
+    seconds = seconds[:n]
+    piston = piston[:n]
+    app_values = app_values[:n]
+
+    err_signed = [app_values[i] - piston[i] for i in range(n)]
+    diff_abs = [abs(err_signed[i]) for i in range(n)]
+    variation_pct = [abs(err_signed[i]) / max(abs(piston[i]), 1e-9) * 100.0 for i in range(n)]
+
+    piston_stats = _series_stats(piston)
+    app_stats = _series_stats(app_values)
+    diff_stats = _series_stats(diff_abs)
+
+    mae = float(np.mean(diff_abs)) if diff_abs else 0.0
+    rmse = float(np.sqrt(np.mean(np.array(err_signed) ** 2))) if err_signed else 0.0
+    mape = float(np.mean(variation_pct)) if variation_pct else 0.0
+    bias = float(np.mean(err_signed)) if err_signed else 0.0
+    corr = _pearson_corr(piston, app_values)
+    p90_abs = float(np.quantile(np.array(diff_abs), 0.90)) if diff_abs else 0.0
+    expanded_u_k2 = 2.0 * diff_stats['sem']
+    mean_piston_abs = max(abs(piston_stats['mean']), 1e-9)
+    relative_bias_pct = (bias / mean_piston_abs) * 100.0
+
+    metadata = payload.get('metadata', {}) if isinstance(payload.get('metadata'), dict) else {}
+    source_label = metadata.get('reference_source') or 'registro_pistofono'
+    selected_audio = metadata.get('selected_audio') or 'N/A'
+    generated_at = metadata.get('generated_at') or lima_now().strftime('%Y-%m-%d %H:%M:%S')
+
+    chart_images = payload.get('chart_images', {}) if isinstance(payload.get('chart_images'), dict) else {}
+    second_chart_img = _decode_data_uri_image(chart_images.get('second_chart'))
+    global_chart_img = _decode_data_uri_image(chart_images.get('global_chart'))
+    spectrogram_img = _decode_data_uri_image(chart_images.get('spectrogram'))
+
+    doc = Document()
+    doc.add_heading('Informe de Calibracion Acustica - Formato Word Editable', level=1)
+    doc.add_paragraph(f'Fecha y hora de emision: {generated_at}')
+    doc.add_paragraph(f'Audio base seleccionado: {selected_audio}')
+    doc.add_paragraph(f'Fuente de referencia: {source_label}')
+    doc.add_paragraph(f'Muestras analizadas: {n} segundos')
+
+    doc.add_heading('Resumen ejecutivo', level=2)
+    resumen = [
+        ('Promedio pistofono', f"{piston_stats['mean']:.4f} dB"),
+        ('Promedio sistema/app', f"{app_stats['mean']:.4f} dB"),
+        ('Diferencia promedio', f"{abs(app_stats['mean'] - piston_stats['mean']):.4f} dB"),
+        ('MAE', f'{mae:.5f} dB'),
+        ('RMSE', f'{rmse:.5f} dB'),
+        ('MAPE', f'{mape:.5f} %'),
+        ('Correlacion de Pearson', f'{corr:.6f}'),
+        ('Criterio final (MAPE <= 1)', 'SI' if mape <= 1.0 else 'NO')
+    ]
+    _add_calibration_stats_table(doc, 'Indicadores principales', resumen, ['Metrica', 'Valor'])
+
+    doc.add_page_break()
+    doc.add_heading('Graficos del ensayo', level=1)
+    if second_chart_img is not None:
+        doc.add_paragraph('Comparacion por segundo (pistofono vs sistema y variacion relativa):')
+        doc.add_picture(second_chart_img, width=Inches(6.5))
+    else:
+        doc.add_paragraph('No se incluyo la imagen del grafico por segundo.')
+
+    if global_chart_img is not None:
+        doc.add_paragraph('Comparacion global de promedios:')
+        doc.add_picture(global_chart_img, width=Inches(5.5))
+    else:
+        doc.add_paragraph('No se incluyo la imagen del grafico global.')
+
+    if spectrogram_img is not None:
+        doc.add_paragraph('Espectrograma del audio base:')
+        doc.add_picture(spectrogram_img, width=Inches(6.5))
+
+    doc.add_page_break()
+    rows_sec = []
+    for i in range(n):
+        rows_sec.append([
+            int(seconds[i]) if float(seconds[i]).is_integer() else f'{seconds[i]:.3f}',
+            f'{piston[i]:.6f}',
+            f'{app_values[i]:.6f}',
+            f'{diff_abs[i]:.6f}'
+        ])
+    _add_calibration_stats_table(
+        doc,
+        'Tabla base segundo a segundo',
+        rows_sec,
+        ['Segundo', 'Pistofono (dB)', 'App (dB)', 'Variacion abs (dB)']
+    )
+
+    doc.add_page_break()
+    _add_calibration_stats_table(
+        doc,
+        'Estadigrafos del ensayo corto',
+        [
+            ['Pistofono', f"{piston_stats['mean']:.3f}", f"{piston_stats['std']:.3f}", f"{piston_stats['variance']:.5f}", f"{piston_stats['median']:.3f}", f"{piston_stats['min']:.3f}", f"{piston_stats['max']:.3f}", f"{piston_stats['cv']:.4f}"],
+            ['Sistema (App)', f"{app_stats['mean']:.3f}", f"{app_stats['std']:.3f}", f"{app_stats['variance']:.5f}", f"{app_stats['median']:.3f}", f"{app_stats['min']:.3f}", f"{app_stats['max']:.3f}", f"{app_stats['cv']:.4f}"],
+            ['Diferencia absoluta', f"{diff_stats['mean']:.3f}", f"{diff_stats['std']:.3f}", f"{diff_stats['variance']:.5f}", f"{diff_stats['median']:.3f}", f"{diff_stats['min']:.3f}", f"{diff_stats['max']:.3f}", f"{diff_stats['cv']:.4f}"]
+        ],
+        ['Serie', 'Media', 'Desv. est.', 'Varianza', 'Mediana', 'Min', 'Max', 'CV (%)']
+    )
+
+    _add_calibration_stats_table(
+        doc,
+        'Estadistica avanzada',
+        [
+            ['Pistofono', f"{piston_stats['q1']:.4f}", f"{piston_stats['q3']:.4f}", f"{piston_stats['iqr']:.4f}", f"{piston_stats['p95']:.4f}", f"{piston_stats['sem']:.5f}", f"{piston_stats['ci95_low']:.4f}", f"{piston_stats['ci95_high']:.4f}", f"{piston_stats['skew']:.5f}", f"{piston_stats['kurt']:.5f}"],
+            ['Sistema (App)', f"{app_stats['q1']:.4f}", f"{app_stats['q3']:.4f}", f"{app_stats['iqr']:.4f}", f"{app_stats['p95']:.4f}", f"{app_stats['sem']:.5f}", f"{app_stats['ci95_low']:.4f}", f"{app_stats['ci95_high']:.4f}", f"{app_stats['skew']:.5f}", f"{app_stats['kurt']:.5f}"],
+            ['Error absoluto', f"{diff_stats['q1']:.4f}", f"{diff_stats['q3']:.4f}", f"{diff_stats['iqr']:.4f}", f"{diff_stats['p95']:.4f}", f"{diff_stats['sem']:.5f}", f"{diff_stats['ci95_low']:.4f}", f"{diff_stats['ci95_high']:.4f}", f"{diff_stats['skew']:.5f}", f"{diff_stats['kurt']:.5f}"]
+        ],
+        ['Serie', 'Q1', 'Q3', 'IQR', 'P95', 'SEM', 'IC95 inf', 'IC95 sup', 'Asimetria', 'Curtosis exc.']
+    )
+
+    _add_calibration_stats_table(
+        doc,
+        'Comparacion pistofono vs sistema',
+        [
+            ['Variacion relativa media observada (MAPE)', f'{mape:.5f} %'],
+            ['Sesgo medio (Sistema - Pistofono)', f'{bias:.5f} dB'],
+            ['Sesgo relativo medio', f'{relative_bias_pct:.5f} %'],
+            ['MAE', f'{mae:.5f} dB'],
+            ['RMSE', f'{rmse:.5f} dB'],
+            ['Desviacion estandar del error absoluto', f"{diff_stats['std']:.5f} dB"],
+            ['Varianza del error absoluto', f"{diff_stats['variance']:.7f} dB^2"],
+            ['Percentil 90 del error absoluto (P90)', f'{p90_abs:.5f} dB'],
+            ['Error absoluto maximo', f"{diff_stats['max']:.5f} dB"],
+            ['Incertidumbre expandida (k=2)', f'{expanded_u_k2:.5f} dB'],
+            ['Correlacion de Pearson (r)', f'{corr:.6f}'],
+            ['Cumplimiento del criterio final (MAPE <= 1)', 'SI' if mape <= 1.0 else 'NO']
+        ],
+        ['Metrica', 'Valor']
+    )
+
+    out = BytesIO()
+    doc.save(out)
+    out.seek(0)
+    stamp = lima_now().strftime('%Y%m%d_%H%M%S')
+    filename = f'calibracion_informe_word_{stamp}.docx'
+    return send_file(
+        out,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
 
 
 @app.route('/calibracion/piston_excel_generado', methods=['GET'])

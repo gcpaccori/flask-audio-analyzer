@@ -9,7 +9,13 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <link rel="stylesheet" href="/static/css/global.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/static/vendor/highstock.js"></script>
+  <script src="/static/vendor/highcharts-boost.js"></script>
+  <script>
+    if (typeof Highcharts === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/highcharts.js"><\\/script>');
+    }
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://unpkg.com/wavesurfer.js@4.6.0"></script>
   <script src="https://unpkg.com/wavesurfer.js@4.6.0/dist/plugin/wavesurfer.spectrogram.min.js"></script>
@@ -25,6 +31,62 @@
       position: fixed;
       bottom: 20px; right: 20px;
       z-index: 999;
+    }
+    #wordBtn {
+      position: fixed;
+      bottom: 72px; right: 20px;
+      z-index: 999;
+    }
+    #audioChart {
+      width: 100%;
+      min-height: 420px;
+      border: 1px solid #dbe4ef;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #fbfdff 0%, #f6faff 100%);
+      box-shadow: 0 10px 30px rgba(30, 41, 59, 0.08);
+      padding: 8px;
+    }
+    .audit-card {
+      background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 14px;
+      margin: 12px 0 24px;
+    }
+    .audit-card h5 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+    .audit-card p {
+      margin-bottom: 6px;
+      color: #334155;
+      font-size: 0.92rem;
+    }
+    .mini-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .mini-kpi {
+      border: 1px solid #dbeafe;
+      border-radius: 10px;
+      background: #ffffff;
+      padding: 10px;
+    }
+    .mini-kpi .k-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 0.05em;
+    }
+    .mini-kpi .k-value {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
     }
   </style>
 </head>
@@ -70,7 +132,7 @@
 
     <div class="text-center mb-5">
       <h1>Resultados del Análisis</h1>
-      <h4>{{ audio.title }} - {{ audio.artist }}</h4>
+      <h4>{{ audio.title }} - {{ audio.source }}</h4>
     </div>
 
   <!-- Detalles del Audio -->
@@ -143,7 +205,13 @@
    
     <!-- Gráfico Interactivo -->
     <h3 class="section-title">Gráfico</h3>
-    <canvas id="chart" height="100"></canvas>
+    <div class="audit-card">
+      <h5>¿Por qué se analiza este audio de forma individual?</h5>
+      <p>El análisis por audio permite identificar eventos puntuales que se diluyen en promedios globales del escenario.</p>
+      <p>Con esto se detectan picos de riesgo, patrones transitorios y segmentos críticos que justifican acciones correctivas específicas.</p>
+      <div class="mini-kpis" id="miniKpis"></div>
+    </div>
+    <div id="audioChart"></div>
 
     <!-- Espectrograma -->
     <h3 class="section-title">Espectrograma</h3>
@@ -195,29 +263,42 @@
 
   <!-- Botón flotante para generar PDF -->
   <button id="pdfBtn" class="btn btn-danger">📄 Descargar PDF</button>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
-  <!-- Incluye Wavesurfer.js y el plugin de espectrograma en el <head> -->
-<script src="https://unpkg.com/wavesurfer.js@4.6.0"></script>
-<script src="https://unpkg.com/wavesurfer.js@4.6.0/dist/plugin/wavesurfer.spectrogram.min.js"></script>
+  <button id="wordBtn" class="btn btn-primary">📝 Descargar Word</button>
 
 
   <script>
     const detailedResults = JSON.parse('{{ detailed_results | tojson | safe }}');
 
     // Extraer las series de datos
-    const timestamps = detailedResults.map(chunk => chunk.timestamp);
-    const Lp_eqT_values = detailedResults.map(chunk => chunk.Lp_eqT);
-    const Lp_max_values = detailedResults.map(chunk => chunk.Lp_max);
+    const timestamps = detailedResults.map(chunk => Number(chunk.timestamp || 0));
+    const Lp_eqT_values = detailedResults.map(chunk => Number(chunk.Lp_eqT || 0));
+    const Lp_max_values = detailedResults.map(chunk => Number(chunk.Lp_max || 0));
 
-    // Extraer el valor global real desde el análisis global (asegúrate de que el dato esté disponible)
-    const globalLp_eqT = parseFloat('{{ global_result["Lp_eqT"] }}');
+    // Extraer el valor global real desde el análisis global; si falta, calcular fallback energético
+    const globalLpEqRaw = {{ (global_result.get('Lp_eqT') if global_result else None) | tojson }};
+    let globalLp_eqT = Number(globalLpEqRaw);
 
     // Estadísticas (ya existentes en tu código)
     const numPoints = Lp_eqT_values.length;
     const minVal = Math.min(...Lp_eqT_values);
     const maxVal = Math.max(...Lp_eqT_values);
     const avgVal = Lp_eqT_values.reduce((a, b) => a + b, 0) / numPoints;
-    const leqVal = Math.sqrt(Lp_eqT_values.reduce((sum, val) => sum + val * val, 0) / numPoints);
+    const leqVal = Math.sqrt(Lp_eqT_values.reduce((sum, val) => sum + val * val, 0) / Math.max(numPoints, 1));
+    const limiteRef = 85.0;
+    const excedencias = Lp_max_values.filter(v => v > limiteRef).length;
+    const pctExcedencias = (excedencias / Math.max(numPoints, 1)) * 100;
+
+    if (!Number.isFinite(globalLp_eqT) && numPoints > 0) {
+      const linAvg = Lp_eqT_values.reduce((acc, v) => acc + Math.pow(10, (Number(v) || 0) / 10), 0) / numPoints;
+      globalLp_eqT = linAvg > 0 ? (10 * Math.log10(linAvg)) : NaN;
+    }
+
+    document.getElementById('miniKpis').innerHTML = `
+      <div class="mini-kpi"><div class="k-label">Duración</div><div class="k-value">${numPoints} s</div></div>
+      <div class="mini-kpi"><div class="k-label">Picos > 85 dB</div><div class="k-value">${excedencias}</div></div>
+      <div class="mini-kpi"><div class="k-label">% Excedencia</div><div class="k-value">${pctExcedencias.toFixed(1)}%</div></div>
+      <div class="mini-kpi"><div class="k-label">Lp,max</div><div class="k-value">${maxVal.toFixed(2)} dB</div></div>
+    `;
 
     document.getElementById('numPuntos').textContent = numPoints;
     document.getElementById('minNivel').textContent = minVal.toFixed(2);
@@ -225,63 +306,103 @@
     document.getElementById('promNivel').textContent = avgVal.toFixed(2);
     document.getElementById('leq').textContent = leqVal.toFixed(2);
 
-    // Crear el gráfico con una línea de anotación horizontal azul basada en globalLp_eqT
-    new Chart(document.getElementById('chart'), {
-      type: 'line',
-      data: {
-        labels: timestamps,
-        datasets: [
-          {
-            label: 'Nivel de presión sonora equivalente continuo durante un intervalo de tiempo [dB]',
-            data: Lp_eqT_values,
-            borderColor: 'blue',
-            fill: false,
-            tension: 0.1
-          },
-          {
-            label: 'Nivel de presión sonora máximo [dB]',
-            data: Lp_max_values,
-            borderColor: 'red',
-            fill: false,
-            tension: 0.1
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Tiempo (s)'
-            }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Nivel de presión sonora (dB)'
-            }
-          }
-        },
-        plugins: {
-          annotation: {
-            annotations: {
-              lineaGlobalLp_eqT: {
-                type: 'line',
-                yMin: globalLp_eqT,
-                yMax: globalLp_eqT,
-                borderColor: 'blue',
-                borderWidth: 2,
-                label: {
-                  content: `Lp_eqT Global: ${globalLp_eqT} dB`,
-                  enabled: true,
-                  position: 'center'
-                }
-              }
-            }
-          }
-        }
+    // Gráfico moderno con Highcharts
+    const lpEqSeries = timestamps.map((t, i) => [t, Lp_eqT_values[i] || 0]);
+    const lpMaxSeries = timestamps.map((t, i) => [t, Lp_max_values[i] || 0]);
+
+    const yPlotLines = [{
+      value: limiteRef,
+      color: '#dc2626',
+      width: 2,
+      dashStyle: 'ShortDot',
+      label: {
+        text: `Límite ${limiteRef} dB`,
+        align: 'left',
+        style: { color: '#dc2626', fontWeight: '700' }
       }
+    }];
+
+    if (Number.isFinite(globalLp_eqT)) {
+      yPlotLines.unshift({
+        value: globalLp_eqT,
+        color: '#7e22ce',
+        width: 2,
+        dashStyle: 'ShortDash',
+        label: {
+          text: `Lp_eqT global ${globalLp_eqT.toFixed(2)} dB`,
+          align: 'right',
+          style: { color: '#7e22ce', fontWeight: '600' }
+        }
+      });
+    }
+
+    Highcharts.chart('audioChart', {
+      chart: {
+        type: 'areaspline',
+        animation: { duration: 700 },
+        spacing: [18, 16, 14, 16],
+        backgroundColor: '#ffffff'
+      },
+      title: {
+        text: 'Análisis temporal del audio',
+        style: { fontSize: '18px', fontWeight: '700' }
+      },
+      subtitle: {
+        text: Number.isFinite(globalLp_eqT)
+          ? `Referencia global Lp_eqT: ${globalLp_eqT.toFixed(2)} dB · Límite de control: ${limiteRef} dB`
+          : `Límite de control: ${limiteRef} dB`,
+        style: { color: '#475569' }
+      },
+      xAxis: {
+        type: 'linear',
+        title: { text: 'Tiempo relativo (s)' },
+        gridLineColor: '#eef2f7',
+        gridLineDashStyle: 'Dash',
+        labels: {
+          formatter: function() { return this.value + ' s'; }
+        }
+      },
+      yAxis: {
+        title: { text: 'Nivel sonoro (dB)' },
+        plotLines: yPlotLines
+      },
+      tooltip: {
+        shared: true,
+        useHTML: true,
+        formatter: function() {
+          const sec = this.x;
+          let html = `<b>t = ${sec} s</b>`;
+          this.points.forEach(p => {
+            const warn = p.y > limiteRef ? ' ⚠' : '';
+            html += `<br/><span style="color:${p.color}">●</span> ${p.series.name}: <b>${p.y.toFixed(2)} dB</b>${warn}`;
+          });
+          return html;
+        }
+      },
+      legend: {
+        enabled: true,
+        align: 'center',
+        verticalAlign: 'bottom'
+      },
+      credits: { enabled: false },
+      series: [
+        {
+          name: 'Lp_eqT',
+          data: lpEqSeries,
+          color: '#2563eb',
+          lineWidth: 2.8,
+          marker: { enabled: false },
+          fillOpacity: 0.16
+        },
+        {
+          name: 'Lp_max',
+          data: lpMaxSeries,
+          color: '#ef4444',
+          lineWidth: 2,
+          marker: { enabled: false },
+          fillOpacity: 0.10
+        }
+      ]
     });
 
     // Código para el espectrograma y la generación de PDF se mantiene igual...
@@ -303,9 +424,13 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       doc.text('Resultados del Análisis de Audio', 10, 10);
-      doc.text(`Título: {{ audio.title }} - {{ audio.artist }}`, 10, 20);
+      doc.text(`Título: {{ audio.title }} - {{ audio.source }}`, 10, 20);
       doc.text(`Puntos: ${numPoints} | Min: ${minVal.toFixed(2)} | Max: ${maxVal.toFixed(2)} | Prom: ${avgVal.toFixed(2)} | LEQ: ${leqVal.toFixed(2)}`, 10, 30);
       doc.save('reporte_audio.pdf');
+    });
+
+    document.getElementById('wordBtn').addEventListener('click', () => {
+      window.location.href = '/audio/{{ audio.id }}/reporte_word';
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

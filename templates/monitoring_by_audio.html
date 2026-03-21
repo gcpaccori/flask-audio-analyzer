@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitoreo por Audio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="/static/css/global.css">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="/static/vendor/highstock.js"></script>
+  <script src="/static/vendor/highcharts-boost.js"></script>
+  <script>
+    if (typeof Highcharts === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/highstock.js"><\\/script>');
+    }
+  </script>
+  <style>
+    body {
+      background: #f3f6fb;
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1f2937;
+    }
+    .main-wrap {
+      padding: 84px 20px 20px;
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid #d8e0ea;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+      padding: 14px;
+    }
+    #chart {
+      height: 460px;
+      min-width: 280px;
+    }
+    .why-card {
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      background: linear-gradient(125deg, #eff6ff 0%, #f8fafc 100%);
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .why-card h6 {
+      font-weight: 700;
+      color: #1d4ed8;
+      margin-bottom: 6px;
+    }
+    .why-card p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #334155;
+    }
+    .audio-meta {
+      font-size: 0.9rem;
+      color: #334155;
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #0f172a;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto auto;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 900px) {
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .kpi {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px;
+      background: #f8fafc;
+      margin-bottom: 8px;
+    }
+    .kpi .label {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .kpi .value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg ga-navbar fixed-top">
+    <div class="container-fluid px-3 d-flex align-items-center gap-2">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+        <i class="bi bi-soundwave"></i>
+        <span style="font-size:0.9rem;font-weight:600;">AcusticaLab</span>
+      </a>
+      <div class="d-flex ms-auto gap-2">
+        <button class="btn-nav" onclick="window.print()"><i class="bi bi-printer me-1"></i>Imprimir</button>
+        <a class="btn-nav" href="/"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid main-wrap">
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="panel">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <div>
+              <h5 class="mb-1">Monitoreo por audio (uno por uno)</h5>
+              <div class="audio-meta">Escenario {{ escenario_id }} · Microfono {{ microfono_id }}</div>
+            </div>
+            <span id="loadState" class="status-pill">Cargando audios...</span>
+          </div>
+
+          <div class="toolbar">
+            <select id="audioSelector" class="form-select form-select-sm">
+              <option value="">Seleccione un audio</option>
+            </select>
+            <button id="prevBtn" class="btn btn-outline-secondary btn-sm" type="button"><i class="bi bi-chevron-left"></i> Anterior</button>
+            <button id="nextBtn" class="btn btn-outline-secondary btn-sm" type="button">Siguiente <i class="bi bi-chevron-right"></i></button>
+            <a id="analysisBtn" class="btn btn-outline-dark btn-sm" target="_blank" href="#"><i class="bi bi-graph-up me-1"></i>Ver analisis</a>
+            <a id="wordBtn" class="btn btn-success btn-sm" href="#"><i class="bi bi-file-earmark-word me-1"></i>Descargar Word</a>
+          </div>
+
+          <div class="why-card">
+            <h6>¿Por qué analizar audio por audio?</h6>
+            <p>Este modo revela eventos de ruido críticos que se pierden al promediar todo el escenario. Sirve para localizar picos, validar comportamiento temporal y sustentar acciones correctivas puntuales.</p>
+          </div>
+
+          <div id="chart"></div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-4">
+        <div class="panel" id="audioInfo">
+          <h6 class="mb-2">Detalle del audio seleccionado</h6>
+          <div class="audio-meta">Seleccione un audio para ver su resumen.</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-8">
+        <div class="panel">
+          <h6 class="mb-2">Reproductor</h6>
+          <audio id="audioPlayer" controls style="width: 100%;"></audio>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const escenarioId = "{{ escenario_id }}";
+    const microfonoId = "{{ microfono_id }}";
+    const limiteReferencia = Number("{{ limite_referencia }}") || 85.0;
+
+    let audios = [];
+    let selectedIndex = -1;
+    let chart = null;
+
+    function buildChart(seriesLpMax, seriesLpEq, title, globalLpEq) {
+      const globalLine = Number.isFinite(globalLpEq) ? [{
+        color: '#7e22ce',
+        width: 2,
+        dashStyle: 'ShortDash',
+        value: globalLpEq,
+        zIndex: 6,
+        label: {
+          text: 'LEQ global audio: ' + globalLpEq.toFixed(2) + ' dB',
+          align: 'left',
+          style: { color: '#7e22ce', fontWeight: '600' }
+        }
+      }] : [];
+
+      chart = Highcharts.stockChart('chart', {
+        rangeSelector: { enabled: false },
+        navigator: { enabled: false },
+        scrollbar: { enabled: false },
+        credits: { enabled: false },
+        chart: {
+          backgroundColor: '#ffffff',
+          spacing: [16, 16, 14, 16]
+        },
+        title: {
+          text: title,
+          style: { fontWeight: '700', fontSize: '17px' }
+        },
+        subtitle: {
+          text: Number.isFinite(globalLpEq)
+            ? ('LEQ global del audio: ' + globalLpEq.toFixed(2) + ' dB · Límite de control: ' + limiteReferencia + ' dB')
+            : ('Vista detallada para deteccion de transitorios y picos por segundo · Limite: ' + limiteReferencia + ' dB'),
+          style: { color: '#64748b', fontSize: '12px' }
+        },
+        xAxis: {
+          title: { text: 'Tiempo relativo (s)' },
+          gridLineColor: '#e2e8f0',
+          gridLineDashStyle: 'Dash',
+          labels: {
+            formatter: function () {
+              return (this.value / 1000).toFixed(0) + ' s';
+            }
+          }
+        },
+        yAxis: {
+          title: { text: 'Nivel (dB)' },
+          gridLineColor: '#e2e8f0',
+          gridLineDashStyle: 'Dot',
+          plotLines: [{
+            color: '#dc2626',
+            width: 2,
+            value: limiteReferencia,
+            zIndex: 5,
+            label: {
+              text: 'Referencia ' + limiteReferencia + ' dB',
+              align: 'right',
+              style: { color: '#dc2626', fontWeight: '600' }
+            }
+          }].concat(globalLine)
+        },
+        tooltip: {
+          shared: true,
+          useHTML: true,
+          formatter: function () {
+            const xSec = (this.x / 1000).toFixed(2);
+            const lpMaxPoint = (this.points || []).find(p => p.series && p.series.name === 'Lp_max');
+            const lpEqPoint = (this.points || []).find(p => p.series && p.series.name === 'Lp_eqT');
+            const lpMax = lpMaxPoint ? lpMaxPoint.y : null;
+            const lpEq = lpEqPoint ? lpEqPoint.y : null;
+            const warn = (lpMax !== null && lpMax > limiteReferencia) ? ' <span style="color:#dc2626;">⚠</span>' : '';
+            return '<b>t=' + xSec + ' s</b>' +
+              '<br/>Lp_max: <b>' + (lpMax !== null ? lpMax.toFixed(2) : '-') + ' dB</b>' + warn +
+              '<br/>Lp_eqT: <b>' + (lpEq !== null ? lpEq.toFixed(2) : '-') + ' dB</b>';
+          }
+        },
+        series: [{
+          name: 'Lp_max',
+          data: seriesLpMax,
+          type: 'line',
+          color: '#1d4ed8',
+          lineWidth: 2.4,
+          marker: { enabled: false }
+        }, {
+          name: 'Lp_eqT',
+          data: seriesLpEq,
+          type: 'areaspline',
+          color: '#ef4444',
+          lineWidth: 1.8,
+          fillOpacity: 0.08,
+          marker: { enabled: false }
+        }]
+      });
+    }
+
+    function buildAudioInfo(audio) {
+      const g = audio.global_result || {};
+      const detail = Array.isArray(audio.detailed_results) ? audio.detailed_results : [];
+      const exceso = detail.filter((p) => Number(p.Lp_max || 0) > limiteReferencia).length;
+      const pctExceso = (exceso / Math.max(detail.length, 1)) * 100;
+      return `
+        <h6 class="mb-2">Audio ID ${audio.audio_id}</h6>
+        <div class="kpi"><div class="label">Timestamp</div><div class="value">${audio.timestamp || 'N/A'}</div></div>
+        <div class="kpi"><div class="label">Duracion</div><div class="value">${g.duration ?? 'N/A'} s</div></div>
+        <div class="kpi"><div class="label">Lp_eqT</div><div class="value">${g.Lp_eqT ?? 'N/A'} dB</div></div>
+        <div class="kpi"><div class="label">Lp_max</div><div class="value">${g.Lp_max ?? 'N/A'} dB</div></div>
+        <div class="kpi"><div class="label">Picos > ${limiteReferencia} dB</div><div class="value">${exceso} (${pctExceso.toFixed(1)}%)</div></div>
+        <div class="kpi"><div class="label">Frecuencia de muestreo</div><div class="value">${g.sample_rate ?? 'N/A'} Hz</div></div>
+      `;
+    }
+
+    function renderAudio(index) {
+      if (index < 0 || index >= audios.length) {
+        return;
+      }
+
+      selectedIndex = index;
+      const audio = audios[index];
+      const detail = Array.isArray(audio.detailed_results) ? audio.detailed_results : [];
+
+      const seriesLpEq = detail.map((p) => {
+        const sec = Number(p.timestamp || 0);
+        const val = Number(p.Lp_eqT);
+        return [Math.round(sec * 1000), val];
+      });
+      const seriesLpMax = detail.map((p) => {
+        const sec = Number(p.timestamp || 0);
+        const val = Number(p.Lp_max);
+        return [Math.round(sec * 1000), val];
+      });
+      const globalLpEq = Number(audio.global_result && audio.global_result.Lp_eqT);
+
+      const title = `Audio ${audio.audio_id} - Analisis individual`;
+      buildChart(seriesLpMax, seriesLpEq, title, globalLpEq);
+
+      document.getElementById('audioInfo').innerHTML = buildAudioInfo(audio);
+
+      const player = document.getElementById('audioPlayer');
+      if (audio.filename) {
+        player.src = '/uploads/' + encodeURIComponent(audio.filename);
+      } else {
+        player.removeAttribute('src');
+      }
+      player.load();
+
+      document.getElementById('audioSelector').value = String(index);
+      document.getElementById('analysisBtn').href = '/analyze/' + audio.audio_id;
+      document.getElementById('prevBtn').disabled = index <= 0;
+      document.getElementById('nextBtn').disabled = index >= audios.length - 1;
+      document.getElementById('loadState').textContent = 'Mostrando audio ' + (index + 1) + ' de ' + audios.length;
+    }
+
+    function populateSelector() {
+      const selector = document.getElementById('audioSelector');
+      selector.innerHTML = '';
+      audios.forEach((a, idx) => {
+        const op = document.createElement('option');
+        op.value = String(idx);
+        op.textContent = 'Audio ID ' + a.audio_id + ' - ' + (a.timestamp || 'sin timestamp');
+        selector.appendChild(op);
+      });
+    }
+
+    function loadAudios() {
+      $.getJSON(`/escenarios/${escenarioId}/microfono/${microfonoId}/audios`, function(data) {
+        audios = Array.isArray(data) ? data : [];
+        if (!audios.length) {
+          document.getElementById('loadState').textContent = 'Sin audios para este escenario/microfono';
+          document.getElementById('audioInfo').innerHTML = '<h6>Detalle del audio seleccionado</h6><div class="audio-meta">No hay informacion para mostrar.</div>';
+          if (chart) {
+            chart.destroy();
+          }
+          document.getElementById('chart').innerHTML = '<div class="alert alert-warning m-2">No hay audios registrados para este escenario y microfono.</div>';
+          return;
+        }
+
+        populateSelector();
+        renderAudio(0);
+      }).fail(function() {
+        document.getElementById('loadState').textContent = 'No se pudo cargar la informacion';
+        document.getElementById('chart').innerHTML = '<div class="alert alert-danger m-2">Error consultando audios.</div>';
+      });
+    }
+
+    document.getElementById('audioSelector').addEventListener('change', function(e) {
+      renderAudio(Number(e.target.value));
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', function() {
+      if (selectedIndex > 0) {
+        renderAudio(selectedIndex - 1);
+      }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', function() {
+      if (selectedIndex < audios.length - 1) {
+        renderAudio(selectedIndex + 1);
+      }
+    });
+
+    $(document).ready(function() {
+      document.getElementById('wordBtn').href = `/escenarios/${escenarioId}/microfono/${microfonoId}/reporte_word`;
+      loadAudios();
+    });
+  </script>
+</body>
+</html>

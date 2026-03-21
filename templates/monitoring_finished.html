@@ -1324,6 +1324,9 @@
         <button class="toc-mobile-btn no-print" id="tocMobileBtn" type="button" aria-label="Mostrar contenido">
           <i class="bi bi-list"></i><span>Contenido</span>
         </button>
+        <a class="btn-nav" href="/escenarios/{{ escenario_id }}/microfono/{{ microfono_id }}/reporte_word">
+          <i class="bi bi-file-earmark-word me-1"></i><span class="btn-label">Descargar Word</span>
+        </a>
         <button class="btn-nav" onclick="abrirConfiguracionImpresion()">
           <i class="bi bi-printer me-1"></i><span class="btn-label">Imprimir / Exportar</span>
         </button>
@@ -2046,6 +2049,29 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
 
           <hr>
 
+          <div class="modal-section-label">Exportación Word editable</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="radio" name="pc-word-audio-mode" id="pc-word-mode-all" value="all" checked>
+                <label for="pc-word-mode-all"><i class="bi bi-collection me-1 text-primary"></i>Incluir todos los audios</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="print-config-check">
+                <input type="radio" name="pc-word-audio-mode" id="pc-word-mode-selected" value="selected">
+                <label for="pc-word-mode-selected"><i class="bi bi-check2-square me-1 text-primary"></i>Seleccionar audios manualmente</label>
+              </div>
+            </div>
+          </div>
+          <div id="pc-word-audios-picker" style="max-height:180px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:8px; background:#fff;"></div>
+          <div class="small text-muted mt-2">
+            El informe final principal del escenario se incluye siempre, aunque selecciones audios manualmente.
+          </div>
+          <div id="pc-word-status" class="small text-muted mt-2">Verificando disponibilidad de exportación Word...</div>
+
+          <hr>
+
           <!-- Multi-scenario batch print -->
           <div class="modal-section-label">Impresión de múltiples escenarios en un solo PDF</div>
           <div class="alert alert-info py-2 px-3" style="font-size:0.82rem;">
@@ -2064,19 +2090,16 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
           </div>
 
         </div>
-        <div class="modal-footer d-flex gap-2 flex-wrap">
+        <div class="modal-footer d-flex gap-2">
           <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-sm btn-outline-success" onclick="descargarWordActual()">
+            <i class="bi bi-file-earmark-word me-1"></i>Descargar Word editable
+          </button>
           <button type="button" class="btn btn-sm btn-outline-primary" onclick="ejecutarImpresionActual()">
             <i class="bi bi-printer me-1"></i>Imprimir este informe
           </button>
           <button type="button" class="btn btn-sm btn-primary" onclick="ejecutarImpresionMultiple()">
             <i class="bi bi-files me-1"></i>Imprimir seleccionados como PDF único
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-success" onclick="exportarWordActual()" id="btnExportWordActual">
-            <i class="bi bi-file-earmark-word me-1"></i>Exportar Word (.docx)
-          </button>
-          <button type="button" class="btn btn-sm btn-success" onclick="exportarWordCombinado()" id="btnExportWordComb">
-            <i class="bi bi-files me-1"></i>Exportar Word combinado (.docx)
           </button>
         </div>
       </div>
@@ -2142,6 +2165,10 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         var micInfo = data.microfonos && data.microfonos.length > 0 ?
           data.microfonos.map(function(m) { return m.identificador || 'ID ' + m.id; }).join(', ') :
           'Micrófono ID: ' + microfonoId;
+        var historialMics = (data.microfonos_historial && String(data.microfonos_historial).trim())
+          ? String(data.microfonos_historial)
+          : 'No registrado';
+        var fotosCount = Array.isArray(data.fotos) ? data.fotos.length : 0;
         
         var html = `
           <table class="report-table">
@@ -2167,6 +2194,14 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             <tr>
               <th>Protección Auditiva</th><td>${data.proteccion_auditiva || 'N/A'}</td>
               <th>Micrófonos Asignados</th><td>${micInfo}</td>
+            </tr>
+            <tr>
+              <th>Horas de Medición (declaradas)</th><td>${data.horas_medicion != null ? data.horas_medicion : 'No registrado'}</td>
+              <th>Días de Medición (declarados)</th><td>${data.dias_medicion != null ? data.dias_medicion : 'No registrado'}</td>
+            </tr>
+            <tr>
+              <th>Historial de Micrófonos</th><td>${historialMics}</td>
+              <th>Fotos Adjuntas</th><td>${fotosCount}</td>
             </tr>
           </table>
         `;
@@ -2323,6 +2358,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         printTableHtml += '</tbody></table>';
         $('#technical-data').html(technicalDataHtml);
         $('#audio-print-table-content').html(printTableHtml);
+        refrescarPickerAudiosWord();
 
         cargarSerieTemporal();
       });
@@ -2741,7 +2777,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
             var point = this.point || this;
             var yValue = parseFloat(point.y || 0);
             var excede = yValue > limiteReferencia;
-            var color = excede ? '#dc2626' : '#16a34a';
+            var color = excede ? '#dc2626' : '#1d4ed8';
             var indicador = excede ? ' ⚠ EXCEDE LÍMITE' : ' ✓ Dentro del límite';
             var muestras = point.count || 1;
             s += '<br/><span style="color:' + color + '; font-weight: 500;">Lp,max prom.: ' + yValue.toFixed(2) + ' dB' + indicador + '</span>';
@@ -2792,7 +2828,7 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
         series: [{
           name: 'Lp,max (promedio por ventana)',
           data: seriesData,
-          color: '#16a34a'
+          color: '#1d4ed8'
         }]
       });
 
@@ -3428,7 +3464,94 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
     function abrirConfiguracionImpresion() {
       var modal = new bootstrap.Modal(document.getElementById('printConfigModal'));
       modal.show();
+      refrescarPickerAudiosWord();
+      diagnosticarExportacionWord();
       recargarEscenariosDisponibles();
+    }
+
+    function diagnosticarExportacionWord() {
+      var statusEl = document.getElementById('pc-word-status');
+      if (statusEl) statusEl.textContent = 'Verificando disponibilidad de exportación Word...';
+      $.getJSON('/diagnostico/exportes', function(data) {
+        if (!statusEl) return;
+        if (data && data.word_export_available) {
+          statusEl.textContent = 'Exportación Word disponible y lista.';
+          statusEl.className = 'small text-success mt-2';
+        } else {
+          var msg = (data && data.recommendation) ? data.recommendation : 'No disponible en este entorno.';
+          statusEl.textContent = 'Word no disponible: ' + msg;
+          statusEl.className = 'small text-danger mt-2';
+        }
+      }).fail(function() {
+        if (!statusEl) return;
+        statusEl.textContent = 'No se pudo validar la disponibilidad de exportación Word.';
+        statusEl.className = 'small text-danger mt-2';
+      });
+    }
+
+    function refrescarPickerAudiosWord() {
+      var box = document.getElementById('pc-word-audios-picker');
+      if (!box) return;
+      if (!todosLosAudios || !todosLosAudios.length) {
+        box.innerHTML = '<div class="text-muted" style="font-size:0.82rem;">No hay audios cargados para este escenario.</div>';
+        return;
+      }
+      var html = '';
+      todosLosAudios.forEach(function(audio, idx) {
+        var aid = parseInt(audio.audio_id, 10);
+        var ts = formatLimaDate(audio.timestamp);
+        var lp = (audio.global_result && audio.global_result.Lp_max) ? audio.global_result.Lp_max : 'N/A';
+        html += '<div class="d-flex align-items-center gap-2 py-1" style="border-bottom:1px dashed #e2e8f0;">' +
+          '<input type="checkbox" class="pc-word-audio" id="pc-word-audio-' + aid + '" value="' + aid + '">' +
+          '<label for="pc-word-audio-' + aid + '" style="font-size:0.82rem;cursor:pointer;margin:0;">Audio ' + aid + ' · ' + ts + ' · Lp,max: ' + lp + ' dB</label>' +
+          '</div>';
+      });
+      box.innerHTML = html;
+      aplicarModoPickerWord();
+    }
+
+    function aplicarModoPickerWord() {
+      var selectedMode = $('input[name="pc-word-audio-mode"]:checked').val() || 'all';
+      var disabled = selectedMode !== 'selected';
+      $('#pc-word-audios-picker .pc-word-audio').prop('disabled', disabled);
+      if (disabled) {
+        $('#pc-word-audios-picker .pc-word-audio').prop('checked', false);
+      }
+    }
+
+    function _obtenerSeleccionWord() {
+      var mode = $('input[name="pc-word-audio-mode"]:checked').val() || 'all';
+      var ids = [];
+      if (mode === 'selected') {
+        $('#pc-word-audios-picker .pc-word-audio:checked').each(function() {
+          ids.push(parseInt($(this).val(), 10));
+        });
+      }
+      return { mode: mode, ids: ids };
+    }
+
+    function descargarWordActual() {
+      var vis = _getSectionVisibility();
+      var sel = _obtenerSeleccionWord();
+      if (sel.mode === 'selected' && !sel.ids.length) {
+        alert('Selecciona al menos un audio para exportación Word o usa el modo todos los audios.');
+        return;
+      }
+
+      var params = new URLSearchParams();
+      params.set('include_chart', vis.grafico ? '1' : '0');
+      params.set('include_global', vis.datos ? '1' : '0');
+      params.set('include_detailed', vis.datos ? '1' : '0');
+      params.set('include_metodologia', vis.metodologia ? '1' : '0');
+      params.set('include_fotos', vis.fotos ? '1' : '0');
+      params.set('include_glosario', vis.glosario ? '1' : '0');
+      params.set('include_referencias', vis.referencias ? '1' : '0');
+      if (sel.mode === 'selected') {
+        params.set('audio_ids', sel.ids.join(','));
+      }
+
+      var url = '/escenarios/' + escenarioId + '/microfono/' + microfonoId + '/reporte_word?' + params.toString();
+      window.location.href = url;
     }
 
     function recargarEscenariosDisponibles() {
@@ -3571,143 +3694,9 @@ porcentaje_exceso = (puntos_excedidos / total_puntos * 100)</code></pre>
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // ─── Word (.docx) Export ─────────────────────────────────────────────────
-
-    /**
-     * Convert the Highcharts chart SVG to a base64 PNG using an off-screen canvas.
-     * Returns a Promise<string|null> (base64 data only, no data: prefix).
-     */
-    function _getChartPngB64() {
-      var CHART_EXPORT_WIDTH = 1100;
-      var CHART_EXPORT_HEIGHT = 480;
-      var DOWNLOAD_CLEANUP_DELAY_MS = 1000;
-      return new Promise(function(resolve) {
-        if (!chart || typeof chart.getSVG !== 'function') { resolve(null); return; }
-        try {
-          var svg = chart.getSVG({ chart: { width: CHART_EXPORT_WIDTH, height: CHART_EXPORT_HEIGHT } });
-          if (!svg) { resolve(null); return; }
-          var canvas = document.createElement('canvas');
-          canvas.width = CHART_EXPORT_WIDTH;
-          canvas.height = CHART_EXPORT_HEIGHT;
-          var ctx = canvas.getContext('2d');
-          var img = new Image();
-          img.onload = function() {
-            try {
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
-              ctx.drawImage(img, 0, 0);
-              URL.revokeObjectURL(img.src);
-              var dataUrl = canvas.toDataURL('image/png');
-              resolve(dataUrl.split(',')[1] || null);
-            } catch(e) { URL.revokeObjectURL(img.src); resolve(null); }
-          };
-          img.onerror = function() { URL.revokeObjectURL(img.src); resolve(null); };
-          img.src = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
-        } catch(e) { resolve(null); }
-      });
-    }
-
-    /** Trigger a file download from a Blob. */
-    function _triggerDownload(blob, filename) {
-      var DOWNLOAD_CLEANUP_DELAY_MS = 1000;
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, DOWNLOAD_CLEANUP_DELAY_MS);
-    }
-
-    /** Set a button into a loading state and return a restore function. */
-    function _btnLoading(btn, text) {
-      var orig = btn.innerHTML;
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>' + text;
-      return function() { btn.disabled = false; btn.innerHTML = orig; };
-    }
-
-    /** Export current scenario report as Word (.docx). */
-    function exportarWordActual() {
-      var btn = document.getElementById('btnExportWordActual');
-      var restore = _btnLoading(btn, 'Generando…');
-      var vis = _getSectionVisibility();
-      bootstrap.Modal.getInstance(document.getElementById('printConfigModal')).hide();
-
-      _getChartPngB64().then(function(chartB64) {
-        var payload = {
-          chart_image: chartB64,
-          secciones: vis
-        };
-        return fetch('/escenarios/' + escenarioId + '/microfono/' + microfonoId + '/exportar-docx', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      }).then(function(resp) {
-        if (!resp.ok) {
-          return resp.json().then(function(d) { throw new Error(d.error || 'Error ' + resp.status); });
-        }
-        var disposition = resp.headers.get('Content-Disposition') || '';
-        var fnMatch = disposition.match(/filename="?([^";\n]+)"?/);
-        var filename = fnMatch ? fnMatch[1] : 'Informe.docx';
-        return resp.blob().then(function(blob) { _triggerDownload(blob, filename); });
-      }).catch(function(err) {
-        alert('Error al exportar Word: ' + err.message);
-      }).finally(function() { restore(); });
-    }
-
-    /** Export combined Word (.docx) for selected scenarios. */
-    function exportarWordCombinado() {
-      var btn = document.getElementById('btnExportWordComb');
-
-      // Collect selected scenarios + mic pairs
-      var seleccionados = [];
-      $('#scenarios-picker input[type="checkbox"]:checked').each(function() {
-        var escId = parseInt($(this).val(), 10);
-        var esc = escenariosDisponibles.find(function(e) { return e.id === escId; });
-        var mics = esc ? (esc.microfonos || []) : [];
-        if (mics.length) {
-          mics.forEach(function(m) { seleccionados.push({ escenario_id: escId, microfono_id: m.id }); });
-        }
-      });
-
-      if (!seleccionados.length) {
-        alert('Selecciona al menos un escenario con micrófono asignado.');
-        return;
-      }
-
-      var restore = _btnLoading(btn, 'Generando…');
-      var vis = _getSectionVisibility();
-      bootstrap.Modal.getInstance(document.getElementById('printConfigModal')).hide();
-
-      // Capture current chart image to include in the current scenario's entry
-      _getChartPngB64().then(function(chartB64) {
-        // Attach chart image only to the current scenario (others won't have it from client)
-        var items = seleccionados.map(function(s) {
-          var item = { escenario_id: s.escenario_id, microfono_id: s.microfono_id, secciones: vis };
-          if (String(s.escenario_id) === String(escenarioId) && String(s.microfono_id) === String(microfonoId)) {
-            item.chart_image = chartB64;
-          }
-          return item;
-        });
-        return fetch('/escenarios/exportar-docx-combinado', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ escenarios: items })
-        });
-      }).then(function(resp) {
-        if (!resp.ok) {
-          return resp.json().then(function(d) { throw new Error(d.error || 'Error ' + resp.status); });
-        }
-        var disposition = resp.headers.get('Content-Disposition') || '';
-        var fnMatch = disposition.match(/filename="?([^";\n]+)"?/);
-        var filename = fnMatch ? fnMatch[1] : 'Informe_Combinado.docx';
-        return resp.blob().then(function(blob) { _triggerDownload(blob, filename); });
-      }).catch(function(err) {
-        alert('Error al exportar Word combinado: ' + err.message);
-      }).finally(function() { restore(); });
-    }
+    $(document).on('change', 'input[name="pc-word-audio-mode"]', function() {
+      aplicarModoPickerWord();
+    });
   </script>
 </body>
 </html>
